@@ -32,7 +32,7 @@ export function AnalyticsConsent() {
     void fetch(endpoint, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ api_key: key, event: "$pageview", distinct_id: distinctId, properties: { $current_url: endpoint.origin + "/" } }),
+      body: JSON.stringify({ api_key: key, event: "$pageview", distinct_id: distinctId, properties: { $current_url: window.location.origin + "/" } }),
       keepalive: true,
     }).catch(() => {});
   }, [consent]);

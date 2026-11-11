@@ -87,7 +87,7 @@ export async function enforceRateLimit(
 export async function readJsonLimited(request: Request, maxBytes: number): Promise<unknown> {
   if (!Number.isSafeInteger(maxBytes) || maxBytes < 1) throw new TypeError("INVALID_BODY_LIMIT");
   const contentType = request.headers.get("content-type") ?? "";
-  if (!contentType.toLowerCase().startsWith("application/json")) throw new TypeError("UNSUPPORTED_CONTENT_TYPE");
+  if (contentType.split(";", 1)[0].trim().toLowerCase() !== "application/json") throw new TypeError("UNSUPPORTED_CONTENT_TYPE");
   const declared = request.headers.get("content-length");
   if (declared !== null && Number(declared) > maxBytes) throw new RangeError("BODY_TOO_LARGE");
   if (!request.body) throw new TypeError("INVALID_JSON_BODY");

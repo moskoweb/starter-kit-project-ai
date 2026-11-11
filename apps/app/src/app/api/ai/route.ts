@@ -5,7 +5,7 @@ import { getIdentityEnv } from "@vibe/config/env";
 import { reserveAiUsage } from "@/lib/ai/usage";
 import { headers } from "next/headers";
 import { z } from "zod";
-import { enforceRateLimit, RateLimitExceeded } from "@/lib/security/rate-limit";
+import { enforceRateLimit, RateLimitExceeded, readJsonLimited } from "@/lib/security/rate-limit";
 import { exportLog, logEvent, type LogEvent } from "@vibe/observability";
 
 export async function POST(request: Request) {
@@ -49,27 +49,9 @@ async function handlePost(request: Request, report: (event: string, status: numb
   }
   if (!origin || origin !== trustedOrigin) return Response.json({ error: "FORBIDDEN" }, { status: 403 });
 
-  const maxBodyBytes = 128 * 1024;
-  const contentLength = Number(request.headers.get("content-length"));
-  if (Number.isFinite(contentLength) && contentLength > maxBodyBytes) return Response.json({ error: "REQUEST_TOO_LARGE" }, { status: 413 });
   let body: unknown;
-  try {
-    if (!request.body) throw new Error("EMPTY_BODY");
-    const reader = request.body.getReader();
-    const chunks: Uint8Array[] = [];
-    let size = 0;
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      size += value.byteLength;
-      if (size > maxBodyBytes) { await reader.cancel(); return Response.json({ error: "REQUEST_TOO_LARGE" }, { status: 413 }); }
-      chunks.push(value);
-    }
-    const bytes = new Uint8Array(size);
-    let offset = 0;
-    for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
-    body = JSON.parse(new TextDecoder().decode(bytes));
-  } catch { return Response.json({ error: "INVALID_REQUEST" }, { status: 400 }); }
+  try { body = await readJsonLimited(request, 128 * 1024); }
+  catch (error) { return Response.json({ error: error instanceof RangeError ? "REQUEST_TOO_LARGE" : "INVALID_REQUEST" }, { status: error instanceof RangeError ? 413 : 400 }); }
   const parsed = bodySchema.safeParse(body);
   if (!parsed.success) return Response.json({ error: "INVALID_REQUEST" }, { status: 400 });
 

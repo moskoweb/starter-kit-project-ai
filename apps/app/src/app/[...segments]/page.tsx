@@ -85,7 +85,7 @@ export default async function PanelPage({ params, searchParams }: { params: Prom
     } else {
       const row = kind === "projects" ? await getProject(identifier, path[1]) : await getTask(identifier, path[1]);
       if (!row) notFound();
-      content = <><ResourceDetail locale={locale} kind={kind} row={{ ...row, createdAt: row.createdAt.toISOString() }} basePath={base} permissions={perms} onDelete={removeResource.bind(null, panel.id, kind, identifier)} />{kind === "projects" && process.env.STORAGE_ENABLED === "true" && <Attachments projectId={row.id} tenantIdentifier={identifier} />}</>;
+      content = <><ResourceDetail locale={locale} kind={kind} row={{ ...row, createdAt: row.createdAt.toISOString() }} basePath={base} permissions={perms} onDelete={removeResource.bind(null, panel.id, kind, identifier)} />{kind === "projects" && process.env.STORAGE_ENABLED === "true" && <Attachments key={`${identifier ?? "personal"}:${row.id}`} projectId={row.id} tenantIdentifier={identifier} locale={locale} />}</>;
     }
   }
   if (panel.context !== "global" && path.length === 0 && process.env.WEBHOOKS_OUTBOUND_ENABLED === "true") content = <>{content}<WebhookDeliveries tenantIdentifier={identifier} locale={locale} /></>;

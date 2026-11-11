@@ -24,6 +24,21 @@ async function selfCheck() {
     headers: { "content-type": "application/json" },
     body: '{"payload":"too long"}',
   }), 4), /BODY_TOO_LARGE/);
+  await assert.rejects(readJsonLimited(new Request("https://example.test", {
+    method: "POST",
+    headers: { "content-type": "application/jsonp" },
+    body: '{}',
+  }), 16), /UNSUPPORTED_CONTENT_TYPE/);
+  assert.deepEqual(await readJsonLimited(new Request("https://example.test", {
+    method: "POST",
+    headers: { "content-type": "application/json; charset=utf-8" },
+    body: '{}',
+  }), 16), {});
+  await assert.rejects(readJsonLimited(new Request("https://example.test", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: new Uint8Array([0x22, 0xff, 0x22]),
+  }), 16), TypeError);
 }
 
 selfCheck().catch((error: unknown) => {

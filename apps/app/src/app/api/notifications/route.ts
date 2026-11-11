@@ -6,33 +6,10 @@ import { and, desc, eq, isNull, sql } from "drizzle-orm";
 import { getIdentityEnv } from "@vibe/config/env";
 import { headers } from "next/headers";
 import { z } from "zod";
+import { readJsonLimited } from "@/lib/security/rate-limit";
 
 const querySchema = z.object({ tenantIdentifier: z.string().trim().min(1).optional(), page: z.coerce.number().int().min(1).max(1_000_000).default(1) }).strict();
 const bodySchema = z.object({ tenantIdentifier: z.string().trim().min(1).nullable().optional(), markAll: z.literal(true).optional(), id: z.string().uuid().optional() }).strict();
-async function readBodyLimited(request: Request): Promise<unknown> {
-  const contentType = request.headers.get("content-type") ?? "";
-  if (!contentType.toLowerCase().startsWith("application/json")) throw new TypeError("UNSUPPORTED_CONTENT_TYPE");
-  const declared = request.headers.get("content-length");
-  if (declared !== null && Number(declared) > 4096) throw new RangeError("BODY_TOO_LARGE");
-  if (!request.body) throw new TypeError("INVALID_REQUEST");
-  const reader = request.body.getReader();
-  const chunks: Uint8Array[] = [];
-  let size = 0;
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      size += value.byteLength;
-      if (size > 4096) { await reader.cancel(); throw new RangeError("BODY_TOO_LARGE"); }
-      chunks.push(value);
-    }
-  } finally { reader.releaseLock(); }
-  const bytes = new Uint8Array(size);
-  let offset = 0;
-  for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
-  return JSON.parse(new TextDecoder().decode(bytes));
-}
-export { readBodyLimited };
 
 async function context(identifier: string | null, currentHeaders: Headers) {
   const session = await requireSession(currentHeaders);
@@ -50,7 +27,7 @@ function errorResponse(error: unknown) {
 function sameOrigin(request: Request) {
   const origin = request.headers.get("origin");
   if (!origin) return false;
-  try { return new URL(origin).origin === new URL(request.url).origin; } catch { return false; }
+  try { return origin === new URL(getIdentityEnv().BETTER_AUTH_URL).origin; } catch { return false; }
 }
 export async function GET(request: Request) {
   try {
@@ -70,7 +47,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   if (!sameOrigin(request)) return Response.json({ error: "CSRF_REJECTED" }, { status: 403 });
   let raw: unknown;
-  try { raw = await readBodyLimited(request); }
+  try { raw = await readJsonLimited(request, 4096); }
   catch (error) {
     if (error instanceof RangeError) return Response.json({ error: "INVALID_REQUEST" }, { status: 413 });
     return Response.json({ error: "INVALID_REQUEST" }, { status: 400 });

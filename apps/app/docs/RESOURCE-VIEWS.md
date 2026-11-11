@@ -18,6 +18,8 @@
 
 `ResourceForm` takes `kind`, `basePath`, optional `initialValues`, required `onSave(values)`, real `cancelHref`, and task `projects` options (`id`, `name`). Project values use `projectInputSchema` (`name`, `description`); task values use `taskInputSchema` (`title`, `projectId`). RHF uses those Zod schemas and `@vibe/ui` form primitives. Save result with `id` navigates to detail; result without ID navigates to base path. Action errors remain visible and accessible.
 
+For existing tasks, `projectId` remains read-only and `onSave` receives only `{ title }`, matching the strict `taskUpdateSchema`. Creation still sends `{ title, projectId }`. List inputs accept pages 1–1,000,000; larger offsets are rejected before querying.
+
 ## Detail
 
 `ResourceDetail` takes `kind`, `row`, `basePath`, server-computed `permissions`, and optional `onDelete(id)`. Edit link appears only when `update` is allowed; delete control appears only when `delete` and callback are present. Back/edit links require matching real routes from caller.

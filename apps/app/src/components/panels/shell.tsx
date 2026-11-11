@@ -72,7 +72,7 @@ export function PanelShell({ title, nav, orgOptions, currentOrg, user, children,
 
   function toggleSidebar() {
     setSidebarOpen((open) => {
-      saveCookie("sidebar", open ? "collapsed" : "open");
+      saveCookie("sidebar:state", open ? "collapsed" : "open");
       return !open;
     });
   }
@@ -95,7 +95,7 @@ export function PanelShell({ title, nav, orgOptions, currentOrg, user, children,
       <button ref={triggerRef} className="rounded border px-3 py-2 md:hidden" aria-label={copy.openMenu} onClick={() => setMenuOpen(true)}>☰</button>
       <button className="hidden rounded border px-3 py-2 md:inline-flex" aria-label={copy.collapseSidebar} onClick={toggleSidebar}>☰</button>
       <div className="ml-auto flex items-center gap-3"><button className="rounded border px-3 py-2" onClick={toggleTheme}>{copy.theme}</button><label className="sr-only" htmlFor="panel-locale">{copy.language}</label><select id="panel-locale" className="rounded border bg-transparent p-2" value={currentLocale} onChange={(event) => changeLocale(event.target.value as Locale)}><option value="pt-BR">Português</option><option value="en">English</option></select></div>
-    </header><main className="space-y-6 p-5 md:p-8">{showNotifications && <Notifications tenantIdentifier={tenantIdentifier} locale={currentLocale} />}{children}</main></div>
-    <dialog ref={dialogRef} className="m-0 h-full max-h-full w-72 max-w-[85vw] bg-[var(--background)] p-5 text-[var(--foreground)] backdrop:bg-black/50" onCancel={(event) => { event.preventDefault(); setMenuOpen(false); }} onClose={() => { setMenuOpen(false); triggerRef.current?.focus(); }}><div className="flex h-full flex-col"><button className="mb-5 self-end rounded border px-3 py-2" onClick={() => setMenuOpen(false)}>{copy.closeMenu}</button>{sidebar}</div></dialog>
+    </header><main className="space-y-6 p-5 md:p-8">{showNotifications && <Notifications key={tenantIdentifier ?? "personal"} tenantIdentifier={tenantIdentifier} locale={currentLocale} />}{children}</main></div>
+    <dialog ref={dialogRef} aria-label={copy.navigation} className="m-0 h-full max-h-full w-72 max-w-[85vw] bg-[var(--background)] p-5 text-[var(--foreground)] backdrop:bg-black/50" onClick={event => { if (event.target instanceof Element && event.target.closest("a")) setMenuOpen(false); }} onCancel={(event) => { event.preventDefault(); setMenuOpen(false); }} onClose={() => { setMenuOpen(false); triggerRef.current?.focus(); }}><div className="flex h-full flex-col"><button className="mb-5 self-end rounded border px-3 py-2" onClick={() => setMenuOpen(false)}>{copy.closeMenu}</button>{sidebar}</div></dialog>
   </div>;
 }
