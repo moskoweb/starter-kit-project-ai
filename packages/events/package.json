@@ -1,0 +1,10 @@
+{
+  "name": "@vibe/events",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts", "./worker": "./src/worker.ts", "./relay": "./src/relay.ts" },
+  "scripts": { "check-types": "tsc --noEmit", "test": "tsx test/concurrency.test.ts", "relay": "tsx src/relay.ts", "provision": "tsx src/provision.ts" },
+  "dependencies": { "@vibe/auth": "workspace:*", "@vibe/db": "workspace:*", "@vibe/jobs": "workspace:*", "drizzle-orm": "^0.45.4", "pg-boss": "12.38.2", "postgres": "^4.1.1" },
+  "devDependencies": { "@vibe/config": "workspace:*", "@types/node": "^22.13.9", "tsx": "^4.19.3", "typescript": "5.9.3" }
+}

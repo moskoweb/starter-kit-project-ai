@@ -1,0 +1,25 @@
+import assert from "node:assert/strict";
+import { getJobsConfig, getProvisionUrl } from "./config";
+import { parseJobEnvelope } from "./contracts";
+import { postgresTransactionAdapter, registerJobHandlers, sendJob } from "./index";
+import type { PgBoss } from "pg-boss";
+import type { TransactionSql } from "postgres";
+
+const id = "85d46431-2ea5-4414-947a-5226fdc72132";
+const envelope = { version: 1, type: "webhook", eventId: id, actorUserId: id, context: { kind: "personal" }, entityId: id, correlationId: id };
+assert.equal(getJobsConfig({}), null);
+assert.throws(() => getJobsConfig({ JOBS_ENABLED: "yes" }));
+assert.throws(() => getJobsConfig({ JOBS_ENABLED: "true" }));
+assert.throws(() => getProvisionUrl({ DATABASE_URL: "postgres://runtime@localhost/db" }));
+assert.deepEqual(parseJobEnvelope(envelope), envelope);
+assert.throws(() => parseJobEnvelope({ ...envelope, token: "secret" }));
+assert.throws(() => parseJobEnvelope({ ...envelope, context: { kind: "organization" } }));
+assert.throws(() => parseJobEnvelope(envelope, "notification"));
+await assert.rejects(registerJobHandlers({} as PgBoss, {}), /No job handlers/);
+let executed = false;
+const transaction = { unsafe: async (text: string, values: unknown[]) => { assert.equal(text, "SELECT $1"); assert.deepEqual(values, [id]); executed = true; return [{ id }]; } } as unknown as TransactionSql;
+assert.deepEqual(await postgresTransactionAdapter(transaction).executeSql("SELECT $1", [id]), { rows: [{ id }] });
+assert.ok(executed);
+const boss = { send: async (name: string, data: unknown, options: { db: unknown }) => { assert.equal(name, "webhook-delivery"); assert.deepEqual(data, envelope); assert.ok(options.db); return id; } } as unknown as PgBoss;
+assert.equal(await sendJob(boss, transaction, parseJobEnvelope(envelope)), id);
+console.info("jobs unit checks passed; no database or delivery evidence");

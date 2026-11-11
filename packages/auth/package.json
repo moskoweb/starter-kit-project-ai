@@ -1,0 +1,10 @@
+{
+  "name": "@vibe/auth",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts", "./client": "./src/client.ts", "./permissions": "./src/permissions.ts" },
+  "scripts": { "check-types": "tsc --noEmit", "seed:admin": "tsx --conditions=react-server src/scripts/seed-admin.ts" },
+  "dependencies": { "@vibe/db": "workspace:*", "@vibe/config": "workspace:*", "@vibe/email": "workspace:*", "better-auth": "1.7.20", "@better-auth/drizzle-adapter": "1.7.20", "@better-auth/utils": "0.5.1", "drizzle-orm": "^0.45.4", "server-only": "^0.0.1" },
+  "devDependencies": { "@types/node": "^22.13.9", "tsx": "^4.19.3", "typescript": "5.9.3" }
+}

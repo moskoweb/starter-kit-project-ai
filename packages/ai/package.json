@@ -1,0 +1,26 @@
+{
+  "name": "@vibe/ai",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "exports": {
+    ".": "./src/server.ts",
+    "./implementation": "./src/implementation.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "test": "tsx --test test/config.test.ts"
+  },
+  "dependencies": {
+    "@ai-sdk/openai-compatible": "3.0.90",
+    "ai": "7.0.169",
+    "server-only": "0.0.1",
+    "zod": "^4.1.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.9",
+    "tsx": "^4.19.3",
+    "typescript": "5.9.3"
+  }
+}

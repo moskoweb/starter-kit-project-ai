@@ -1,0 +1,73 @@
+@custom-variant dark (&:where(.dark, .dark *, [data-theme="dark"], [data-theme="dark"] *));
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-border: var(--border);
+  --color-input: var(--border);
+  --color-ring: var(--ring);
+  --color-destructive: var(--destructive);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+  --font-sans: var(--ui-font-sans);
+  --font-mono: var(--ui-font-mono);
+}
+:root {
+  color-scheme: light;
+  --background: #ffffff;
+  --foreground: #0f172a;
+  --card: #f8fafc;
+  --surface: var(--card);
+  --border: #e2e8f0;
+  --muted-foreground: #64748b;
+  --primary: #0f172a;
+  --primary-foreground: #f8fafc;
+  --accent: #f1f5f9;
+  --destructive: #b91c1c;
+  --ring: #2563eb;
+  --chart-1: #2563eb;
+  --chart-2: #0d9488;
+  --success-background: #dcfce7;
+  --success-foreground: #166534;
+  --danger-background: #fee2e2;
+  --danger-foreground: #991b1b;
+  --chart-3: #f59e0b;
+  --chart-4: #7c3aed;
+  --chart-5: #e11d48;
+  --radius: 6px;
+  --spacing: 0.25rem;
+  --ui-font-sans: Inter, "Geist Sans", system-ui, sans-serif;
+  --ui-font-mono: "Geist Mono", ui-monospace, monospace;
+}
+.dark, [data-theme="dark"] {
+  color-scheme: dark;
+  --background: #090d16;
+  --foreground: #f8fafc;
+  --card: #0f172a;
+  --border: #1e293b;
+  --muted-foreground: #94a3b8;
+  --primary: #f8fafc;
+  --primary-foreground: #0f172a;
+  --accent: #1e293b;
+  --destructive: #f87171;
+  --ring: #60a5fa;
+  --chart-1: #3b82f6;
+  --chart-2: #14b8a6;
+  --chart-3: #fbbf24;
+  --success-background: #064e3b;
+  --success-foreground: #6ee7b7;
+  --danger-background: #7f1d1d;
+  --danger-foreground: #fca5a5;
+  --chart-4: #8b5cf6;
+  --chart-5: #f43f5e;
+}
+[data-density="compact"] { --spacing: 0.2rem; }
+[data-radius="square"] { --radius: 0px; }
+[data-radius="round"] { --radius: 10px; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}

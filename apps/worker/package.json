@@ -1,0 +1,23 @@
+{
+  "name": "@vibe/worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx --conditions=react-server src/main.ts",
+    "build": "tsc --outDir dist --noEmit false",
+    "start": "node --conditions=react-server --import tsx dist/apps/worker/src/main.js",
+    "check-types": "tsc --noEmit",
+    "relay": "tsx --conditions=react-server src/relay.ts"
+  },
+  "dependencies": {
+    "@vibe/jobs": "workspace:*",
+    "@vibe/events": "workspace:*",
+    "@vibe/webhooks": "workspace:*",
+    "tsx": "^4.19.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.9",
+    "typescript": "5.9.3"
+  }
+}

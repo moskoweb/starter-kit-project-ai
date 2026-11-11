@@ -1,0 +1,41 @@
+{
+  "name": "app",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --hostname 127.0.0.1",
+    "build": "next build",
+    "start": "next start",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@vibe/auth": "workspace:*",
+    "@vibe/events": "workspace:*",
+    "@vibe/ai": "workspace:*",
+    "@vibe/webhooks": "workspace:*",
+    "@vibe/observability": "workspace:*",
+    "@hookform/resolvers": "^5.2.2",
+    "@tanstack/react-table": "^8.21.3",
+    "react-hook-form": "^7.66.0",
+    "zod": "^4.6.7",
+    "better-auth": "1.7.20",
+    "@vibe/config": "workspace:*",
+    "@vibe/db": "workspace:*",
+    "@vibe/ui": "workspace:*",
+    "drizzle-orm": "^0.45.4",
+    "next": "16.4.6",
+    "@vibe/storage": "workspace:*",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.2.1",
+    "tailwindcss": "^4.2.1",
+    "postcss": "^8.5.6",
+    "@types/node": "^22.13.9",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "5.9.3"
+  }
+}
