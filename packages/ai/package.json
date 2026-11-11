@@ -5,8 +5,7 @@
   "type": "module",
   "engines": { "node": ">=22" },
   "exports": {
-    ".": "./src/server.ts",
-    "./implementation": "./src/implementation.ts"
+    ".": "./src/server.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",

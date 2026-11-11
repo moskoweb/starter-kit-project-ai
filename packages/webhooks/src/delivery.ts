@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { and, eq } from "drizzle-orm";
 import { canAccessProject } from "@vibe/auth/permissions";
 import { getSql, type TenantTransaction, webhookDeliveries } from "@vibe/db";
-import { sendJob, type JobEnvelope } from "@vibe/jobs";
+import { parseJobEnvelope, sendJob, type JobEnvelope } from "@vibe/jobs";
 import type { TransactionSql } from "postgres";
 import type { PgBoss } from "pg-boss";
 import { deliverWebhook, verifySignature } from "./index";
@@ -58,6 +58,9 @@ export async function acceptInbound(raw: Uint8Array, headers: Headers): Promise<
 
 export async function createDelivery(tx: TenantTransaction, context: Context, eventId: string, payload: unknown) {
   if (!uuid.test(context.actorUserId) || (context.organizationId !== null && !uuid.test(context.organizationId)) || !uuid.test(eventId)) throw new Error("INVALID_IDENTITY_CONTEXT");
+  const enabled = process.env.WEBHOOKS_OUTBOUND_ENABLED ?? "false";
+  if (enabled !== "true" && enabled !== "false") throw new Error("WEBHOOKS_OUTBOUND_ENABLED must be true or false");
+  if (enabled === "false") throw new Error("WEBHOOK_OUTBOUND_DISABLED");
   if (!process.env.WEBHOOK_OUTBOUND_URL || !process.env.WEBHOOK_OUTBOUND_SECRET || !process.env.WEBHOOK_OUTBOUND_ALLOWED_HOSTS) throw new Error("WEBHOOK_OUTBOUND_NOT_CONFIGURED");
   const [row] = await tx.insert(webhookDeliveries).values({ actorUserId: context.actorUserId, organizationId: context.organizationId, eventId, event: "project.created", payload }).returning({ id: webhookDeliveries.id });
   return row!;
@@ -78,11 +81,13 @@ export async function relayWebhookDeliveries(boss: PgBoss, limit = 25): Promise<
   });
 }
 
-export async function webhookHandler(envelope: JobEnvelope): Promise<void> {
+export async function webhookHandler(input: JobEnvelope): Promise<void> {
+  const envelope = parseJobEnvelope(input, "webhook");
   const sql = await checkedWorkerSql();
   await sql.begin(async (tx) => {
     const [row] = await tx`select * from webhook_deliveries where id = ${envelope.entityId}::uuid and event_id = ${envelope.eventId}::uuid for update`;
     if (!row || row.status === "delivered" || row.status === "failed") return;
+    if (row.status === "pending" && new Date(row.next_at).getTime() > Date.now()) return;
     const contextOrg = envelope.context.kind === "organization" ? envelope.context.organizationId : null;
     if (row.actor_user_id !== envelope.actorUserId || row.organization_id !== contextOrg || envelope.correlationId !== row.id) throw new Error("WEBHOOK_ENVELOPE_MISMATCH");
     await tx`select set_config('app.current_user_id', ${row.actor_user_id}, true), set_config('app.current_tenant_id', ${row.organization_id ?? ""}, true)`;

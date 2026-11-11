@@ -15,7 +15,12 @@ const allowed: Record<string, true> = { level: true, event: true, requestId: tru
 function sanitize(input: LogEvent): LogEvent {
   const record: Record<string, string | number> = {};
   for (const [key, value] of Object.entries(input)) {
-    if (allowed[key] && (typeof value === "string" || (typeof value === "number" && Number.isFinite(value)))) record[key] = value;
+    if (!Object.hasOwn(allowed, key)) continue;
+    if (key === "level" && (value === "debug" || value === "info" || value === "warn" || value === "error")) record[key] = value;
+    else if (key === "event" && typeof value === "string" && /^[a-zA-Z][a-zA-Z0-9_.:-]{0,127}$/.test(value)) record[key] = value;
+    else if (["requestId", "userId", "tenantId"].includes(key) && typeof value === "string" && /^[a-zA-Z0-9_-]{1,128}$/.test(value)) record[key] = value;
+    else if (key === "duration" && typeof value === "number" && Number.isFinite(value) && value >= 0) record[key] = value;
+    else if (key === "status" && typeof value === "number" && Number.isInteger(value) && value >= 0 && value <= 599) record[key] = value;
   }
   return record as LogEvent;
 }
@@ -51,6 +56,7 @@ export async function exportLog(input: LogEvent): Promise<void> {
   try {
     const response = await fetch(url, {
       method: "POST",
+      redirect: "error",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ resourceLogs: [{ scopeLogs: [{ logRecords: [{ body: { stringValue: JSON.stringify(event) } }] }] }] }),
       signal: controller.signal,
