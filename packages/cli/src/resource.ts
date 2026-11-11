@@ -130,7 +130,12 @@ function base(identifier: string | null) {
 }
 export async function save(identifier: string | null, id: string | null, form: FormData) {
   const path = base(identifier);
-  const input = inputSchema.parse({ ${fields.map(([key, field]) => `${key}: ${field.type === "boolean" ? `form.get(${quote(key)}) === "on"` : field.type === "integer" ? `form.get(${quote(key)}) === null || form.get(${quote(key)}) === "" ? undefined : Number(form.get(${quote(key)}))` : `form.get(${quote(key)}) ?? undefined`}`).join(", ")} });
+  const input = inputSchema.parse({ ${fields.map(([key, field]) => {
+    const raw = `form.get(${quote(key)})`;
+    const empty = field.optional && field.default === undefined ? "null" : "undefined";
+    const value = field.type === "boolean" ? `${raw} === "on"` : field.type === "integer" || field.type === "uuid" ? `${raw} === null || ${raw} === "" ? ${empty} : ${field.type === "integer" ? `Number(${raw})` : raw}` : `${raw} ?? undefined`;
+    return `${key}: ${value}`;
+  }).join(", ")} });
   if (id !== null) z.string().uuid().parse(id);
   await authorized(identifier, id === null ? "create" : "update", async (tx, ownerUserId) => {
     ${Object.entries(spec.relations).map(([key, relation]) => `if (input.${key}) { const [parent] = await tx.select({ id: ${relation.model}.id }).from(${relation.model}).where(eq(${relation.model}.id, input.${key})).limit(1); if (!parent) throw new Error("NOT_FOUND"); }`).join("\n")}
