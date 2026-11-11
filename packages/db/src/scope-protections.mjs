@@ -4,7 +4,7 @@ import path from "node:path";
 
 export async function pendingScopeProtections(dbDirectory) {
   const directory = path.join(dbDirectory, "scope-protections");
-  const manifest = JSON.parse(await readFile(path.join(dbDirectory, "migrations/meta/scope-protections.json"), "utf8").catch(error => { if (error.code === "ENOENT") return "{}"; throw error; }));
+  const manifest = JSON.parse(await readFile(path.join(dbDirectory, "migrations/scope-protections.json"), "utf8").catch(error => { if (error.code === "ENOENT") return "{}"; throw error; }));
   const entries = await readdir(directory, { withFileTypes: true }).catch(error => { if (error.code === "ENOENT") return []; throw error; });
   const pending = [];
   for (const entry of entries) {

@@ -98,7 +98,7 @@ export async function generateMigration() {
     for (const [file, content] of before) {
       if (content !== null && file.endsWith(".sql") && !(await readFile(file)).equals(content)) throw new Error(`Existing migration changed: ${file}`);
     }
-    await writeFile("packages/db/migrations/meta/scope-protections.json", JSON.stringify(manifest, null, 2) + "\n");
+    await writeFile("packages/db/migrations/scope-protections.json", JSON.stringify(manifest, null, 2) + "\n");
   } catch (error) {
     await restoreFiles(directory, before);
     throw error;

@@ -24,7 +24,7 @@ try {
   await writeFile(path.join(directory, "scope-protections/note.sql"), sql);
   const { pending } = await pendingScopeProtections(directory);
   assert.equal(pending.length, 1);
-  await writeFile(path.join(migrations, "meta/scope-protections.json"), JSON.stringify({ "note.sql": pending[0].hash }));
+  await writeFile(path.join(migrations, "scope-protections.json"), JSON.stringify({ "note.sql": pending[0].hash }));
   assert.equal((await pendingScopeProtections(directory)).pending.length, 0);
   await writeFile(path.join(directory, "scope-protections/note.sql"), sql + "\n");
   await assert.rejects(pendingScopeProtections(directory), /changed after migration generation/);
