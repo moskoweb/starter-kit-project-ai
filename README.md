@@ -216,10 +216,9 @@ Abra `http://127.0.0.1:3005`. Personalize templates e conteúdo no projeto deriv
 
 ## Trabalho com agentes
 
-[`AGENTS.md`](AGENTS.md) define arquitetura, segurança e regras de mudança. `.agents/skills/` contém skills locais `atomic-commits` e `frontend-design`; leia instruções, origem e scripts antes de executar. Skills são ferramentas de desenvolvimento, não dependências runtime.
+[`AGENTS.md`](AGENTS.md) define arquitetura, segurança e regras de mudança. `.agents/skills/` traz `atomic-commits` (MIT) e `frontend-design` (Apache-2.0), skills locais revisadas; não instale coleções em massa.
 
-GSD usa `.planning/` como continuidade deste kit. CLI não copia esse histórico para projetos derivados: inicie planejamento próprio quando necessário. Configuração de modelos, instalações globais e conexões MCP da máquina de preparação não são transportadas. CodeGraph é opcional; índice não substitui código nem demonstra MCP conectado. Não há instalação em massa automática de ferramentas.
-
+GSD continua o trabalho em `.planning/`; projetos derivados começam histórico próprio, sem copiar planejamento ou índice do kit. Ferramentas externas são opcionais e devem ser instaladas no escopo do projeto quando suportado. Consulte [matriz, comandos oficiais, licenças, telemetria e riscos](docs/AGENT-TOOLS.md) antes de instalar.
 ## Limites e verificação
 
 O kit entrega código e fluxos de exemplo, não certificação de segurança, operação ou compliance. Antes de publicar um produto:

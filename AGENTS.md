@@ -34,6 +34,8 @@ CodeGraph correto: https://github.com/colbymchenry/codegraph. CLI local disponí
 
 Skills locais devem ter origem/revisão/licença e gatilho claros. Scripts e referências transitivas precisam de leitura antes da execução. Não encadear compressores ou proxies. Archify fica fora da preparação inicial; reconsiderar no fechamento.
 
+Recomendações e instalação ficam em `docs/AGENT-TOOLS.md`. Não confundir ferramenta instalada na máquina com parte do template. GSD organiza planejamento; CodeGraph auxilia navegação; RTK é opt-in para reduzir saída, preservando stderr, códigos de saída e acesso bruto. Skills de React/Next, acessibilidade e design são carregadas conforme tarefa. Regras de segurança, requisitos do produto e componentes locais prevalecem sobre personas e preferências externas. Nenhum instalador/hook global, proxy ou atualização automática sem autorização específica.
+
 ## Verificação e operação
 
 Verificar comportamento alterado com menor cenário suficiente. Isolamento e permissões exigem casos negativos. UI exige inspeção real; feature externa exige integração real, não mock apresentado como pronta. Manter documentação e estado coerentes com evidência.
