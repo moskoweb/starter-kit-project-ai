@@ -8,13 +8,13 @@ import { nextCookies } from "better-auth/next-js";
 import { getDb } from "@vibe/db";
 import * as schema from "@vibe/db/schema";
 import { getIdentityEnv } from "@vibe/config/env";
-import { sendEmail, escapeHtml } from "@vibe/email";
+import { sendEmail, renderAuthEmail, type AuthEmail } from "@vibe/email";
 import { accessControl, roles } from "./permissions";
 import { totpReplayGuard } from "./totp-replay";
 import { singleTenantBoundary } from "./single-tenant";
 
-function sendLink(to: string, subject: string, url: string) {
-  return sendEmail({ to, subject, text: `${subject}: ${url}`, html: `<p>${escapeHtml(subject)}</p><p><a href="${escapeHtml(url)}">Continuar</a></p>` });
+async function sendAuthEmail(to: string, template: AuthEmail) {
+  return sendEmail({ to, ...await renderAuthEmail(template) });
 }
 function createAuth() {
   const env = getIdentityEnv();
@@ -28,13 +28,13 @@ function createAuth() {
       enabled: true,
       requireEmailVerification: true,
       revokeSessionsOnPasswordReset: true,
-      sendResetPassword: ({ user, url }) => sendLink(user.email, "Redefinir senha", url),
+      sendResetPassword: ({ user, url }) => sendAuthEmail(user.email, { type: "reset-password", url }),
     },
     emailVerification: {
       sendOnSignUp: true,
       sendOnSignIn: true,
       autoSignInAfterVerification: false,
-      sendVerificationEmail: ({ user, url }) => sendLink(user.email, "Verificar email", url),
+      sendVerificationEmail: ({ user, url }) => sendAuthEmail(user.email, { type: "verification", url }),
     },
     hooks: {
       before: createAuthMiddleware(async (ctx) => {
@@ -72,13 +72,13 @@ function createAuth() {
           },
         } : {}),
         requireEmailVerificationOnInvitation: true,
-        sendInvitationEmail: ({ email, id, organization }) => sendLink(email, `Convite para ${organization.name}`, `${env.BETTER_AUTH_URL}/invitations/${encodeURIComponent(id)}`),
+        sendInvitationEmail: ({ email, id, organization }) => sendAuthEmail(email, { type: "invitation", organizationName: organization.name, url: `${env.BETTER_AUTH_URL}/invitations/${encodeURIComponent(id)}` }),
       }),
       twoFactor({
         issuer: "Vibe Starter",
         otpOptions: {
           storeOTP: "hashed",
-          sendOTP: ({ user, otp }) => sendEmail({ to: user.email, subject: "Código de autenticação", text: `Seu código: ${otp}`, html: `<p>Seu código: <strong>${escapeHtml(otp)}</strong></p>` }),
+          sendOTP: ({ user, otp }) => sendAuthEmail(user.email, { type: "otp", code: otp }),
         },
       }),
       totpReplayGuard(),

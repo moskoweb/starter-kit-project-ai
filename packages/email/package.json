@@ -4,18 +4,25 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./render": "./src/render.tsx"
   },
   "scripts": {
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "preview": "node --require ./preview-loopback.cjs ./node_modules/react-email/dist/cli/index.mjs dev --dir ./emails --port 3005"
   },
   "dependencies": {
     "nodemailer": "10.5.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "react-email": "6.11.11",
     "server-only": "^0.0.1"
   },
   "devDependencies": {
+    "@react-email/ui": "6.11.11",
     "@types/node": "^22.13.9",
     "@types/nodemailer": "^7.0.0",
+    "@types/react": "^19.0.0",
     "typescript": "5.9.3"
   }
 }

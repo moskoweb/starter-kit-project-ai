@@ -1,0 +1,24 @@
+{
+  "name": "@vibe/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev --host 127.0.0.1 --port 4321",
+    "build": "astro build",
+    "check": "astro check",
+    "check-types": "astro check",
+    "preview": "astro preview --host 127.0.0.1 --port 4321"
+  },
+  "dependencies": {
+    "@vibe/ui": "workspace:*",
+    "astro": "6.4.8",
+    "@astrojs/sitemap": "3.7.4",
+    "@tailwindcss/vite": "4.3.5",
+    "tailwindcss": "4.3.5"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.12",
+    "typescript": "5.9.3"
+  }
+}

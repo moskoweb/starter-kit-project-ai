@@ -29,6 +29,9 @@ jobs:
       MIGRATION_DATABASE_URL: postgres://app_owner:ci-owner@localhost:5432/app
       NEXT_TELEMETRY_DISABLED: 1
       TURBO_TELEMETRY_DISABLED: 1
+      ASTRO_TELEMETRY_DISABLED: 1
+      SITE_URL: https://site.example.test
+      PUBLIC_APP_URL: https://app.example.test
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4

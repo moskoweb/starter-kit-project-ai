@@ -1,0 +1,16 @@
+---
+import SiteLayout from "../../layouts/SiteLayout.astro";
+import { appUrl } from "../../lib/app-url";
+---
+<SiteLayout lang="en" title="Getting started — Vibe Starter Kit" description="Create an independent project and configure its database and email."><article class="prose"><span class="eyebrow">Getting started</span><h1>From starter to your product</h1><p>Use Node.js 22.23.2, pnpm 10.32.1 and PostgreSQL 17. The public website is independent of the database-backed application.</p><h2>Create your project</h2><pre><code>pnpm install --frozen-lockfile
+pnpm exec tsx packages/cli/src/index.ts create ../my-product --profile hybrid
+cd ../my-product
+pnpm install --frozen-lockfile</code></pre><h2>Configure private settings</h2><p>Provision separate migration-owner and restricted runtime database roles. Full SQL and grants are documented in the repository's <code>docs/GETTING-STARTED.md</code>. Never use a superuser or BYPASSRLS role for the application.</p><pre><code>cp .env.example .env.local
+chmod 600 .env.local
+# Edit values and generate BETTER_AUTH_SECRET first.
+set -a; . ./.env.local; set +a
+pnpm db:migrate
+# Apply runtime grants documented in the setup guide.
+pnpm db:seed
+pnpm dev</code></pre><p>Default application port: 3000. <a href={`${appUrl}/signup`}>Create an account</a> requires configured email delivery for verification. <a href={`${appUrl}/login`}>Sign in</a> uses the configured application origin.</p><h2>Public pages and email preview</h2><pre><code>pnpm dev:web
+pnpm dev:email</code></pre><p>Website: port 4321. React Email preview: port 3005, without sending messages.</p><h2>Static deployment</h2><p>Set HTTPS origins in <code>SITE_URL</code> and <code>PUBLIC_APP_URL</code>, then build:</p><pre><code>pnpm --filter @vibe/web build</code></pre><p>Publish <code>apps/web/dist</code> to static hosting. App and worker deployment is documented separately in <code>docs/DEPLOYMENT.md</code>. Public configuration must never contain secrets.</p></article></SiteLayout>

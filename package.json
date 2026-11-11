@@ -8,7 +8,11 @@
   },
   "scripts": {
     "build": "turbo run build",
-    "dev": "turbo run dev",
+    "dev": "pnpm --filter app dev",
+    "dev:web": "pnpm --filter @vibe/web dev",
+    "dev:email": "pnpm --filter @vibe/email preview",
+    "dev:worker": "pnpm --filter @vibe/worker dev ./src/handlers.ts",
+    "dev:relay": "pnpm --filter @vibe/worker relay",
     "check-types": "turbo run check-types",
     "test": "turbo run test",
     "db:generate": "turbo run db:generate",

@@ -22,15 +22,6 @@ function headerValue(name: string, value: string): string {
   return value;
 }
 
-export function escapeHtml(value: string): string {
-  return value.replace(/[&<>"']/g, (character) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;",
-  })[character]!);
-}
 
 export async function sendEmail({ to, subject, html, text }: SendEmailOptions): Promise<void> {
   const recipient = headerValue("recipient", to);

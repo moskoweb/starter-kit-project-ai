@@ -1,0 +1,23 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+import { appUrl } from "../lib/app-url";
+---
+<SiteLayout title="Começar — Vibe Starter Kit" description="Crie uma cópia independente e configure aplicação, banco e email.">
+<article class="prose"><span class="eyebrow">Guia inicial</span><h1>Do starter ao seu produto</h1><p>Node.js 22.23.2, pnpm 10.32.1 e PostgreSQL 17. O site público não precisa de banco; o painel autenticado precisa.</p>
+<h2>Crie um projeto independente</h2><pre><code>pnpm install --frozen-lockfile
+pnpm exec tsx packages/cli/src/index.ts create ../meu-produto --profile hybrid
+cd ../meu-produto
+pnpm install --frozen-lockfile</code></pre>
+<h2>Configure o ambiente privado</h2><p>Copie <code>.env.example</code> para <code>.env.local</code>, restrinja permissões e preencha somente serviços necessários. Provisione banco e roles distintas: owner para migrations, runtime sem superuser ou BYPASSRLS. O guia <code>docs/GETTING-STARTED.md</code> do repositório contém SQL e grants completos.</p><pre><code>cp .env.example .env.local
+chmod 600 .env.local
+# Edite valores e gere BETTER_AUTH_SECRET antes de continuar.
+set -a; . ./.env.local; set +a
+pnpm db:migrate
+# Conceda os grants de runtime descritos no guia.
+pnpm db:seed
+pnpm dev</code></pre>
+<p>Painel usa porta 3000 por padrão. <a href={`${appUrl}/signup`}>Criar conta</a> requer SMTP ou Resend configurado para verificar email; <a href={`${appUrl}/login`}>entrar</a> usa a mesma origem configurada.</p>
+<h2>Site e emails separados</h2><pre><code>pnpm dev:web
+pnpm dev:email</code></pre><p>Site público: porta 4321. Preview React Email: porta 3005, sem envio de mensagens.</p>
+<h2>Publicação estática</h2><p>Defina <code>SITE_URL</code> e <code>PUBLIC_APP_URL</code> como origens HTTPS do produto antes do build. Nenhum segredo pertence às variáveis públicas.</p><pre><code>pnpm --filter @vibe/web build</code></pre><p>Publique <code>apps/web/dist</code> em hospedagem estática. App e worker têm deploy próprio, documentado em <code>docs/DEPLOYMENT.md</code>.</p></article>
+</SiteLayout>

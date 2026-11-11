@@ -1,0 +1,47 @@
+---
+import "../styles/global.css";
+interface Props { title: string; description: string; lang?: "pt-BR" | "en" }
+const { title, description, lang = "pt-BR" } = Astro.props as Props;
+const english = lang === "en";
+const switchPath = english ? (Astro.url.pathname === "/en/" ? "/" : Astro.url.pathname.replace(/^\/en/, "") || "/") : `/en${Astro.url.pathname === "/" ? "/" : Astro.url.pathname}`;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const jsonLd = JSON.stringify({ "@context": "https://schema.org", "@type": "WebSite", name: "Vibe Starter Kit", url: Astro.site?.href }).replace(/</g, "\\u003c");
+---
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <meta name="color-scheme" content="light dark" />
+    <title>{title}</title>
+    <script type="application/ld+json" set:html={jsonLd} />
+  </head>
+  <body>
+    <a class="skip" href="#main">{english ? "Skip to content" : "Pular para conteúdo"}</a>
+    <header><nav class="wrap" aria-label={english ? "Main navigation" : "Navegação principal"}>
+      <a class="brand" href={english ? "/en/" : "/"}>vibe / starter</a>
+      <a href={english ? "/en/getting-started/" : "/getting-started/"}>{english ? "Setup guide" : "Começar"}</a>
+      <a href={switchPath}>{english ? "Português" : "English"}</a>
+      <button type="button" id="theme-toggle" aria-label={english ? "Toggle theme" : "Alternar tema"} aria-pressed="false">{english ? "Theme" : "Tema"}</button>
+    </nav></header>
+    <main id="main" class="wrap"><slot /></main>
+    <footer><div class="wrap"><span>Vibe Starter Kit</span><a href={english ? "/en/getting-started/" : "/getting-started/"}>{english ? "Getting started" : "Documentação inicial"}</a></div></footer>
+    <script>
+      const button = document.querySelector<HTMLButtonElement>("#theme-toggle");
+      const root = document.documentElement;
+      let saved: string | null = null;
+      try { saved = localStorage.getItem("theme"); } catch {}
+      if (saved === "light" || saved === "dark") root.dataset.theme = saved;
+      const update = () => button?.setAttribute("aria-pressed", String(root.dataset.theme === "dark"));
+      update();
+      button?.addEventListener("click", () => {
+        const next = root.dataset.theme === "dark" ? "light" : "dark";
+        root.dataset.theme = next;
+        try { localStorage.setItem("theme", next); } catch {}
+        update();
+      });
+    </script>
+  </body>
+</html>
