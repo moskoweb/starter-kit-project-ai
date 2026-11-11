@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build and output
+.next/
+out/
+build/
+dist/
+.turbo/
+
+*.tsbuildinfo
+next-env.d.ts
+
+# Environment files
+.env*
+!.env.example
+
+# CodeGraph transient files (local database, sockets, daemons)
+.codegraph/
+
+# Logs and debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# System
+.DS_Store
+*.pem

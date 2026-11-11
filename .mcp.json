@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "codegraph": {
+      "command": "codegraph",
+      "args": [
+        "serve",
+        "--mcp",
+        "--path",
+        "."
+      ],
+      "env": {
+        "DO_NOT_TRACK": "1",
+        "CODEGRAPH_TELEMETRY": "0"
+      }
+    }
+  }
+}
