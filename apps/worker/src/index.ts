@@ -37,6 +37,7 @@ export async function startWorker(handlers: JobHandlers, closeConnections: () =>
     await startJobs(boss);
     if (stopping) throw new Error("Worker stopped during startup");
     await registerJobHandlers(boss, handlers);
+    if (stopping) throw new Error("Worker stopped during startup");
     ready = true;
     console.info("worker_ready");
   } catch {

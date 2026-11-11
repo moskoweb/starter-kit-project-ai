@@ -22,8 +22,11 @@ try {
   console.error("RELAY_FAILED");
   process.exitCode = 1;
 } finally {
-  await boss?.stop();
-  await closeConnections();
-  process.removeListener("SIGTERM", shutdown);
-  process.removeListener("SIGINT", shutdown);
+  try {
+    await boss?.stop();
+  } finally {
+    await closeConnections();
+    process.removeListener("SIGTERM", shutdown);
+    process.removeListener("SIGINT", shutdown);
+  }
 }

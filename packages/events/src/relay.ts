@@ -44,10 +44,13 @@ async function main(): Promise<void> {
       if (!count) await setTimeout(1000, undefined, { signal: stop.signal }).catch(() => {});
     }
   } finally {
-    await boss.stop();
-    await closeConnections();
-    process.removeListener("SIGTERM", shutdown);
-    process.removeListener("SIGINT", shutdown);
+    try {
+      await boss.stop();
+    } finally {
+      await closeConnections();
+      process.removeListener("SIGTERM", shutdown);
+      process.removeListener("SIGINT", shutdown);
+    }
   }
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
