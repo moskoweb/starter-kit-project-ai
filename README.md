@@ -136,7 +136,9 @@ Na raiz, Turborepo executa scripts existentes nos workspaces:
 | `pnpm dev:relay` | Inicia relay; exige provisionamento e ambiente próprio |
 | `pnpm build` | Builds dos workspaces com script correspondente |
 | `pnpm check-types` | Checagem TypeScript dos workspaces |
-| `pnpm test` | Testes declarados nos manifests; não é aceite integrado completo |
+| `pnpm test` / `pnpm test:unit` | Suítes unitárias e self-checks de identidade, routing, limiter, validação, email e geração; sem integrações DB |
+| `pnpm test:integration` | Identidade/RLS contra app, Mailpit e banco descartáveis; exige `IDENTITY_TEST_DATABASE=1` |
+| `pnpm test:integration:events` | Concorrência de eventos contra banco/worker provisionados; exige `EVENTS_TEST_INTEGRATION=true` |
 | `pnpm db:generate` | Gera SQL/snapshots e proteções de escopo pendentes; não aplica banco |
 | `pnpm db:migrate` | Aplica migrations com credencial DDL |
 | `pnpm db:seed` | Insere `app_name` se ausente, sem sobrescrever customizações |
@@ -188,6 +190,8 @@ pnpm --filter @vibe/worker relay
 
 [`Dockerfile`](Dockerfile) tem targets `app` e `worker`; [`compose.example.yml`](compose.example.yml) é exemplo com perfil `jobs` para worker/relay, não infraestrutura pronta. TLS, rede, backups/restauração, supervisão, limites de recursos, secret manager e validação real dos containers são responsabilidades do deploy. [Guia de deployment e gates](docs/DEPLOYMENT.md).
 
+Compose usa arquivos runtime separados `.env.app.runtime` e `.env.worker.runtime`: nunca inclua credenciais de migrations/provisionamento nesses arquivos. `.env` serve somente para interpolação do deploy. Configuração pública de analytics e origem S3 para CSP são argumentos de build; alterações exigem recompilar imagem. pnpm autoriza scripts nativos somente de `esbuild` e `sharp`; novas exceções exigem revisão.
+
 ## Site público Astro
 
 `apps/web` é frontend público estático separado do Next.js: landing page `/`, guia público `/getting-started`, versões inglesas `/en` e `/en/getting-started`, além de páginas de erro 404. Compartilha tokens visuais de `@vibe/ui`, não sessão nem conexão de banco. Não substitui painéis autenticados e não é servidor de autenticação.
@@ -226,7 +230,7 @@ O kit entrega código e fluxos de exemplo, não certificação de segurança, op
 - Exercitar storage, IA, webhooks, email e observabilidade com credenciais do projeto quando habilitados; ausência de credenciais é gate não executado, não aprovado.
 - Validar container, CI, worker/relay, retry/idempotência, revogação de permissão, backup/restauração e configuração de produção separadamente.
 
-`pnpm test` não inclui todos os self-checks e testes de integração presentes no repositório. Não há prova universal de produção nem autorização irrestrita para superadmin. Algumas notas técnicas de implementação registram estados anteriores; para aceite use código atual e evidência observada, não frases históricas de conclusão.
+`pnpm test` inclui os self-checks unitários canônicos, não os gates de integração opt-in. Os scripts de integração recusam execução sem habilitação explícita; skips não são aceite. Não há prova universal de produção nem autorização irrestrita para superadmin. Algumas notas técnicas de implementação registram estados anteriores; para aceite use código atual e evidência observada, não frases históricas de conclusão.
 
 ## Documentação
 

@@ -10,3 +10,7 @@ node_modules
 .env.*
 !.env.example
 coverage
+.planning
+.codegraph
+**/.astro
+.vibe-cli.lock

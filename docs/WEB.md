@@ -19,3 +19,5 @@ pnpm --filter @vibe/web preview
 ```
 
 Development and preview bind to loopback port 4321. `check` and `check-types` run `astro check`. The site uses Tailwind CSS 4's Vite plugin and shared `@vibe/ui/theme.css` tokens; it does not render the React dashboard.
+
+Home and setup pages share the same validated app origin. Sitemap excludes both localized and root 404 routes; generated Astro metadata is ignored and excluded from derived projects.

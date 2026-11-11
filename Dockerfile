@@ -12,6 +12,10 @@ RUN pnpm install --frozen-lockfile
 
 FROM deps AS builder
 COPY . .
+ARG NEXT_PUBLIC_ANALYTICS_ENABLED=false
+ARG NEXT_PUBLIC_POSTHOG_KEY
+ARG NEXT_PUBLIC_POSTHOG_HOST
+ARG S3_PUBLIC_UPLOAD_ORIGIN
 RUN pnpm --filter app build
 
 FROM node:22.23.2-bookworm-slim AS app

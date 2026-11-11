@@ -18,6 +18,6 @@ try {
 export default defineConfig({
   output: "static",
   site: siteUrl,
-  integrations: [sitemap({ filter: (page) => !/\/en?\/404\/?$/.test(new URL(page).pathname) })],
+  integrations: [sitemap({ filter: (page) => !/(?:^|\/)404\/?$/.test(new URL(page).pathname) })],
   vite: { plugins: [tailwindcss()] },
 });

@@ -68,9 +68,10 @@ export async function runPanel(argv: string[]) {
   const reserved = [...reservedBlock[1].matchAll(/["']([^"']+)["']/g)].map(match => `/${match[1]}`);
   if (ids.includes(id) || [...prefixes, ...reserved].some(value => value === prefix || value.startsWith(`${prefix}/`) || prefix.startsWith(`${value}/`))) throw new Error("Panel id or prefix conflicts with existing routes");
   const configFile = `apps/app/src/lib/panels/${id}.config.ts`;
+  const symbol = `panel_${id.replace(/-/g, "$")}`;
   const changes: Change[] = [
-    { file: configFile, before: null, after: `import type { PanelConfig } from "./registry";\nexport const ${id.replace(/[-_]([a-z])/g, (_, letter: string) => letter.toUpperCase())}Panel = { id: ${JSON.stringify(id)}, label: ${JSON.stringify(id)}, prefix: ${JSON.stringify(prefix)}, context: ${JSON.stringify(context)}${context === "organization" ? `, tenantIdentifier: ${JSON.stringify(values.identifier)}` : ""} } satisfies PanelConfig;\n` },
-    { file, before, after: `import { ${id.replace(/[-_]([a-z])/g, (_, letter: string) => letter.toUpperCase())}Panel } from "./${id}.config";\n${before.replace(marker, `${marker}\n  ${id.replace(/[-_]([a-z])/g, (_, letter: string) => letter.toUpperCase())}Panel,`)}` },
+    { file: configFile, before: null, after: `import type { PanelConfig } from "./registry";\nexport const ${symbol} = { id: ${JSON.stringify(id)}, label: ${JSON.stringify(id)}, prefix: ${JSON.stringify(prefix)}, context: ${JSON.stringify(context)}${context === "organization" ? `, tenantIdentifier: ${JSON.stringify(values.identifier)}` : ""} } satisfies PanelConfig;\n` },
+    { file, before, after: `import { ${symbol} } from "./${id}.config";\n${before.replace(marker, `${marker}\n  ${symbol},`)}` },
   ];
   await commitChanges(changes, !!values.preview); reportChanges(changes, values.json, values.preview);
 }

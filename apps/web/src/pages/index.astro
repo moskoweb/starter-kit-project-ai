@@ -1,6 +1,6 @@
 ---
 import SiteLayout from "../layouts/SiteLayout.astro";
-const appUrl = import.meta.env.PUBLIC_APP_URL || "http://localhost:3001";
+import { appUrl } from "../lib/app-url";
 ---
 <SiteLayout title="Vibe Starter Kit — base real para seu próximo app" description="Starter TypeScript com painel Next.js, autenticação, organizações, recursos, arquivos e webhooks. Código real, sem promessa de demonstração.">
   <section class="hero">

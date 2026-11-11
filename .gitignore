@@ -9,6 +9,7 @@ out/
 build/
 dist/
 .turbo/
+.astro/
 
 *.tsbuildinfo
 next-env.d.ts

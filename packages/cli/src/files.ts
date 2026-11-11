@@ -1,4 +1,4 @@
-import { lstat, mkdir, readdir, readFile, rm, writeFile, rename } from "node:fs/promises";
+import { lstat, mkdir, mkdtemp, readdir, readFile, rm, writeFile, rename } from "node:fs/promises";
 import path from "node:path";
 
 export async function snapshotFiles(directory: string): Promise<Map<string, Buffer | null>> {
@@ -49,14 +49,14 @@ export async function assertSafeDestination(destination: string) {
   return target;
 }
 
-const excluded = new Set([".git", ".planning", "node_modules", ".next", ".turbo", "dist", ".codegraph", ".env", "DEVELOPMENT.md", "AGENT-BOOTSTRAP.md"]);
+const excluded: Record<string, true> = { ".git": true, ".planning": true, "node_modules": true, ".next": true, ".astro": true, ".turbo": true, "dist": true, ".codegraph": true, ".vibe-cli.lock": true, ".mcp.json": true, ".env": true, "DEVELOPMENT.md": true, "AGENT-BOOTSTRAP.md": true };
 export async function copyTemplate(source: string, destination: string, profile: Profile) {
   const root = path.resolve(source);
   async function visit(from: string, to: string) {
     await mkdir(to, { recursive: true });
     for (const entry of await readdir(from, { withFileTypes: true })) {
       if (from === root && entry.name === "AGENTS.md") continue;
-      if (excluded.has(entry.name) || (entry.name.startsWith(".env") && entry.name !== ".env.example") || entry.name.endsWith(".tsbuildinfo")) continue;
+      if (Object.hasOwn(excluded, entry.name) || (entry.name.startsWith(".env") && entry.name !== ".env.example") || entry.name.endsWith(".tsbuildinfo")) continue;
       const src = path.join(from, entry.name), dest = path.join(to, entry.name);
       if (src === path.resolve(destination) || path.resolve(src).startsWith(path.resolve(destination) + path.sep)) continue;
       if (entry.isSymbolicLink()) continue;
@@ -74,9 +74,8 @@ export async function copyTemplate(source: string, destination: string, profile:
 }
 
 export async function withStaging<T>(target: string, work: (stage: string) => Promise<T>): Promise<T> {
-  const stage = `${target}.tmp-${process.pid}-${Date.now()}`;
+  const stage = await mkdtemp(`${target}.tmp-`);
   try {
-    await mkdir(stage, { recursive: false });
     const result = await work(stage);
     await rename(stage, target);
     return result;

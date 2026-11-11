@@ -20,13 +20,18 @@ services:
     build:
       context: .
       target: app
+      args:
+        NEXT_PUBLIC_ANALYTICS_ENABLED: ${NEXT_PUBLIC_ANALYTICS_ENABLED:-false}
+        NEXT_PUBLIC_POSTHOG_KEY: ${NEXT_PUBLIC_POSTHOG_KEY:-}
+        NEXT_PUBLIC_POSTHOG_HOST: ${NEXT_PUBLIC_POSTHOG_HOST:-}
+        S3_PUBLIC_UPLOAD_ORIGIN: ${S3_PUBLIC_UPLOAD_ORIGIN:-}
     environment:
       NODE_ENV: production
       PORT: 3000
       DATABASE_URL: ${DATABASE_URL:?Provision a non-owner application role first}
     env_file:
-      - path: .env
-        required: false
+      - path: .env.app.runtime
+        required: true
     ports:
       - "127.0.0.1:3000:3000"
     depends_on:
@@ -46,10 +51,10 @@ services:
       target: worker
     environment:
       JOBS_ENABLED: "true"
-      DATABASE_URL: ${WORKER_DATABASE_URL:?Provision a restricted worker role first}
-      WORKER_DATABASE_URL: ${WORKER_DATABASE_URL:?Provision a restricted worker role first}
+      DATABASE_URL: ${WORKER_DATABASE_URL:-}
+      WORKER_DATABASE_URL: ${WORKER_DATABASE_URL:-}
     env_file:
-      - path: .env
+      - path: .env.worker.runtime
         required: false
     depends_on:
       postgres:
@@ -63,10 +68,10 @@ services:
     command: ["pnpm", "--filter", "@vibe/worker", "relay"]
     environment:
       JOBS_ENABLED: "true"
-      DATABASE_URL: ${WORKER_DATABASE_URL:?Provision a restricted worker role first}
-      WORKER_DATABASE_URL: ${WORKER_DATABASE_URL:?Provision a restricted worker role first}
+      DATABASE_URL: ${WORKER_DATABASE_URL:-}
+      WORKER_DATABASE_URL: ${WORKER_DATABASE_URL:-}
     env_file:
-      - path: .env
+      - path: .env.worker.runtime
         required: false
     depends_on:
       postgres:

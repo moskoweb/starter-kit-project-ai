@@ -9,3 +9,5 @@ Run local CLI through `pnpm exec tsx packages/cli/src/index.ts`.
 Resource e painel: ver [CLI-RESOURCES.md](CLI-RESOURCES.md). Geração de projeto foi exercitada em diretório externo, com banco separado, autenticação e CRUD gerado. Preview e conflito de repetição também foram exercitados. Não há sincronização automática com o kit.
 
 Configuração real é fornecida somente no projeto derivado. `.env.example` é preservado; `.env`, histórico `.planning`, caches e dependências instaladas não são copiados. Atualizações do kit exigem migração revisada manualmente.
+
+Create also excludes Astro generated metadata, CLI lock directories and machine-local `.mcp.json`. Staging directories use exclusive random names; failed work removes only its own staging directory. Panel IDs containing hyphens before digits remain supported and generate valid, distinct TypeScript symbols.

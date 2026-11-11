@@ -14,7 +14,10 @@
     "dev:worker": "pnpm --filter @vibe/worker dev ./src/handlers.ts",
     "dev:relay": "pnpm --filter @vibe/worker relay",
     "check-types": "turbo run check-types",
-    "test": "turbo run test",
+    "test": "pnpm test:unit",
+    "test:unit": "turbo run test --filter=!@vibe/events && tsx --conditions=react-server --test tests/identity/config.test.ts apps/app/src/lib/panels/routing.test.ts apps/app/src/lib/security/rate-limit.test.ts apps/app/src/lib/resources/validation.test.ts && tsx packages/email/src/render.check.ts && tsx packages/cli/src/generation.check.ts",
+    "test:integration": "node -e \"if(process.env.IDENTITY_TEST_DATABASE!=='1'||process.env.NODE_ENV==='production')throw new Error('Set IDENTITY_TEST_DATABASE=1 with disposable app, database and Mailpit; production is forbidden')\" && tsx --conditions=react-server --test tests/identity/tenant-rls.test.ts tests/identity/auth.test.ts tests/identity/organization.test.ts tests/identity/totp-replay.test.ts",
+    "test:integration:events": "node -e \"if(process.env.EVENTS_TEST_INTEGRATION!=='true')throw new Error('Set EVENTS_TEST_INTEGRATION=true with disposable provisioned PostgreSQL and restricted worker')\" && pnpm --filter @vibe/events test",
     "db:generate": "turbo run db:generate",
     "db:migrate": "turbo run db:migrate",
     "db:seed": "turbo run db:seed"
