@@ -1,6 +1,6 @@
 # Starter kit — visão e plano de construção
 
-Status: planejamento; implementação não autorizada nesta etapa.
+Status: implementação autônoma autorizada, fechamento do produto e validação local em andamento; provedores externos adiados pelo usuário.
 Atualizado em: 2026-11-11.
 
 ## 1. Objetivo
@@ -8,6 +8,8 @@ Atualizado em: 2026-11-11.
 Criar starter kit próprio para SaaS, aplicações e microaplicações em Next.js, desenvolvidas com agentes de IA e preparadas para incorporar IA no produto. Centralizar e replicar ambiente, padrões, componentes, ferramentas e documentação hoje usados pelo responsável, reduzindo setup repetitivo.
 
 Filament é referência de experiência e capacidades, não dependência, nome interno ou modelo a copiar literalmente. Reaproveitar bibliotecas e projetos existentes antes de construir alternativas próprias. Suportar projetos pequenos sem exigir infraestrutura de projetos grandes.
+
+Ampliação aprovada: aplicação pública independente em `apps/web`, com Astro estático como escolha técnica para marketing/páginas públicas; painel continua Next.js. Não exige CMS/blog. `packages/email` deve incluir templates React Email para verificação, recuperação, convites e OTP, mantendo transporte SMTP/Resend separado. README e guia inicial devem explicar todos workspaces e fluxo completo de criação/execução/deploy.
 
 ## 2. Decisões confirmadas
 

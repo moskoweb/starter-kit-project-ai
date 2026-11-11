@@ -144,3 +144,12 @@ CMS/blog dedicado; cobrança obrigatória; RAG obrigatório; domínio próprio/s
 | SHIP-04 | 8 | Pendente |
 
 Cobertura planejada: 51 requisitos, 51 mapeados, zero sem fase. Conclusão exige comportamento verificado, não apenas arquivos gerados.
+
+## Ampliação de fechamento: páginas públicas e emails
+
+- [ ] **WEB-01**: `apps/web` inicia e gera site público estático independente do Next.js, sem conexão obrigatória com banco/auth.
+- [ ] **WEB-02**: Home e guia inicial públicos têm navegação acessível/mobile, links configurados para aplicação, metadata/canonical/sitemap/robots e conteúdo sem alegações fictícias.
+- [ ] **EMAIL-02**: Templates React Email de verificação, reset, convite e OTP renderizam HTML e texto, são usados pelos hooks de auth e têm preview sem envio real.
+- [ ] **DOC-01**: README cobre todos workspaces, comandos reais, perfis, configuração, geração, testes e deploy; início rápido reproduzível fora deste checkout.
+
+Esses quatro requisitos integram fechamento das fases 2 e 8; total ampliado:55. Percentual de conclusão só deve ser apresentado como estimativa enquanto rastreabilidade não for reconciliada por evidências. Provas externas continuam adiadas, não concluídas.

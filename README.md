@@ -1,125 +1,240 @@
 # Vibe Starter Kit
 
-Monorepo com Turborepo, Next.js 16, TypeScript 5.9.3, PostgreSQL 17 e Drizzle ORM.
+**Base independente para criar produtos com IA — e produtos que usam IA.**
 
-## Workspaces
+Um monorepo TypeScript com aplicação autenticada, PostgreSQL, painéis e ferramentas de geração. O objetivo tem duas frentes:
 
-```text
-apps/app          Next.js 16 (App Router, Server Components, /api/health)
-packages/config   tsconfig base e validação Zod das variáveis de ambiente ativas
-packages/db       Drizzle, schema app_settings, migrations, seed e client (entrypoint server-only)
-packages/ui       Tokens CSS e primitivas de layout sem dependência de banco
-```
+1. **Desenvolvimento assistido por IA:** código local legível, contratos de autorização, CLI para projetos/models/resources/painéis, `AGENTS.md` e skills revisáveis. O agente trabalha no seu projeto, não em uma plataforma proprietária.
+2. **IA dentro do produto:** integração opcional com provedor OpenAI-compatible, streaming e ferramentas com autorização no servidor. Não é necessária para usar autenticação, painéis ou CRUD.
 
-## Pré-requisitos
+O projeto criado recebe seu próprio código. Não depende de um serviço central do kit e não recebe atualizações automáticas. Não é um CMS, ORM próprio nem garantia universal de produção.
 
-- Node.js >= 22.23.0 e pnpm 10.32.1
-- PostgreSQL 17 externo (ex.: 127.0.0.1:5432) com database `vibe_starter` já criado
+[Começar](docs/GETTING-STARTED.md) · [CLI](docs/CLI.md) · [Resources](docs/CLI-RESOURCES.md) · [Deploy](docs/DEPLOYMENT.md) · [Aceite](docs/ACCEPTANCE.md)
 
-## Banco de dados externo
+## O que está no código
 
-O template não cria banco nem roles (sem `db:create`). Provisione fora do repositório duas roles `NOSUPERUSER NOCREATEDB NOCREATEROLE`:
+- **Aplicação Next.js 16 / React 19:** App Router, Server Components, formulários, estados vazios/erro, navegação responsiva e `/api/health` com verificação do banco.
+- **Identidade Better Auth:** cadastro, verificação de email, login/logout, recuperação, TOTP, email OTP, códigos de recuperação, organizações, convites e membros. Administrador global é provisionado explicitamente; não há conta ou senha padrão.
+- **Domínio de exemplo real:** projetos e tarefas com CRUD, paginação, filtros, relações e autorização no servidor. PostgreSQL RLS e triggers protegem escopo pessoal/organizacional; UUID e prefixo de URL não concedem acesso.
+- **Painéis configuráveis:** administração global, contexto pessoal e organização, sem transformar contexto pessoal em organização fictícia. Admin global mostra contagens administrativas, não acesso irrestrito aos projetos de todos.
+- **UI local:** Tailwind v4, tokens, componentes adaptados de shadcn/ui, Radix, TanStack Table, React Hook Form, Zod e Recharts. Temas claro/escuro e locale `pt-BR`/`en`.
+- **Geração revisável:** CLI cria cópia independente, models Drizzle com RLS, recursos CRUD e registro de painéis; preview e recusa de sobrescrita.
+- **Integrações opt-in:** SMTP/Resend, armazenamento S3-compatible privado, IA, jobs pg-boss, notificações internas, webhooks, analytics com consentimento e exportação sanitizada de logs.
 
-- `vibe_starter_owner`: DDL/migrations. Usa `MIGRATION_DATABASE_URL` (obrigatória, sem fallback para `DATABASE_URL`).
-- `vibe_starter_app`: DML do runtime e seed. Usa `DATABASE_URL`. Precisa de `SELECT/INSERT/UPDATE/DELETE` nas tabelas do schema `public` (grant após cada migration ou `ALTER DEFAULT PRIVILEGES` da owner).
+**Implementação não é aceite.** Instalação, migrations, grants, build, execução de containers, isolamento entre usuários/organizações e serviços externos precisam ser verificados no ambiente do projeto. Os comandos abaixo são instruções, não afirmação de execução nesta revisão documental. Consulte [limites e gates](#limites-e-verificação).
 
-## Variáveis de ambiente
+## Estrutura do monorepo
 
-Nenhum `.env` é carregado pelos scripts de `@vibe/db`. Injete as variáveis no shell, com `.env.example` como referência e o arquivo real fora do repositório:
+Nomes e scripts abaixo correspondem aos manifests dos workspaces; todos são privados. Pacotes locais não são serviços separados.
 
-```bash
-set -a; . /caminho/externo/development.env; set +a
-```
+| Caminho | Nome no manifest | Responsabilidade | Scripts do workspace |
+| --- | --- | --- | --- |
+| `apps/app` | `app` | Aplicação Next.js autenticada, APIs e painéis | `dev`, `build`, `start`, `check-types` |
+| `apps/web` | `@vibe/web` | Site público Astro estático, separado da aplicação autenticada | `dev`, `build`, `check`, `check-types`, `preview` |
+| `apps/worker` | `@vibe/worker` | Consumidor de jobs e relay supervisionados | `dev`, `build`, `start`, `relay`, `check-types` |
+| `packages/config` | `@vibe/config` | Ambiente validado com Zod e tsconfig compartilhado | `check-types`, `test` |
+| `packages/db` | `@vibe/db` | Schema Drizzle, client, RLS, migrations e seed | `check-types`, `db:generate`, `db:migrate`, `db:seed`, `db:rate-limit-cleanup` |
+| `packages/ui` | `@vibe/ui` | Primitivas e composição visual sem banco/autenticação | `check-types` |
+| `packages/auth` | `@vibe/auth` | Better Auth, sessão, permissões e resolução de tenant | `check-types`, `seed:admin` |
+| `packages/email` | `@vibe/email` | Templates React Email, render puro e transporte SMTP/Resend | `check-types`, `preview` |
+| `packages/storage` | `@vibe/storage` | S3-compatible e validação de upload | `check-types`, `test` |
+| `packages/jobs` | `@vibe/jobs` | Fila pg-boss e provisionamento separado | `check-types`, `test`, `provision` |
+| `packages/ai` | `@vibe/ai` | Provedor OpenAI-compatible server-only | `check-types`, `test` |
+| `packages/events` | `@vibe/events` | Outbox, notificações e relay | `check-types`, `test`, `relay`, `provision` |
+| `packages/webhooks` | `@vibe/webhooks` | Recepção assinada, entrega e provisionamento | `check-types`, `test`, `provision` |
+| `packages/observability` | `@vibe/observability` | Logs estruturados e exportação opcional | `check-types` |
+| `packages/cli` | `@vibe/cli` | Executável local `vibe` | `build`, `check-types` |
 
-- `DATABASE_URL`: URL `postgres:`/`postgresql:` da role de runtime
-- `MIGRATION_DATABASE_URL`: URL `postgres:`/`postgresql:` da role owner
-- `PORT`: somente dígitos, 1-65535 (padrão 3000)
-- `NODE_ENV`: `development`, `test` ou `production`
+## Quickstart: seu próprio projeto
 
-O Next.js carrega `.env*` de `apps/app` por conta própria; prefira a injeção explícita única.
+Pré-requisitos: **Node.js >=22.23.0**, **pnpm 10.32.1** (versão fixada em `packageManager`), PostgreSQL 17 e acesso de operador para criar banco/roles. Docker é opcional; não substitui provisionamento e grants.
 
-## Comandos
-
-```bash
-pnpm install                              # gera/respeita pnpm-lock.yaml
-pnpm install --frozen-lockfile            # CI
-pnpm --filter @vibe/db db:generate        # gera SQL a partir do schema (exige MIGRATION_DATABASE_URL)
-pnpm --filter @vibe/db db:migrate         # aplica migrations com a role owner
-pnpm --filter @vibe/db db:seed            # insere app_name se ausente; não sobrescreve customizações
-pnpm dev                                  # Next.js em 127.0.0.1:$PORT (padrão 3000)
-pnpm check-types                          # tsc --noEmit em todos os pacotes
-pnpm test                                 # testes node:test de limites de env
-pnpm build
-```
-
-Health check:
+A CLI não está publicada como pacote público. A partir de um checkout do kit:
 
 ```bash
-curl -s http://127.0.0.1:3000/api/health
+pnpm install
+pnpm exec tsx packages/cli/src/index.ts create ../meu-produto --profile hybrid --preview --json
+pnpm exec tsx packages/cli/src/index.ts create ../meu-produto --profile hybrid --noninteractive
+cd ../meu-produto
+pnpm install
 ```
 
-- 200: `{"status":"ok","db":"connected","latencyMs":N}`
-- 503: `{"status":"error","db":"unreachable"}` (payload fixo, sem detalhes do driver). Limite de 3s para a query; `statement_timeout` e `query_timeout` no client cobrem consultas fora do health.
+O destino deve não existir, ficar fora do template e ter diretório pai existente. A cópia exclui credenciais `.env*` (exceto `.env.example`), dependências, caches, `.git`, `.planning` e índice CodeGraph; gera `AGENTS.md` portátil e grava perfil no exemplo de ambiente. Não copia o ambiente de preparação. Inicie histórico Git próprio se desejar.
 
-## Guias e aceite
-
-- [Localização, temas e limites](docs/I18N.md)
-- [CLI e comandos disponíveis](docs/CLI.md)
-- [Deploy e gates externos](docs/DEPLOYMENT.md)
-- [Roteiro de aceite integrado](docs/ACCEPTANCE.md) — roteiro a executar; não representa testes concluídos.
-
-`pnpm test` executa testes disponíveis no workspace, não aceite integrado. Build, container, workflows externos e integrações sem credenciais próprias permanecem gates separados; consulte os guias antes de declarar conclusão.
-## Limites da Fase 1
-
-- Lint (ESLint) não configurado: `next lint` não existe no Next.js 16.
-- `app_settings` usa chave textual (`varchar(64)`) deliberadamente por ser configuração interna; UUID para entidades de domínio entra na Fase 2.
-- Identidade da Fase 2 está implementada separadamente; não implica conclusão/verificação da fundação.
-- `@vibe/db` (entrypoint) importa `server-only`: importar em componente `'use client'` quebra o build. Scripts CLI usam módulos sem `server-only`.
-- `start` não fixa hostname; defina-o no ambiente de deploy quando necessário.
-
-## Identidade
-
-`@vibe/auth` integra Better Auth 1.7.20 com adapter Drizzle e plugins admin, organization e twoFactor. Schema auth foi gerado/conferido pela CLI instalada; tabelas auth não usam RLS. `user.role` administra privilégio global; `member.role` governa somente organização. Cadastro rejeita campos privilegiados. Verificação de email é obrigatória antes login.
-
-Configure `BETTER_AUTH_URL` e segredo próprio `BETTER_AUTH_SECRET` (mínimo 32 caracteres). Perfil `IDENTITY_PROFILE=personal|organizations|hybrid`: pessoal não exige organização, organizations exige contexto organizacional para operações de domínio, híbrido permite ambos. Variáveis de identidade são validadas somente ao usar módulo. Template entrega apenas `.env.example`, sem conta ou arquivo de credenciais real. Alterar ambiente requer reiniciar processo de desenvolvimento.
-
-Email usa `@vibe/email`, provedor explícito `EMAIL_PROVIDER=smtp|resend`, `EMAIL_FROM` e configuração correspondente no exemplo. SMTP local pode usar Mailpit em `127.0.0.1:11025`, sem conta/autenticação. Resend exige chave somente se selecionado. Falha não tenta outro provedor. Smoke externo Resend depende de credenciais do projeto e não foi executado.
-
-`withAuthorizedProjects(headers, tenantIdentifier|null, action, callback)` deriva usuário da sessão autoritativa, resolve organização por UUID/slug com membership e verifica permissão no servidor. Callback recebe apenas transação autorizada. `withTenantTransaction` é primitiva interna servidor: usuário deve vir de sessão, nunca do cliente. Membership é bloqueada/revalidada dentro transação e GUCs são locais. Use somente `tx` no callback, nunca client global. Superadmin não recebe bypass de domínio. `projects/tasks` possuem FORCE RLS para isolamento pessoal/organizacional; permissões de operação têm fonte única `packages/auth/src/permissions.ts`. Credencial SQL de runtime não é fronteira contra atacante com acesso SQL arbitrário, que poderia forjar GUCs; nunca expor conexão/query livre. Triggers/grants custom de migrations precisam ser preservados em futuras alterações Drizzle.
-
-Relação tarefa/projeto: organização deve coincidir (comparação null-safe). Em contexto pessoal, dono também deve coincidir. Em organização, membro autorizado pode criar tarefa em projeto de outro membro; `task.ownerUserId` é usuário criador, não dono do projeto. Migration `0004_task_scope` corrige essa regra sem modificar migrations anteriores; RLS continua exigindo membership e autoria da inserção.
-
-`totpReplayGuard` mantém somente último timestep aceito por usuário em `totp_replay`, com compare-and-set atômico. Mantém verificação criptográfica da biblioteca e janela nativa de ±1 timestep (30 segundos); passo já consumido ou anterior é negado também em desafios independentes/concorrentes. Falha posterior do endpoint não libera passo consumido (fail-closed); usuário aguarda próximo código ou usa recuperação. Reativar TOTP com novo segredo também não reutiliza timestep já consumido nesse usuário. Nunca persistir códigos ou segredo nesse guard.
-
-Role runtime deve ser `NOSUPERUSER NOBYPASSRLS`, sem propriedade das tabelas. Policies `TO public` não concedem privilégios SQL. Após migration, owner do banco concede para role runtime escolhida (substitua `your_runtime_role`, identificador administrado, nunca entrada HTTP):
-
-```sql
-GRANT SELECT, INSERT, UPDATE, DELETE ON public."user", public.session, public.account, public.verification, public.organization, public.member, public.invitation, public.two_factor TO your_runtime_role;
-GRANT SELECT, INSERT, DELETE ON public.projects, public.tasks TO your_runtime_role;
-GRANT UPDATE (name, description, updated_at) ON public.projects TO your_runtime_role;
-GRANT UPDATE (project_id, title, updated_at) ON public.tasks TO your_runtime_role;
-GRANT EXECUTE ON FUNCTION public.identity_scope_immutable(), public.task_project_scope() TO your_runtime_role;
-GRANT SELECT, INSERT, UPDATE ON public.totp_replay TO your_runtime_role;
-```
-
-Provisionamento global explícito, sem senha em argumentos/logs/histórico:
-
-```bash
-export ADMIN_EMAIL=admin@example.test ADMIN_NAME='Admin'
-read -rs -p 'Senha: ' ADMIN_INPUT; printf '\n'
-printf '%s\n' "$ADMIN_INPUT" | pnpm --filter @vibe/auth seed:admin
-unset ADMIN_INPUT
-```
-
-Comandos de prova integrada, **não executados nesta implementação**; use DB de teste dedicado e ambiente injetado externamente, nunca produção:
+Em seguida, siga [GETTING-STARTED](docs/GETTING-STARTED.md): provisionar roles, configurar ambiente, aplicar migrations, conceder grants, executar seed, provisionar admin e entrar. Resumo **após** esses preparativos:
 
 ```bash
 pnpm --filter @vibe/db db:migrate
-# Runtime role precisa grants do contrato banco acima após migration.
-pnpm check-types
-IDENTITY_TEST_DATABASE=1 IDENTITY_TEST_BASE_URL=http://127.0.0.1:3001 pnpm exec tsx --conditions=react-server --test --test-concurrency=1 tests/identity/*.test.ts
-curl -s http://127.0.0.1:3001/api/auth/ok
-curl -s http://127.0.0.1:18025/api/v1/messages
+# Aplicar grants de runtime descritos no guia antes do seed.
+pnpm --filter @vibe/db db:seed
+pnpm --filter app dev
 ```
 
-Testes criam emails/UUIDs próprios e removem somente fixtures próprias; não limpam inbox Mailpit. Inspeção UI deve cobrir cadastro, verificação, login/logout, recuperação, TOTP, email OTP, backup codes e gestão de organizações/convites/membros, incluindo erros e navegação por teclado. Aplicar migrations e executar provas são operações separadas; implementação não afirma aceite de fase nem conclusão de build de produção.
+Abra `http://127.0.0.1:3000/login`. Sem admin provisionado, use `/signup` e conclua verificação de email no SMTP configurado. Não há credenciais de demonstração.
+
+## Banco, ambiente e segredos
+
+[`.env.example`](.env.example) é referência, não arquivo de credenciais utilizáveis. Substitua `change_me`, gere segredo próprio (`openssl rand -base64 32`) e mantenha arquivo real ignorado pelo Git ou use secret manager.
+
+- `DATABASE_URL`: role runtime DML, `NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE`, sem propriedade de tabelas e sem herdar owner.
+- `MIGRATION_DATABASE_URL`: role DDL separada, proprietária dos objetos do projeto; obrigatória para aplicar migrations, sem fallback para runtime. Não disponibilize no processo web.
+- `BETTER_AUTH_URL`: origem real da aplicação, coerente com porta e hostname usados no navegador. `BETTER_AUTH_SECRET`: mínimo de 32 caracteres.
+- Scripts de banco/CLI não carregam `.env` automaticamente. Injete configuração no processo; Next carrega seus próprios `.env*` em `apps/app`, mas isso não configura outros workspaces. [Guia](docs/GETTING-STARTED.md#3-configurar-ambiente) mostra injeção única.
+- Flags opcionais ficam desligadas por padrão. Não exponha segredos em `NEXT_PUBLIC_*`, código client, imagens Docker, logs ou argumentos de geração.
+
+Não existe `db:create`. As migrations não concedem automaticamente privilégios à role de runtime escolhida pelo operador. RLS não substitui grants SQL nem protege contra atacante com acesso SQL arbitrário às credenciais do servidor.
+
+## Perfis e topologia
+
+| Configuração | Comportamento |
+| --- | --- |
+| `IDENTITY_PROFILE=personal` | Dados pessoais; fluxos organizacionais desabilitados |
+| `IDENTITY_PROFILE=organizations` | Operações de domínio exigem organização e membership |
+| `IDENTITY_PROFILE=hybrid` | Contextos pessoal e organizacional reais, separados |
+| `ORGANIZATION_MODE=multi` | Organizações múltiplas; padrão |
+| `ORGANIZATION_MODE=single` | Somente organização existente em `SINGLE_ORGANIZATION_ID`; não cria organização/membership no startup |
+
+Perfil e topologia são independentes. Em `single`, provisione primeiro organização e proprietário numa etapa controlada em `multi`, configure UUID e reinicie. Não é “uma organização por usuário”. [Contrato completo e fronteira das APIs](docs/SINGLE-TENANT.md).
+Papéis organizacionais entregues são `owner`, `admin`, `member` e `viewer`, definidos em `packages/auth/src/permissions.ts`. No domínio de exemplo, owner/admin têm CRUD, member não exclui e viewer só lê. Papéis são extensíveis no código; não há editor genérico de permissões dinâmicas habilitado por padrão. Papel global de usuário é separado de papel de membership.
+
+
+## Painéis, resources e temas
+
+Registro canônico: [`apps/app/src/lib/panels/registry.ts`](apps/app/src/lib/panels/registry.ts).
+
+| Painel | Prefixo padrão | Contexto |
+| --- | --- | --- |
+| `admin` | `/admin` | Admin global |
+| `personal` | `/app` | Usuário autenticado; exemplos `/app/projects`, `/app/tasks` |
+| `organization` | `/org` | Membership; exemplo `/org/minha-equipe/projects` |
+
+Painel organizacional declara `tenantIdentifier: "slug" | "uuid"`; padrão é slug. Trocar para UUID muda identificador da URL, não autorização. IDs/prefixos precisam ser únicos, não sobrepostos e não podem colidir com rotas reservadas. Use `buildPanelPath` em vez de concatenar caminhos. [Integração real](docs/PANEL-INTEGRATION.md) · [Shell](docs/PANEL-SHELL.md).
+
+**Model é schema Drizzle; resource compõe interface e operações.** Não há segunda camada ORM. Para trabalhar na CLI sem compilar:
+
+```bash
+pnpm exec tsx packages/cli/src/index.ts doctor
+pnpm exec tsx packages/cli/src/index.ts panel sales --context organization --prefix /sales --preview --json
+pnpm exec tsx packages/cli/src/index.ts model Note --spec '{"scope":"personal","fields":{"title":{"type":"string","required":true}}}' --preview --json
+pnpm exec tsx packages/cli/src/index.ts resource Note --model note --panel personal --with-model --spec '{"scope":"personal","fields":{"title":{"type":"string","required":true}},"permissions":{"read":["personal"],"create":["personal"],"update":["personal"],"delete":["personal"]}}' --preview --json
+```
+
+Exemplos acima são previews independentes. Para gerar Note com modelo e CRUD, execute **somente** comando `resource --with-model` sem `--preview`; não gere previamente o mesmo model. Revise arquivos e execute `pnpm db:generate`, revise SQL e aplique migrations separadamente. CLI recusa conflitos; não sobrescreve customizações. Resources gerados usam allowlists, autorização e contexto RLS, não inferem qualquer schema arbitrário. [Tipos, relações, limites e rollback](docs/CLI-RESOURCES.md).
+
+Temas usam `@vibe/ui/theme.css`, tokens semânticos e CSS variables, não cópias de componentes por tema. Claro/escuro, densidade e raio são personalizáveis; shell persiste preferências por cookie. Locale base `pt-BR`, alternativa `en`; textos de domínio pertencem ao produto derivado. [UI](docs/UI.md) · [Localização](docs/I18N.md).
+
+## Comandos
+
+Na raiz, Turborepo executa scripts existentes nos workspaces:
+
+| Comando | Uso |
+| --- | --- |
+| `pnpm dev` | Inicia somente aplicação Next.js (`app`), sem worker/relay/preview |
+| `pnpm dev:web` | Inicia site público Astro isolado |
+| `pnpm dev:email` | Inicia preview React Email com exemplos sintéticos |
+| `pnpm dev:worker` | Inicia worker com handlers reais; exige provisionamento e ambiente próprio |
+| `pnpm dev:relay` | Inicia relay; exige provisionamento e ambiente próprio |
+| `pnpm build` | Builds dos workspaces com script correspondente |
+| `pnpm check-types` | Checagem TypeScript dos workspaces |
+| `pnpm test` | Testes declarados nos manifests; não é aceite integrado completo |
+| `pnpm db:generate` | Gera SQL/snapshots e proteções de escopo pendentes; não aplica banco |
+| `pnpm db:migrate` | Aplica migrations com credencial DDL |
+| `pnpm db:seed` | Insere `app_name` se ausente, sem sobrescrever customizações |
+
+Use `pnpm --filter <nome> <script>` para processos isolados. Exemplos:
+
+```bash
+pnpm --filter app dev
+pnpm --filter app build
+pnpm --filter app start
+pnpm --filter @vibe/auth seed:admin       # ADMIN_EMAIL/ADMIN_NAME; senha por stdin
+pnpm --filter @vibe/cli build
+node packages/cli/dist/index.js --help
+pnpm --filter @vibe/storage test
+pnpm --filter @vibe/db db:rate-limit-cleanup
+pnpm install --frozen-lockfile           # instalação reproduzível em CI
+```
+
+Não existe script root `lint`; não use `next lint` no Next.js 16.
+
+## Integrações opcionais
+
+| Integração | Ativação / contrato | Guia |
+| --- | --- | --- |
+| Email | `EMAIL_PROVIDER=smtp|resend`, `EMAIL_FROM` e configuração do provedor; necessário para fluxos de verificação/recuperação/convite; sem fallback automático | [Email](docs/EMAIL.md) |
+| S3-compatible | `STORAGE_ENABLED=true`, bucket privado e credenciais próprias; URLs assinadas e vínculo autorizado ao projeto | [Storage](docs/STORAGE.md), [Endpoints](docs/STORAGE-ENDPOINTS.md) |
+| IA | `AI_ENABLED=true`, provedor/modelo/chave próprios; limites e ferramentas server-side, sem chave pública | [IA](docs/AI.md), [Endpoint](docs/AI-ENDPOINT.md) |
+| Jobs / notificações | `JOBS_ENABLED=true`, schema pg-boss provisionado, worker e relay separados; `project.created` notifica criador | [Eventos](docs/EVENTS.md), [Notificações](docs/NOTIFICATIONS.md) |
+| Webhooks | Flags inbound/outbound independentes; assinatura, deduplicação e política de destino; outbound exige jobs | [Webhooks](docs/WEBHOOKS.md), [Integração](docs/WEBHOOK-INTEGRATION.md) |
+| Analytics / logs | Analytics exige flag, configuração pública e consentimento; OTLP é exportador mínimo opcional, não SDK completo | [Operação](docs/OPERATIONS.md) |
+
+Desabilitado não exige credencial de provedor. Habilitado inválido deve falhar claramente; nenhum sucesso simulado. Mailpit é ferramenta externa de desenvolvimento opcional, não prova de entrega SMTP/Resend na internet.
+
+## Worker, relay e deploy
+
+Aplicação web não consome fila. Após migrations e provisionamento explícito de roles/schemas, execute processos separados. Exemplo a partir da raiz, com ambiente restrito apropriado a cada processo:
+
+```bash
+pnpm --filter @vibe/jobs provision
+pnpm --filter @vibe/events provision
+# Se outbound estiver habilitado:
+pnpm --filter @vibe/webhooks provision
+pnpm --filter @vibe/worker dev "$PWD/apps/worker/src/handlers.ts"
+# Outro terminal / supervisor:
+pnpm --filter @vibe/worker relay
+```
+
+`handlers.ts` registra callbacks reais de notificação e webhook. Use caminho absoluto porque `--filter` muda diretório de execução. Worker exige `JOBS_ENABLED=true`, `WORKER_DATABASE_URL` dedicado e acesso à fila pela `DATABASE_URL` do seu processo. Provisionadores usam credenciais separadas (`JOBS_MIGRATION_DATABASE_URL`, `EVENTS_PROVISION_DATABASE_URL`) e roles explicitamente nomeadas; nunca execute provisionamento no startup. Entrega é ao menos uma vez com efeito idempotente, não promessa de exatamente uma execução.
+
+[`Dockerfile`](Dockerfile) tem targets `app` e `worker`; [`compose.example.yml`](compose.example.yml) é exemplo com perfil `jobs` para worker/relay, não infraestrutura pronta. TLS, rede, backups/restauração, supervisão, limites de recursos, secret manager e validação real dos containers são responsabilidades do deploy. [Guia de deployment e gates](docs/DEPLOYMENT.md).
+
+## Site público Astro
+
+`apps/web` é frontend público estático separado do Next.js: landing page `/`, guia público `/getting-started`, versões inglesas `/en` e `/en/getting-started`, além de páginas de erro 404. Compartilha tokens visuais de `@vibe/ui`, não sessão nem conexão de banco. Não substitui painéis autenticados e não é servidor de autenticação.
+
+```bash
+PUBLIC_APP_URL=http://127.0.0.1:3000 SITE_URL=http://127.0.0.1:4321 pnpm dev:web
+```
+
+Abra `http://127.0.0.1:4321`. `PUBLIC_APP_URL` é origem pública do app usada em links; `SITE_URL` é origem canônica do site e deve ser fornecida no build. Não são segredos. Para publicar, configure origens reais, execute `pnpm --filter @vibe/web build` e hospede `apps/web/dist` em hosting estático com tratamento de `404.html`. Não precisa de DB, auth nem processo Node no deploy estático. `pnpm --filter @vibe/web preview` serve artefato localmente; não é servidor de produção.
+
+Na validação local integrada do kit, site Astro passou checagem de tipos e build; home em português/inglês e guia foram inspecionados no navegador, incluindo layout mobile sem overflow horizontal e troca de tema. Preview React Email, renderização e fluxo real de autenticação com captura Mailpit também foram exercitados. Isso não comprova hosting de produção, entrega de email na internet ou integração com provedores externos.
+
+## Email transacional e preview
+
+`packages/email` reúne templates React Email para verificação, recuperação de senha, convite e OTP, renderização `{ subject, html, text }` e transporte SMTP/Resend. `@vibe/email/render` é entrypoint puro para Node/worker; transporte continua server-only. Preview usa exemplos sintéticos, não envia mensagens nem exige credenciais:
+
+```bash
+pnpm --filter @vibe/email preview
+```
+
+Abra `http://127.0.0.1:3005`. Personalize templates e conteúdo no projeto derivado, mantendo URLs confiáveis e sem segredos no preview. [Contrato de renderização e provedores](docs/EMAIL.md).
+
+## Trabalho com agentes
+
+[`AGENTS.md`](AGENTS.md) define arquitetura, segurança e regras de mudança. `.agents/skills/` contém skills locais `atomic-commits` e `frontend-design`; leia instruções, origem e scripts antes de executar. Skills são ferramentas de desenvolvimento, não dependências runtime.
+
+GSD usa `.planning/` como continuidade deste kit. CLI não copia esse histórico para projetos derivados: inicie planejamento próprio quando necessário. Configuração de modelos, instalações globais e conexões MCP da máquina de preparação não são transportadas. CodeGraph é opcional; índice não substitui código nem demonstra MCP conectado. Não há instalação em massa automática de ferramentas.
+
+## Limites e verificação
+
+O kit entrega código e fluxos de exemplo, não certificação de segurança, operação ou compliance. Antes de publicar um produto:
+
+- Executar tipos, testes disponíveis e build; verificar o conteúdo e os skips de cada suíte. Testes de integração exigem banco descartável e opt-in; não apontar para produção.
+- Validar cadastro/email/login/recuperação/2FA, admin, organização única/múltipla, CRUD e casos negativos entre usuários e tenants.
+- Inspecionar UI real: teclado, foco, mobile, temas, locale e estados de falha. Build não comprova acessibilidade.
+- Exercitar storage, IA, webhooks, email e observabilidade com credenciais do projeto quando habilitados; ausência de credenciais é gate não executado, não aprovado.
+- Validar container, CI, worker/relay, retry/idempotência, revogação de permissão, backup/restauração e configuração de produção separadamente.
+
+`pnpm test` não inclui todos os self-checks e testes de integração presentes no repositório. Não há prova universal de produção nem autorização irrestrita para superadmin. Algumas notas técnicas de implementação registram estados anteriores; para aceite use código atual e evidência observada, não frases históricas de conclusão.
+
+## Documentação
+
+- **Primeira execução:** [GETTING-STARTED](docs/GETTING-STARTED.md)
+- **Extensão:** [CLI](docs/CLI.md), [resources/painéis](docs/CLI-RESOURCES.md), [dados](docs/RESOURCE-DATA.md), [integração de painéis](docs/PANEL-INTEGRATION.md)
+- **Identidade:** [rotas](docs/AUTH-ROUTES.md), [single-tenant](docs/SINGLE-TENANT.md)
+- **Interface:** [UI e licença das adaptações](docs/UI.md), [shell](docs/PANEL-SHELL.md), [localização](docs/I18N.md)
+- **Operação:** [deployment](docs/DEPLOYMENT.md), [logs/analytics/SEO](docs/OPERATIONS.md), [controles de segurança](docs/SECURITY.md)
+- **Aceite:** [roteiro integrado](docs/ACCEPTANCE.md), [testes de identidade](tests/identity)
+
+Não há licença geral declarada no manifest raiz. Antes de redistribuir, defina licença do seu produto e preserve atribuições de dependências e adaptações; a licença das adaptações shadcn/ui está em `docs/UI.md`.
