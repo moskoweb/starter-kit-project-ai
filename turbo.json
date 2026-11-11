@@ -1,6 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalPassThroughEnv": ["DATABASE_URL", "MIGRATION_DATABASE_URL", "BETTER_AUTH_*", "IDENTITY_*", "EMAIL_*", "SMTP_*", "RESEND_*", "JOBS_*", "WORKER_*", "EVENTS_*", "STORAGE_*", "S3_*", "AI_*", "PORT"],
+  "globalPassThroughEnv": ["DATABASE_URL", "MIGRATION_DATABASE_URL", "BETTER_AUTH_*", "IDENTITY_*", "EMAIL_*", "SMTP_*", "RESEND_*", "JOBS_*", "WORKER_*", "EVENTS_*", "STORAGE_*", "S3_*", "AI_*", "PWA_*", "PUSH_*", "PORT"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

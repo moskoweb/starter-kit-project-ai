@@ -24,6 +24,17 @@ async function main(): Promise<void> {
       await tx`drop policy if exists events_worker_update on event_outbox`;
       await tx`create policy events_worker_read on event_outbox for select to ${tx(role)} using (true)`;
       await tx`create policy events_worker_update on event_outbox for update to ${tx(role)} using (true) with check (true)`;
+      if (process.env.PUSH_ENABLED === "true") {
+        await tx`grant select (id,event_id) on notifications to ${tx(role)}`;
+        await tx`grant select,delete on push_subscriptions to ${tx(role)}`;
+        await tx`grant select,insert,update on push_deliveries to ${tx(role)}`;
+        await tx`drop policy if exists push_worker_read on push_subscriptions`;
+        await tx`drop policy if exists push_worker_delete on push_subscriptions`;
+        await tx`create policy push_worker_read on push_subscriptions for select to ${tx(role)} using(true)`;
+        await tx`create policy push_worker_delete on push_subscriptions for delete to ${tx(role)} using(true)`;
+        await tx`drop policy if exists push_worker_deliveries on push_deliveries`;
+        await tx`create policy push_worker_deliveries on push_deliveries for all to ${tx(role)} using(true) with check(true)`;
+      }
     });
   } finally {
     await sql.end({ timeout: 5 });

@@ -57,6 +57,13 @@
       "when": 1794433699004,
       "tag": "0007_lucky_living_lightning",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794438912597,
+      "tag": "0008_quick_warbird",
+      "breakpoints": true
     }
   ]
 }

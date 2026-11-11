@@ -1,0 +1,10 @@
+{
+  "name": "@vibe/push",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts", "./delivery": "./src/delivery.ts" },
+  "scripts": { "check-types": "tsc --noEmit" },
+  "dependencies": { "@vibe/webhooks": "workspace:*", "web-push": "4.0.0", "postgres": "^4.1.1" },
+  "devDependencies": { "@types/node": "^22.13.9", "typescript": "5.9.3" }
+}

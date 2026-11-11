@@ -1,3 +1,4 @@
+import { PushSettings } from "../../components/push-settings";
 import { WebhookDeliveries } from "../../components/webhook-deliveries";
 import { cookies, headers } from "next/headers";
 import { notFound, redirect, forbidden } from "next/navigation";
@@ -89,6 +90,7 @@ export default async function PanelPage({ params, searchParams }: { params: Prom
     }
   }
   if (panel.context !== "global" && path.length === 0 && process.env.WEBHOOKS_OUTBOUND_ENABLED === "true") content = <>{content}<WebhookDeliveries tenantIdentifier={identifier} locale={locale} /></>;
+  if (panel.context !== "global" && path.length === 0 && process.env.PUSH_ENABLED === "true") content = <>{content}<PushSettings key={identifier ?? "personal"} enabled tenantIdentifier={identifier} locale={locale} /></>;
   const nav = [{ label: messages[locale].overview, href: basePath }, ...resourcesForPanel(panel.id).map(resource => ({ label: resource.id === "projects" ? messages[locale].projects : resource.id === "tasks" ? messages[locale].tasks : resource.label, href: `${basePath}/${resource.id}` }))];
   return <PanelShell title={tenant?.name ?? panel.label} nav={nav} orgOptions={orgOptions} currentOrg={tenant ? { id: tenant.id, name: tenant.name } : undefined} user={{ name: session.user.name, email: session.user.email }} locale={locale} theme={cookieStore.get("theme")?.value === "dark" ? "dark" : "light"} initialCollapsed={cookieStore.get("sidebar:state")?.value === "collapsed"} tenantIdentifier={identifier} showNotifications={process.env.JOBS_ENABLED === "true"}>{content}{panel.context !== "global" && <AiAssistant key={identifier ?? "personal"} enabled={process.env.AI_ENABLED === "true"} tenantIdentifier={identifier} locale={locale} />}</PanelShell>;
 }

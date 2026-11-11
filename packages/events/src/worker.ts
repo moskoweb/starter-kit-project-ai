@@ -27,6 +27,12 @@ export async function processEvent(input: JobEnvelope): Promise<void> {
       await tx`insert into notifications (recipient_user_id, organization_id, event_id, payload)
         values (${event.actor_user_id}, ${event.organization_id}, ${event.id}, ${tx.json({ type: "project.created", projectId: event.entity_id })})
         on conflict (event_id) do nothing`;
+      if (process.env.PUSH_ENABLED === "true") {
+        await tx`insert into push_deliveries(event_id,subscription_id,notification_id)
+          select ${event.id},s.id,n.id from push_subscriptions s join notifications n on n.event_id=${event.id}
+          where s.user_id=${event.actor_user_id} and s.organization_id is not distinct from ${event.organization_id}::uuid and s.enabled=true
+          on conflict(event_id,subscription_id) do nothing`;
+      }
     }
     // Revocation/deletion is terminal: never notify someone whose authority vanished.
     await tx`update event_outbox set status = 'done', done_at = now(), last_error = ${authorized ? null : "authorization_revoked"} where id = ${event.id}`;

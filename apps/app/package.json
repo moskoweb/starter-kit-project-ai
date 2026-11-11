@@ -15,6 +15,7 @@
     "@vibe/ai": "workspace:*",
     "@vibe/webhooks": "workspace:*",
     "@vibe/observability": "workspace:*",
+    "@vibe/push": "workspace:*",
     "@hookform/resolvers": "^5.2.2",
     "@tanstack/react-table": "^8.21.3",
     "react-hook-form": "^7.66.0",
