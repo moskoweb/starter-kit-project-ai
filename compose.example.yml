@@ -1,0 +1,78 @@
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: app
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD:?Set a database administrator password}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d app"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    mem_limit: 512m
+
+  app:
+    build:
+      context: .
+      target: app
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: ${DATABASE_URL:?Provision a non-owner application role first}
+    env_file:
+      - path: .env
+        required: false
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    mem_limit: 768m
+
+  worker:
+    profiles: ["jobs"]
+    build:
+      context: .
+      target: worker
+    environment:
+      JOBS_ENABLED: "true"
+      DATABASE_URL: ${WORKER_DATABASE_URL:?Provision a restricted worker role first}
+      WORKER_DATABASE_URL: ${WORKER_DATABASE_URL:?Provision a restricted worker role first}
+    env_file:
+      - path: .env
+        required: false
+    depends_on:
+      postgres:
+        condition: service_healthy
+    mem_limit: 512m
+  relay:
+    profiles: ["jobs"]
+    build:
+      context: .
+      target: worker
+    command: ["pnpm", "--filter", "@vibe/worker", "relay"]
+    environment:
+      JOBS_ENABLED: "true"
+      DATABASE_URL: ${WORKER_DATABASE_URL:?Provision a restricted worker role first}
+      WORKER_DATABASE_URL: ${WORKER_DATABASE_URL:?Provision a restricted worker role first}
+    env_file:
+      - path: .env
+        required: false
+    depends_on:
+      postgres:
+        condition: service_healthy
+    mem_limit: 512m
+
+
+volumes:
+  postgres-data:
