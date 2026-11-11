@@ -6,6 +6,7 @@ import { closeDb, getDb } from "../../packages/db/src/client";
 import { member, organization, user } from "../../packages/db/src/auth-schema";
 import { projects, tasks } from "../../packages/db/src/domain-schema";
 import { withTenantTransaction } from "../../packages/db/src/tenant";
+import { webhookDeliveries } from "../../packages/db/src/webhook-schema";
 
 import { canAccessProject } from "../../packages/auth/src/permissions";
 const enabled = process.env.IDENTITY_TEST_DATABASE === "1" && process.env.NODE_ENV !== "production";
@@ -69,6 +70,16 @@ test("runtime DB: tenant/personal RLS, revocation, relation scope and pooled con
       });
     }
     await assertNoContext();
+    const eventId = randomUUID();
+    await withTenantTransaction(ownA, async (tx) => {
+      await tx.insert(webhookDeliveries).values({ actorUserId: a, organizationId: null, eventId, event: "project.created", payload: {} });
+    });
+    await assert.rejects(withTenantTransaction(ownA, async (tx) => {
+      await tx.insert(webhookDeliveries).values({ actorUserId: a, organizationId: null, eventId, event: "project.created", payload: {} });
+    }), (error: unknown) => {
+      const cause = error instanceof Error && "cause" in error ? error.cause : error;
+      return typeof cause === "object" && cause !== null && "code" in cause && cause.code === "23505";
+    });
 
     for (const [context, visible, hidden] of [[scopeA, projectA, projectB], [scopeB, projectB, projectA], [ownA, personalA, personalB], [ownB, personalB, personalA]] as const) {
       await withTenantTransaction(context, async (tx) => {

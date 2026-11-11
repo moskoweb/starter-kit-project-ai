@@ -50,6 +50,13 @@
       "when": 1794426411601,
       "tag": "0006_storage_parent_scope",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1794433699004,
+      "tag": "0007_lucky_living_lightning",
+      "breakpoints": true
     }
   ]
 }

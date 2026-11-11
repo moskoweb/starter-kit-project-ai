@@ -5,7 +5,7 @@ const identityEnvSchema = z.object({
   BETTER_AUTH_URL: z.url(),
   IDENTITY_PROFILE: z.enum(["personal", "organizations", "hybrid"]).default("hybrid"),
   ORGANIZATION_MODE: z.enum(["single", "multi"]).default("multi"),
-  SINGLE_ORGANIZATION_ID: z.preprocess((value) => value === "" ? undefined : value, z.uuid().optional()),
+  SINGLE_ORGANIZATION_ID: z.preprocess((value) => value === "" ? undefined : value, z.uuid().transform((value) => value.toLowerCase()).optional()),
 }).superRefine((env, ctx) => {
   if (env.ORGANIZATION_MODE === "single" && !env.SINGLE_ORGANIZATION_ID) {
     ctx.addIssue({ code: "custom", path: ["SINGLE_ORGANIZATION_ID"], message: "Required in single organization mode" });

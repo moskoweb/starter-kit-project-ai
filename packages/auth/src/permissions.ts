@@ -11,6 +11,7 @@ export const roles = {
 export type ProjectAction = "read" | "create" | "update" | "delete";
 export function canAccessProject(role: string, action: ProjectAction): boolean {
   return role.split(",").some((name) => {
+    if (!Object.hasOwn(roles, name.trim())) return false;
     const declared = roles[name.trim() as keyof typeof roles];
     return declared?.authorize({ project: [action] }).success === true;
   });

@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "webhook_deliveries_personal_event_unique" ON "webhook_deliveries" USING btree ("actor_user_id","event_id") WHERE "webhook_deliveries"."organization_id" is null;

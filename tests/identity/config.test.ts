@@ -23,6 +23,7 @@ test("organization mode defaults to multi and single requires a valid organizati
   const single = getIdentityEnv({ ...env, ORGANIZATION_MODE: "single", SINGLE_ORGANIZATION_ID: id });
   assert.equal(single.ORGANIZATION_MODE, "single");
   assert.equal(single.SINGLE_ORGANIZATION_ID, id);
+  assert.equal(getIdentityEnv({ ...env, ORGANIZATION_MODE: "single", SINGLE_ORGANIZATION_ID: id.toUpperCase() }).SINGLE_ORGANIZATION_ID, id);
   assert.equal(single.IDENTITY_PROFILE, "hybrid");
 });
 test("declared project permissions deny unknown roles and preserve multiple memberships", () => {
@@ -30,5 +31,8 @@ test("declared project permissions deny unknown roles and preserve multiple memb
   assert.equal(canAccessProject("viewer", "create"), false);
   assert.equal(canAccessProject("member", "delete"), false);
   assert.equal(canAccessProject("unknown", "read"), false);
+  for (const role of ["constructor", "toString", "__proto__", "hasOwnProperty"]) {
+    assert.equal(canAccessProject(role, "read"), false);
+  }
   assert.equal(canAccessProject("viewer, admin", "delete"), true);
 });

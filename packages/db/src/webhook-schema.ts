@@ -34,6 +34,7 @@ export const webhookDeliveries = pgTable("webhook_deliveries", {
   const scope = sql`${actor} is not null and ${t.actorUserId} = ${actor} and ((${tenant} is null and ${t.organizationId} is null) or (${t.organizationId} = ${tenant} and ${memberScope}))`;
   return [index("webhook_deliveries_due_idx").on(t.status, t.nextAt),
     uniqueIndex("webhook_deliveries_event_unique").on(t.actorUserId, t.organizationId, t.eventId),
+    uniqueIndex("webhook_deliveries_personal_event_unique").on(t.actorUserId, t.eventId).where(sql`${t.organizationId} is null`),
     check("webhook_deliveries_status", sql`${t.status} in ('pending', 'queued', 'delivered', 'failed')`),
     pgPolicy("webhook_deliveries_actor_read", { for: "select", to: "public", using: scope }),
     pgPolicy("webhook_deliveries_actor_insert", { for: "insert", to: "public", withCheck: sql`${scope} and ${t.status} = 'pending'` }),
