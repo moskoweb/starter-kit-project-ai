@@ -1,0 +1,20 @@
+# Fase 08 — Entrega e replicação
+
+## Objetivo e limites
+
+Cobrir SHIP-01 a SHIP-04 de `.planning/REQUIREMENTS.md`, conforme decisões de `.planning/PROJECT.md`: prova de projeto derivado isolado, operação Node/Docker, documentação operacional e gates de CI. Este plano não autoriza publicação, commit, push ou deploy externo. Nenhum check será executado nesta etapa de planejamento. Comandos ainda não implementados ficam identificados como planejados; não inventar nomes/flags nem alegar execução.
+
+## Decisões
+
+- Projeto independente é criado em diretório temporário fora do checkout, usando CLI/caminho real que existir ao implementar. Não copiar `.planning` histórico, `.env*` com segredos, caches, `node_modules`, artefatos de build ou caminhos absolutos locais. Preservar `AGENTS.md`, skills escolhidas com origem/licença/versão e documentação de produto necessária ao uso. Revisar manifest de arquivos incluídos e excluir segredos, caches e histórico sem remover docs úteis.
+- Prova funcional cobre três perfis separados: pessoal sem tenant fictício, organização com isolamento de membros/tenant e híbrido com uso pessoal e organizacional. Usar PostgreSQL próprio efêmero da prova, não DB compartilhado, fixture externa nem DB do kit original. Instalar pelo lockfile congelado, migrations explícitas, autenticação real local configurada e fluxo CRUD persistido; prova não depende do checkout depois da geração.
+- Docker suporta imagem/serviço app e imagem/serviço worker separados quando jobs habilitados. Dev publica portas somente em loopback por padrão; documentação explica override explícito para acesso remoto. Não executar worker dentro da réplica web nem mascarar worker indisponível.
+- Migrations são etapa operacional explícita e única, executada por serviço/job de migration com credencial apropriada antes de atualizar app/worker. Réplicas web e worker não aplicam DDL ao iniciar. Health/readiness distingue processo vivo de dependências prontas; probes não vazam segredos. SIGTERM interrompe aceitação de trabalho, drena dentro de prazo documentado e fecha recursos.
+- CI usa `pnpm` e lockfile canônico: instalação frozen, verificação de tipos, testes críticos e build de produção. O workflow deve seguir scripts/targets reais existentes; não adicionar scripts fictícios ao plano como se fossem executáveis. Falha de DB usa PostgreSQL de serviço isolado de CI.
+- Smoke de AI, Resend/email, storage e analytics com serviços externos ocorre apenas no gate final, depois da implementação completa e somente com credenciais/contas de teste fornecidas pelo usuário. Sem credenciais, registrar gate bloqueado e requisito externo pendente; não substituir com mock nem alegar prova real. Não pedir/armazenar credenciais neste planejamento.
+- Documentar setup, perfis, roles, painéis, temas, CLI, integrações opcionais, deploy e atualização manual de derivados. Atualização não sobrescreve customizações ou migrations aplicadas; sem sincronização automática prometida.
+- Nenhuma publicação, commit, push, release ou deploy externo. Imagens/builds locais e serviços efêmeros da prova, quando autorizados na implementação, não implicam publicação.
+
+## Critério de encerramento
+
+SHIP-01 exige clone gerado limpo, independente e fluxo local pessoal/organização/híbrido com autenticação e CRUD em DB próprio. SHIP-02 exige configuração Node/Docker coerente para app único e app+worker, loopback dev, migration controlada, health e shutdown. SHIP-03 exige docs de produto completas e atualizadas. SHIP-04 exige gates de CI descritos com comandos canônicos efetivamente existentes e evidência de tipos/testes/build; smoke derivado deve passar. Integrações externas sem credenciais fornecidas ficam explicitamente bloqueadas, sem mock ou alegação. Nenhuma conclusão baseada apenas em arquivos scaffolds.
