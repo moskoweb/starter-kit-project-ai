@@ -6,6 +6,7 @@ import { renderScopeProtection } from "./model.js";
 import { snapshotFiles, restoreFiles, copyTemplate, withStaging, assertSafeDestination } from "./files.js";
 import { pendingScopeProtections } from "../../db/src/scope-protections.mjs";
 import { runPanel } from "./panel.js";
+import { runResource } from "./resource.js";
 
 // Run from repository root: pnpm exec tsx packages/cli/src/generation.check.ts
 const directory = await mkdtemp(path.join(os.tmpdir(), "vibe-generation-"));
@@ -49,6 +50,19 @@ try {
     await writeFile("apps/app/src/lib/panels/registry.ts", 'export const reservedPanelRoutes = ["api"] as const;\nexport const registry: readonly PanelConfig[] = validatePanels([\n]);\n');
     await runPanel(["ops-2", "--context", "global", "--prefix", "/ops-2"]);
     assert.match(await readFile("apps/app/src/lib/panels/ops-2.config.ts", "utf8"), /export const panel_ops\$2 =/);
+    await writeFile("apps/app/src/lib/panels/registry.ts", 'export const registry: readonly PanelConfig[] = validatePanels([\n  { id: "personal", label: "Personal", prefix: "/app", context: "personal" },\n]);\n');
+    await writeFile("apps/app/src/lib/panels/resources.ts", "// CLI_RESOURCE_IMPORTS\nexport const resourceRegistry = [\n  // CLI_RESOURCE_ENTRIES\n];\n");
+    await mkdir("packages/db/src", { recursive: true });
+    await writeFile("packages/db/src/schema.ts", 'export * from "./auth-schema";\n');
+    await writeFile("packages/db/src/auth-schema.ts", "");
+    const spec = JSON.stringify({ scope: "personal", fields: { title: { type: "string", required: true }, done: { type: "boolean", default: false } }, permissions: { read: ["personal"], create: ["personal"], update: ["personal"], delete: ["personal"] } });
+    await runResource(["Note", "--model", "note", "--panel", "personal", "--with-model", "--spec", spec]);
+    const generated = await readFile("apps/app/src/lib/resources/definitions/note.ts", "utf8");
+    assert.match(generated, /export const noteResource = defineResource\(/);
+    assert.match(generated, /if \(!can\(role, operation\)\) throw new Error\("FORBIDDEN"\)/, "generated resource enforces declared roles inside tenant transaction");
+    assert.match(generated, /inputSchema\.safeParse\(values\)/, "generated mutations validate input on the server");
+    assert.match(await readFile("apps/app/src/lib/panels/resources.ts", "utf8"), /\{ kind: "resource", definition: noteResource, panelIds: \["personal"\] \}/);
+    await assert.rejects(runResource(["Note", "--model", "note", "--panel", "personal", "--spec", spec]), /already registered/);
   } finally { process.chdir(cwd); }
 } finally {
   await rm(directory, { recursive: true, force: true });
