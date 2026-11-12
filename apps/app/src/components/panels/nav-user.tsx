@@ -22,6 +22,7 @@ export function NavUser({ user, locale, copy }: { user: { name: string; email?: 
   const [pending, setPending] = useState(false);
   async function signOut() {
     setPending(true);
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- full reload drops client state tied to the old session
     try { const result = await authClient.signOut(); if (result.error) throw new Error("SIGN_OUT_FAILED"); window.location.assign("/login"); }
     catch { toast.error(copy.signOutError); setPending(false); }
   }

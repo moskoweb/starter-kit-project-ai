@@ -4,6 +4,7 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarInset, Si
 import { Notifications } from "../notifications";
 import { messages, type Locale } from "../../lib/i18n";
 import { GlobalSearch } from "./global-search";
+import { ImpersonationBanner } from "./impersonation-banner";
 import { NavMain, type NavGroup } from "./nav-main";
 import { NavUser } from "./nav-user";
 import { TeamSwitcher, type Workspace } from "./team-switcher";
@@ -34,6 +35,7 @@ export function PanelShell({ title, subtitle, groups, currentWorkspaceId, person
       <SidebarRail />
     </Sidebar>
     <SidebarInset>
+      <ImpersonationBanner locale={locale} />
       <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 rounded-t-xl border-b bg-background/95 px-4 backdrop-blur supports-backdrop-filter:bg-background/60">
         <SidebarTrigger className="-ml-1" aria-label={copy.collapseSidebar} />
         <Separator orientation="vertical" className="mr-1 data-vertical:h-4" />
