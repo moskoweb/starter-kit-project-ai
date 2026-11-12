@@ -19,7 +19,7 @@ Criar projeto derivado pela CLI, instalar com pnpm frozen-lockfile e configurar 
 
 ## Evidência já obtida
 
-Ver `.planning/LOCAL-VALIDATION.md` no checkout de desenvolvimento do kit. Projetos derivados não carregam esse histórico. Testes com provedores externos foram adiados pelo usuário e não são substituídos por mocks.
+Evidência detalhada de validação local fica no planejamento interno do kit, fora do repositório. CI (`.github/workflows/ci.yml`) roda lint, tipos, testes, build e E2E a cada push. Testes com provedores externos foram adiados pelo usuário e não são substituídos por mocks.
 
 ## Gates de release
 

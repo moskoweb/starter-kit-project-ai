@@ -11,17 +11,20 @@ Requisitos:
 - Bash para exemplos de injeção de ambiente e senha por stdin.
 - SMTP de desenvolvimento acessível para cadastro/verificação/recuperação. Mailpit é uma opção externa; não é instalado pela CLI.
 
-A partir de um checkout do kit, com diretório pai do destino já existente:
+Clone o kit; o diretório pai do destino precisa existir:
 
 ```bash
+git clone https://github.com/moskoweb/starter-kit-project-ai.git vibe-kit
+cd vibe-kit
 pnpm install
 pnpm exec tsx packages/cli/src/index.ts create ../meu-produto --profile hybrid --preview --json
 pnpm exec tsx packages/cli/src/index.ts create ../meu-produto --profile hybrid --noninteractive
 cd ../meu-produto
 pnpm install
+git init && git add -A && git commit -m "chore: initial import"
 ```
 
-Troque `hybrid` por `personal` ou `organizations` conforme produto. O kit não traz domínio de exemplo: o template só tem o painel `admin` (`/admin`). `create` registra os painéis de trabalho do perfil, como `vibe panel` faria (`apps/app/src/lib/panels/<id>.config.ts` + import em `registry.ts`): `personal` → painel `app` em `/app`; `organizations` → painel `org` em `/org/<slug>`; `hybrid` → ambos. Destino deve não existir, não pode ser symlink nem ficar dentro do kit. CLI copia fonte, não `.git`, `.planning`, dependências, caches ou credenciais reais. O novo `AGENTS.md` é portátil; histórico e configuração de agentes do kit não são transferidos. Não há sincronização automática com upstream.
+Troque `hybrid` por `personal` ou `organizations` conforme produto. O kit não traz domínio de exemplo: o template só tem o painel `admin` (`/admin`). `create` registra os painéis de trabalho do perfil, como `vibe panel` faria (`apps/app/src/lib/panels/<id>.config.ts` + import em `registry.ts`): `personal` → painel `app` em `/app`; `organizations` → painel `org` em `/org/<slug>`; `hybrid` → ambos. Destino deve não existir, não pode ser symlink nem ficar dentro do kit. CLI copia fonte, não `.git`, `.planning`, dependências, caches ou credenciais reais. O novo `AGENTS.md` é portátil; histórico e configuração de agentes do kit não são transferidos. Atualizações do kit não chegam sozinhas: `.vibe-kit.json` registra a base e `pnpm exec tsx packages/cli/src/index.ts upgrade` faz merge revisável (ver [CLI](CLI.md)).
 
 Não há `pnpm create` publicado nem necessidade de instalar `vibe` globalmente. Todos comandos CLI deste guia rodam pela fonte local.
 

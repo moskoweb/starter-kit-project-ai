@@ -6,7 +6,7 @@ Este guia distingue conteúdo já incluído no repositório de ferramentas opcio
 
 | Opção | Estado | Recomendação | Escopo / custo |
 | --- | --- | --- | --- |
-| `AGENTS.md` e `.planning/` | Incluídos no kit | Mínimo: ler instruções locais e usar continuidade GSD já existente | Arquivos do projeto; sem instalação |
+| `AGENTS.md` | Incluído no kit | Mínimo: ler instruções do projeto; `.planning/` é local e não versionado | Arquivo do projeto; sem instalação |
 | `atomic-commits` | Vendored em `.agents/skills/atomic-commits/` | Mínimo para mudanças com vários commits lógicos; leia skill antes de usar | Skill local, MIT, versão 1.0.0; sem scripts |
 | `frontend-design` | Vendored em `.agents/skills/frontend-design/` | Mínimo quando criar ou reformular UI | Skill local modificada, licença Apache-2.0 em `LICENSE.txt`; sem scripts. Tokens e padrões do kit prevalecem |
 | `shadcn` (skill oficial) | Vendored em `.agents/skills/shadcn/`; lock em `skills-lock.json` | Mínimo para qualquer UI do app: componentes, blocos, forms e tema via `components.json` | Skill MIT do repositório `shadcn-ui/ui`; executa `shadcn info --json`. Atualizar com `pnpm dlx skills update shadcn` e revisar diff |
@@ -26,7 +26,7 @@ Este guia distingue conteúdo já incluído no repositório de ferramentas opcio
 
 ## Continuidade GSD e projetos derivados
 
-O GSD Core oficial usa `.planning/` para visão, requisitos, roadmap, estado de sessão, pesquisa e fases. Neste kit, `.planning/` pertence ao planejamento do próprio kit. Ao gerar projeto derivado, a CLI exclui `.planning/` e índice CodeGraph. Não copie histórico, roadmap ou estado do kit para produto novo; inicie planejamento independente quando necessário. Não mantenha estado concorrente em outro arquivo.
+O GSD Core oficial usa `.planning/` para visão, requisitos, roadmap, estado de sessão, pesquisa e fases. Neste kit, `.planning/` é planejamento local do mantenedor, ignorado pelo Git; um clone não o recebe. Ao gerar projeto derivado, a CLI também exclui `.planning/` e índice CodeGraph. Não copie histórico, roadmap ou estado do kit para produto novo; inicie planejamento independente quando necessário. Não mantenha estado concorrente em outro arquivo.
 
 GSD Core oficial: [Open GSD Core](https://github.com/open-gsd/gsd-core), licença MIT; documentação [Quickstart](https://docs.opengsd.net/core/quickstart) e [instalação por runtime](https://github.com/open-gsd/gsd-core/blob/main/docs/how-to/install-on-your-runtime.md). Comando upstream para iniciar instalação interativa:
 

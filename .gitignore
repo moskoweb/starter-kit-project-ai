@@ -36,3 +36,8 @@ e2e/playwright-report/
 e2e/test-results/
 e2e/.auth/
 test-results/
+
+# Maintainer-local planning and machine notes (never shipped)
+.planning/
+docs/DEVELOPMENT.md
+docs/AGENT-BOOTSTRAP.md

@@ -7,7 +7,7 @@ Um monorepo TypeScript com aplicação autenticada, PostgreSQL, painéis e ferra
 1. **Desenvolvimento assistido por IA:** código local legível, contratos de autorização, CLI para criar projetos e gerar models/resources/painéis, `AGENTS.md` e skills revisáveis. O agente trabalha no seu projeto, não em uma plataforma proprietária.
 2. **IA dentro do produto:** integração opcional com provedor OpenAI-compatible, streaming e ferramentas com autorização no servidor. Não é necessária para usar autenticação, painéis ou CRUD.
 
-O projeto criado recebe seu próprio código. Não depende de um serviço central do kit e não recebe atualizações automáticas. Não é um CMS, ORM próprio nem garantia universal de produção.
+O projeto criado recebe seu próprio código. Não depende de um serviço central do kit e não recebe atualizações automáticas; quando quiser, `vibe upgrade` traz melhorias do kit por merge revisável. Não é um CMS, ORM próprio nem garantia universal de produção.
 
 [Começar](docs/GETTING-STARTED.md) · [CLI](docs/CLI.md) · [Resources](docs/CLI-RESOURCES.md) · [Deploy](docs/DEPLOYMENT.md) · [Aceite](docs/ACCEPTANCE.md)
 
@@ -49,14 +49,17 @@ Nomes e scripts abaixo correspondem aos manifests dos workspaces; todos são pri
 
 Pré-requisitos: **Node.js >=22.23.0**, **pnpm 10.32.1** (versão fixada em `packageManager`), PostgreSQL 17 e acesso de operador para criar banco/roles. Docker é opcional; não substitui provisionamento e grants.
 
-A CLI não está publicada como pacote público. A partir de um checkout do kit:
+A CLI não está publicada como pacote público. Clone o kit e gere o projeto a partir dele:
 
 ```bash
+git clone https://github.com/moskoweb/starter-kit-project-ai.git vibe-kit
+cd vibe-kit
 pnpm install
 pnpm exec tsx packages/cli/src/index.ts create ../meu-produto --profile hybrid --preview --json
 pnpm exec tsx packages/cli/src/index.ts create ../meu-produto --profile hybrid --noninteractive
 cd ../meu-produto
 pnpm install
+git init && git add -A && git commit -m "chore: initial import"
 ```
 
 O destino deve não existir, ficar fora do template e ter diretório pai existente. A cópia exclui credenciais `.env*` (exceto `.env.example`), dependências, caches, `.git`, `.planning` e índice CodeGraph; gera `AGENTS.md` portátil, grava perfil no exemplo de ambiente e registra os painéis do perfil (`personal` → `app` em `/app`; `organizations` → `org` em `/org/<slug>`; `hybrid` → ambos; `admin` sempre). Não copia o ambiente de preparação. Grava `.vibe-kit.json` (repositório, branch e commit do kit) como base de atualização.
@@ -225,9 +228,9 @@ Abra `http://127.0.0.1:3005`. Personalize templates e conteúdo no projeto deriv
 
 ## Trabalho com agentes
 
-[`AGENTS.md`](AGENTS.md) define arquitetura, segurança e regras de mudança. `.agents/skills/` traz `atomic-commits` (MIT) e `frontend-design` (Apache-2.0), skills locais revisadas; não instale coleções em massa.
+[`AGENTS.md`](AGENTS.md) define arquitetura, segurança e regras de mudança. `.agents/skills/` traz skills locais revisadas, com origem e licença listadas em [docs/AGENT-TOOLS.md](docs/AGENT-TOOLS.md) (incluindo `upgrade-kit` para atualizar projetos derivados); não instale coleções em massa.
 
-GSD continua o trabalho em `.planning/`; projetos derivados começam histórico próprio, sem copiar planejamento ou índice do kit. Ferramentas externas são opcionais e devem ser instaladas no escopo do projeto quando suportado. Consulte [matriz, comandos oficiais, licenças, telemetria e riscos](docs/AGENT-TOOLS.md) antes de instalar.
+Planejamento GSD em `.planning/` é local e não versionado; projetos derivados começam histórico próprio. Ferramentas externas são opcionais e devem ser instaladas no escopo do projeto quando suportado. Consulte [matriz, comandos oficiais, licenças, telemetria e riscos](docs/AGENT-TOOLS.md) antes de instalar.
 ## Limites e verificação
 
 O kit entrega código e fluxos de exemplo, não certificação de segurança, operação ou compliance. Antes de publicar um produto:

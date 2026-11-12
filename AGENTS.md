@@ -2,9 +2,9 @@
 
 ## Estado e fontes canônicas
 
-Starter kit (scaffolding no estilo Filament): fornece infraestrutura, painel admin e CLI; não traz domínio de exemplo. Ler `.planning/STATE.md`, `.planning/PROJECT.md`, `.planning/REQUIREMENTS.md` e `.planning/ROADMAP.md` antes de alterar arquitetura. Pesquisa em `.planning/research/` distingue evidência de recomendação. Comandos existentes: `pnpm check-types`, `pnpm test`, `pnpm db:generate`, `pnpm db:migrate`, `pnpm lint`, `pnpm dev`, `pnpm build`, `pnpm test:e2e`. Nunca presumir aprovação de gates: rodar e reportar.
+Starter kit (scaffolding no estilo Filament): fornece infraestrutura, painel admin e CLI; não traz domínio de exemplo. Se existir planejamento local em `.planning/` (não versionado), ler `STATE.md`, `PROJECT.md`, `REQUIREMENTS.md` e `ROADMAP.md` antes de alterar arquitetura. Comandos existentes: `pnpm check-types`, `pnpm test`, `pnpm db:generate`, `pnpm db:migrate`, `pnpm lint`, `pnpm dev`, `pnpm build`, `pnpm test:e2e`. Nunca presumir aprovação de gates: rodar e reportar.
 
-Runtime usa `DATABASE_URL` com role DML; migrations exigem `MIGRATION_DATABASE_URL` separada. Injetar ambiente antes dos scripts, sem imprimir segredos. Neste checkout dev em 127.0.0.1:3001, infraestrutura documentada em `docs/DEVELOPMENT.md`. Preservar preview e hot reload.
+Runtime usa `DATABASE_URL` com role DML; migrations exigem `MIGRATION_DATABASE_URL` separada. Injetar ambiente antes dos scripts, sem imprimir segredos. Infraestrutura da máquina de desenvolvimento fica em instruções locais não versionadas, nunca neste repositório.
 
 ## Produto e arquitetura
 
@@ -34,7 +34,7 @@ Kit entrega ferramentas, sem domínio de exemplo. Template registra só painel `
 
 GSD mantém continuidade em `.planning/`; não criar fonte concorrente de estado. Planejar antes de executar fases. Cada delegação define arquivos, contrato e aceite; um responsável integra mudanças compartilhadas.
 
-Política aprovada: `nine-router/Tier-03` para tarefas mecânicas; `nine-router/Tier-02` para implementação delimitada; `nine-router/Tier-01` para arquitetura, segurança, integração e revisão. Modelos devem ser aprovados pelo runtime: nunca contornar gate, trocar silenciosamente ou afirmar uso com base no prompt. Probes de ambos tiers inferiores com leitura de arquivo passaram; configuração persistida no runtime do usuário, não transportada automaticamente aos projetos derivados. Evidências em `docs/AGENT-BOOTSTRAP.md`.
+Modelos e tiers de agente são configuração do runtime de quem desenvolve: nunca contornar gate de aprovação, trocar silenciosamente ou afirmar uso com base no prompt.
 
 ## Ferramentas e skills
 
@@ -48,6 +48,6 @@ Recomendações e instalação ficam em `docs/AGENT-TOOLS.md`. Não confundir fe
 
 Verificar comportamento alterado com menor cenário suficiente. Isolamento e permissões exigem casos negativos. UI exige inspeção real; feature externa exige integração real, não mock apresentado como pronta. Manter documentação e estado coerentes com evidência.
 
-Preservar mudanças e serviços existentes. No servidor de desenvolvimento, seguir `/root/projects/DEVELOPMENT.md`; consultar `/root/projects/DEV-SERVICES.md` antes de integrar serviços compartilhados. Builds pesados exigem memória disponível e `flock /tmp/dev-heavy-validation.lock`. Não publicar portas fora de loopback, alterar Access/Tunnel, fazer push/deploy ou executar operação destrutiva sem autorização.
+Preservar mudanças e serviços existentes. Builds pesados exigem memória disponível. Não publicar portas fora de loopback, fazer push/deploy ou executar operação destrutiva sem autorização.
 
 Projetos derivados devem substituir referências locais de infraestrutura por suas próprias instruções. Nunca copiar credenciais, índices, histórico de planejamento ou caminhos privados do kit para novo projeto.
