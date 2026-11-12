@@ -101,7 +101,8 @@ const scope: string = ${quote(spec.scope)};
 const columns = { ${fields.map(([key]) => `${key}: table.${key}`).join(", ")} };
 const select = { id: table.id, ...columns };
 const roles = (role: string | null) => role === null ? ["personal"] : role.split(",").map(value => value.trim());
-const can = (role: string | null, operation: Operation) => roles(role).some(value => (permissions[operation] as readonly string[]).includes(value));
+/** Tenant-role check. \`ResourceDefinition.can(role, operation, scope)\` also receives scope (userId, isAdmin); extend here for owner/superadmin rules. */
+const can = (role: string | null, operation: Operation, _scope?: ResourceScope) => roles(role).some(value => (permissions[operation] as readonly string[]).includes(value));
 
 /** Re-resolves session and tenant, enforces declared roles, then runs under RLS. */
 async function authorized<T>({ identifier }: ResourceScope, operation: Operation, run: (tx: TenantTransaction, userId: string) => Promise<T>) {

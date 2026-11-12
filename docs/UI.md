@@ -28,7 +28,9 @@ Primitivos são componentes oficiais shadcn/ui, estilo `base-nova` sobre [Base U
 
 Composição em Base UI usa a prop `render`, não `asChild`: `<DropdownMenuTrigger render={<Button variant="ghost" />}>`. Para links estilizados como botão use `buttonVariants()` em `<Link className={...}>`. Quando um gatilho de diálogo renderiza algo que não é `<button>` (ex.: item de menu), passe `nativeButton={false}`.
 
-Adicionar item oficial: `cd apps/app && pnpm dlx shadcn@4.23.0 add <item>`. Registries extras declarados em `components.json`: `@cult-ui`.
+Seleção: sempre `Select` shadcn (`@vibe/ui/components/select`, Base UI); nunca `NativeSelect` nem `<select>` nativo. Em formulários use a prop `name` do `Select` (renderiza input oculto) ou valor controlado; passe `items` (`{ value, label }[]`) para o `SelectValue` mostrar o rótulo. Busca em muitas opções: `Combobox`.
+
+Adicionar item oficial: `cd apps/app && env DO_NOT_TRACK=1 pnpm dlx shadcn@4.23.0 add <item> --yes` (sem `--overwrite`). Registries extras declarados em ambos `components.json`: `@cult-ui` e `@reui` (`https://reui.io/r/{style}/{name}.json`). Ordem: shadcn oficial primeiro; ReUI só como fallback para o que shadcn não tem (ex.: `@reui/data-grid`, `@reui/filters`, `@reui/file-upload`, `@reui/stepper`, `@reui/timeline`), instalado sob demanda com `pnpm dlx shadcn@4.23.0 add @reui/<nome>`. Nunca escrever à mão o que shadcn/ReUI já entrega.
 
 ### Tema e providers
 
@@ -38,8 +40,9 @@ Adicionar item oficial: `cd apps/app && pnpm dlx shadcn@4.23.0 add <item>`. Regi
 
 Em `packages/ui/src/components/resource/` e `widgets/`. Schemas serializáveis ficam em `@vibe/ui/lib/schema` (`TableColumn`, `TableFilter`, `FormSection`, `InfolistSection`, `ListState`, `ActionResult`).
 
-- `ResourceTable`: tabela dirigida pela URL (`page`, `perPage`, `search`, `sort`, `direction`, filtros). Tem busca com debounce, filtros em popover, colunas ocultáveis (salvas em `localStorage`), seleção com ação em massa, menu de ações por linha, paginação e estado vazio. O servidor pagina; a tabela nunca ordena só a página atual.
-- `ResourceForm`: formulário por seções (`text`, `email`, `url`, `textarea`, `number`, `boolean` em Switch, `select`, `date`). Valida campos obrigatórios no cliente e mapeia `fieldErrors` do servidor por campo. `disabledOnEdit` deixa o campo só leitura e o omite no update.
+- `ResourceTable`: tabela dirigida pela URL (`page`, `perPage`, `search`, `sort`, `direction`, filtros). Tem busca com debounce, filtros em popover (Select), colunas ocultáveis (salvas em `localStorage`), seleção com ação em massa, menu de ações por linha, ações de registro (`recordActions` + `availableActions` por id + `onRecordAction`; `bulk` também na barra de seleção), paginação e estado vazio. O servidor pagina; a tabela nunca ordena só a página atual.
+- `RecordActions` / `useRecordAction` (`resource/record-actions.tsx`): executa `RecordActionDef` com `ConfirmAction` quando `destructive` ou `confirm`, `toast` do resultado e `router.refresh()`; `ActionResult.redirectTo` faz navegação completa (`window.location.assign`, ex.: troca de sessão).
+- `ResourceForm`: formulário por seções (`text`, `email`, `url`, `textarea`, `number`, `boolean` em Switch, `select` em Select, `combobox` em Combobox com busca, `date` em Popover + Calendar com valor ISO `yyyy-MM-dd`). Valida campos obrigatórios no cliente e mapeia `fieldErrors` do servidor por campo. `disabledOnEdit` deixa o campo só leitura e o omite no update.
 - `ResourceInfolist`: visualização somente leitura em seções e colunas.
 - `PageHeader`: breadcrumbs, título, descrição e ações de cabeçalho.
 - `ConfirmAction`: AlertDialog para ações destrutivas; se `onConfirm` rejeita, o diálogo fica aberto.
@@ -47,7 +50,9 @@ Em `packages/ui/src/components/resource/` e `widgets/`. Schemas serializáveis f
 
 ### Resources declarativos
 
-`apps/app/src/lib/resources/define.ts` define `ResourceDefinition`, equivalente ao Resource do Filament: rótulos localizados, ícone, grupo de navegação, colunas, filtros, formulário, infolist, `can(role, operation)` e operações `list/get/create/update/delete`. `render.tsx` gera as quatro páginas (lista, criar, visualizar, editar) com breadcrumbs. `resource-actions.ts` é a única porta de Server Actions: re-resolve sessão, tenant e papel antes de chamar a definição. Exemplos: `definitions/projects.ts` e `definitions/tasks.ts`. A CLI `vibe resource` gera um arquivo em `definitions/` e registra em `lib/panels/resources.ts`.
+`apps/app/src/lib/resources/define.ts` define `ResourceDefinition`, equivalente ao Resource do Filament: rótulos localizados, ícone, grupo de navegação, colunas, filtros, formulário, infolist, `can(role, operation, scope)`, operações `list/get` e opcionais `create/update/delete` (ausentes = páginas e botões somem) e `actions`. `ResourceScope = { identifier, role, userId, isAdmin }`: `role` é papel no tenant (null fora de organização), `isAdmin` = superadmin global (`user.role === "admin"`). Painel `context: "global"` aceita só superadmin (identifier/role null); resources globais usam `can: (_role, _op, scope) => scope.isAdmin`. `render.tsx` gera as quatro páginas (lista, criar, visualizar, editar) com breadcrumbs. `resource-actions.ts` é a única porta de Server Actions: re-resolve sessão, tenant, papel e superadmin antes de chamar a definição. Exemplos: `definitions/projects.ts` e `definitions/tasks.ts`. A CLI `vibe resource` gera um arquivo em `definitions/` e registra em `lib/panels/resources.ts`.
+
+Ações de registro (Filament Actions): `actions: [{ name, label, icon?, destructive?, confirm?, bulk?, visible?(record, scope), run(scope, ids) }]`. `icon` é chave de `components/panels/nav-icons.ts`. O servidor calcula `visible` por registro para a tabela e o cabeçalho da página de visualização. `runRecordAction` exige `can(read)`, rejeita várias ids sem `bulk` (`INVALID_INPUT`), recarrega cada registro via `get` (null = `NOT_FOUND`) e re-checa `visible` (`FORBIDDEN`) antes de `run`. `run` ainda deve validar regras de negócio próprias.
 
 O shell do painel (`components/panels/`) monta sidebar recolhível com seletor de workspace, grupos de navegação e menu do usuário (conta, aparência, idioma, sair). A topbar tem busca global `⌘K` e o sino de notificações (Sheet). Páginas de conta e organizações usam o mesmo shell pelo route group `app/(account)`.
 

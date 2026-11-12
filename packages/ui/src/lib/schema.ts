@@ -26,7 +26,7 @@ export type TableFilter<L = string> =
   | { key: string; label: L; type: "select"; options: Option<L>[] }
   | { key: string; label: L; type: "boolean"; trueLabel: L; falseLabel: L };
 
-export type FieldType = "text" | "email" | "url" | "textarea" | "number" | "boolean" | "select" | "date";
+export type FieldType = "text" | "email" | "url" | "textarea" | "number" | "boolean" | "select" | "combobox" | "date";
 export type FormField<L = string> = {
   name: string;
   label: L;
@@ -50,5 +50,7 @@ export type InfolistSection<L = string> = { title?: L; description?: L; columns?
 
 export type ResourceRecord = { id: string } & Record<string, string | number | boolean | null>;
 export type ListState = { page: number; pageSize: number; search: string; sort: string | null; direction: "asc" | "desc"; filters: Record<string, string> };
-export type ActionResult = { ok: true; id?: string } | { ok: false; error: string; fieldErrors?: Record<string, string> };
+export type ActionResult = { ok: true; id?: string; /** Full-page navigation after success (e.g. session swap). */ redirectTo?: string } | { ok: false; error: string; fieldErrors?: Record<string, string> };
+/** Custom record action (Filament Action). Serializable: server definition adds `visible`/`run`. */
+export type RecordActionDef<L = string> = { name: string; label: L; icon?: string /* key of apps/app nav-icons or lucide name mapped by app */; destructive?: boolean; confirm?: { title: L; description: L }; bulk?: boolean };
 export const pageSizeOptions = [10, 25, 50, 100] as const;

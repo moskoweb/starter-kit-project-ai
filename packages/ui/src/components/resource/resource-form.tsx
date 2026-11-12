@@ -9,11 +9,16 @@ import { Button, buttonVariants } from "@vibe/ui/components/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@vibe/ui/components/card";
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@vibe/ui/components/field";
 import { Input } from "@vibe/ui/components/input";
-import { NativeSelect, NativeSelectOption } from "@vibe/ui/components/native-select";
+import { Calendar } from "@vibe/ui/components/calendar";
+import { Combobox, ComboboxContent, ComboboxEmpty, ComboboxInput, ComboboxItem, ComboboxList } from "@vibe/ui/components/combobox";
+import { Popover, PopoverContent, PopoverTrigger } from "@vibe/ui/components/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@vibe/ui/components/select";
 import { Spinner } from "@vibe/ui/components/spinner";
 import { Switch } from "@vibe/ui/components/switch";
 import { Textarea } from "@vibe/ui/components/textarea";
-import type { FormField } from "../../lib/schema";
+import { CalendarIcon } from "lucide-react";
+import { format, isValid, parseISO } from "date-fns";
+import type { FormField, Option } from "../../lib/schema";
 import type { ResourceFormProps } from "./types";
 
 type Values = Record<string, string | number | boolean | null>;
@@ -21,11 +26,12 @@ type Values = Record<string, string | number | boolean | null>;
 function initialValue(field: FormField, record: ResourceFormProps["record"]): string | boolean {
   const value = record?.[field.name];
   if (field.type === "boolean") return value === true;
+  if (field.type === "date" && typeof value === "string") return value.slice(0, 10);
   return value === null || value === undefined ? "" : String(value);
 }
 
 /** Schema-driven create/edit form. Server action re-validates; field errors map back by name. */
-export function ResourceForm({ sections, record, redirectTo, cancelHref, labels, onSubmit }: ResourceFormProps) {
+export function ResourceForm({ sections, record, redirectTo, cancelHref, labels, locale, onSubmit }: ResourceFormProps) {
   const router = useRouter();
   const editing = !!record;
   const fields = sections.flatMap(section => section.fields);
@@ -74,7 +80,7 @@ export function ResourceForm({ sections, record, redirectTo, cancelHref, labels,
       {(section.title || section.description) && <CardHeader>{section.title && <CardTitle>{section.title}</CardTitle>}{section.description && <CardDescription>{section.description}</CardDescription>}</CardHeader>}
       <CardContent>
         <FieldGroup className={cn(section.columns === 2 && "grid gap-6 md:grid-cols-2")}>
-          {section.fields.map(field => <FieldControl key={field.name} field={field} value={values[field.name]!} error={errors[field.name]} disabled={pending || (editing && !!field.disabledOnEdit)} choose={labels.choose} onChange={value => set(field.name, value)} />)}
+          {section.fields.map(field => <FieldControl key={field.name} field={field} value={values[field.name]!} error={errors[field.name]} disabled={pending || (editing && !!field.disabledOnEdit)} labels={labels} locale={locale} onChange={value => set(field.name, value)} />)}
         </FieldGroup>
       </CardContent>
     </Card>)}
@@ -85,7 +91,8 @@ export function ResourceForm({ sections, record, redirectTo, cancelHref, labels,
   </form>;
 }
 
-function FieldControl({ field, value, error, disabled, choose, onChange }: { field: FormField; value: string | boolean; error?: string; disabled: boolean; choose: string; onChange: (value: string | boolean) => void }) {
+type ControlLabels = Pick<ResourceFormProps["labels"], "choose" | "searchOptions" | "noOptions" | "pickDate">;
+function FieldControl({ field, value, error, disabled, labels, locale, onChange }: { field: FormField; value: string | boolean; error?: string; disabled: boolean; labels: ControlLabels; locale?: string; onChange: (value: string | boolean) => void }) {
   const id = `field-${field.name}`;
   const described = [field.description && `${id}-description`, error && `${id}-error`].filter(Boolean).join(" ") || undefined;
   const common = { id, name: field.name, disabled, "aria-invalid": !!error || undefined, "aria-describedby": described, required: field.required };
@@ -96,12 +103,43 @@ function FieldControl({ field, value, error, disabled, choose, onChange }: { fie
   return <Field data-invalid={!!error || undefined} data-disabled={disabled || undefined} className={cn((field.fullWidth || field.type === "textarea") && "md:col-span-2")}>
     <FieldLabel htmlFor={id}>{field.label}{field.required && <span aria-hidden className="text-destructive">*</span>}</FieldLabel>
     {field.type === "textarea" ? <Textarea {...common} rows={4} maxLength={field.maxLength} placeholder={field.placeholder} value={String(value)} onChange={event => onChange(event.target.value)} />
-      : field.type === "select" ? <NativeSelect {...common} className="w-full" value={String(value)} onChange={event => onChange(event.target.value)}>
-        <NativeSelectOption value="">{choose}</NativeSelectOption>
-        {field.options?.map(option => <NativeSelectOption key={option.value} value={option.value}>{option.label}</NativeSelectOption>)}
-      </NativeSelect>
+      : field.type === "select" ? <Select items={[{ value: null, label: labels.choose }, ...(field.options ?? [])]} value={String(value) || null} disabled={disabled} onValueChange={next => onChange(next ?? "")}>
+        <SelectTrigger id={id} className="w-full" aria-invalid={common["aria-invalid"]} aria-describedby={described}><SelectValue /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value={null}>{labels.choose}</SelectItem>
+          {field.options?.map(option => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}
+        </SelectContent>
+      </Select>
+      : field.type === "combobox" ? <OptionCombobox id={id} options={field.options ?? []} value={String(value)} disabled={disabled} invalid={!!error} described={described} labels={labels} onChange={onChange} />
+      : field.type === "date" ? <DatePicker id={id} value={String(value)} disabled={disabled} invalid={!!error} described={described} placeholder={field.placeholder ?? labels.pickDate} locale={locale} onChange={onChange} />
       : <Input {...common} type={field.type} maxLength={field.maxLength} min={field.min} max={field.max} placeholder={field.placeholder} value={String(value)} onChange={event => onChange(event.target.value)} />}
     {field.description && <FieldDescription id={`${id}-description`}>{field.description}</FieldDescription>}
     {error && <FieldError id={`${id}-error`}>{error}</FieldError>}
   </Field>;
+}
+
+/** Searchable single choice (shadcn Combobox). Value is the option `value`; empty string = none. */
+function OptionCombobox({ id, options, value, disabled, invalid, described, labels, onChange }: { id: string; options: Option[]; value: string; disabled: boolean; invalid: boolean; described?: string; labels: ControlLabels; onChange: (value: string) => void }) {
+  return <Combobox items={options} value={options.find(option => option.value === value) ?? null} disabled={disabled} itemToStringLabel={(option: Option) => option.label} isItemEqualToValue={(a: Option, b: Option) => a.value === b.value} onValueChange={(option: Option | null) => onChange(option?.value ?? "")}>
+    <ComboboxInput id={id} className="w-full" placeholder={labels.searchOptions} disabled={disabled} showClear={!!value} aria-invalid={invalid || undefined} aria-describedby={described} />
+    <ComboboxContent>
+      <ComboboxEmpty>{labels.noOptions}</ComboboxEmpty>
+      <ComboboxList>{(option: Option) => <ComboboxItem key={option.value} value={option}>{option.label}</ComboboxItem>}</ComboboxList>
+    </ComboboxContent>
+  </Combobox>;
+}
+
+/** Popover + Calendar; value is an ISO date string (`yyyy-MM-dd`). */
+function DatePicker({ id, value, disabled, invalid, described, placeholder, locale, onChange }: { id: string; value: string; disabled: boolean; invalid: boolean; described?: string; placeholder: string; locale?: string; onChange: (value: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const date = value ? parseISO(value) : undefined;
+  const selected = date && isValid(date) ? date : undefined;
+  return <Popover open={open} onOpenChange={setOpen}>
+    <PopoverTrigger render={<Button id={id} type="button" variant="outline" disabled={disabled} aria-invalid={invalid || undefined} aria-describedby={described} className={cn("w-full justify-start font-normal", !selected && "text-muted-foreground")} />}>
+      <CalendarIcon data-icon="inline-start" />{selected ? new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(selected) : placeholder}
+    </PopoverTrigger>
+    <PopoverContent className="w-auto p-0" align="start">
+      <Calendar mode="single" selected={selected} defaultMonth={selected} captionLayout="dropdown" onSelect={day => { onChange(day ? format(day, "yyyy-MM-dd") : ""); setOpen(false); }} />
+    </PopoverContent>
+  </Popover>;
 }

@@ -18,7 +18,7 @@ Tipos de recurso suportados: `string` (varchar), `text`, `integer`, `boolean`, `
 
 Model existente suportado: export direto `pgTable(...).enableRLS()` do agregador `packages/db/src/schema.ts`, UUID `id`, `ownerUserId`, `organizationId`, políticas explícitas `pgPolicy` ou helper `policies(table)` do domínio existente; builders devem coincidir com spec. Campos obrigatórios sem default fora da allowlist são rejeitados. Tabelas sem RLS, exports indiretos, sintaxe customizada, modelos com relações obrigatórias omitidas são rejeitados; CLI não tenta interpretar JavaScript arbitrário. Revisar políticas de modelo existente antes de gerar: parser não prova semântica SQL.
 
-Relação existente: adicionar UUID em `fields` e `relations: { "projectId": { "model": "projects", "label": "name" } }`. FK deve existir explicitamente no modelo e apontar para `id` de tabela RLS com owner/organização. Opções vêm de consulta autorizada no mesmo tenant, limitadas a 100; formulário usa select, filtro usa UUID validado, actions verificam pai visível antes da escrita. Assim `--model tasks` funciona com `title: text` e `projectId: uuid`, sem duplicar tabelas. `--with-model` com relações exige primeiro modelo com FK existente; renderModel não fabrica relações.
+Relação existente: adicionar UUID em `fields` e `relations: { "projectId": { "model": "projects", "label": "name" } }`. FK deve existir explicitamente no modelo e apontar para `id` de tabela RLS com owner/organização. Opções vêm de consulta autorizada no mesmo tenant, limitadas a 500; formulário usa campo `select` (shadcn `Select`, nunca `NativeSelect`; troque para `combobox` quando houver muitas opções), filtro usa UUID validado, actions verificam pai visível antes da escrita. Assim `--model tasks` funciona com `title: text` e `projectId: uuid`, sem duplicar tabelas. `--with-model` com relações exige primeiro modelo com FK existente; renderModel não fabrica relações.
 
 ## Arquivos e execução
 
@@ -27,6 +27,8 @@ Cada resource gera um arquivo `apps/app/src/lib/resources/definitions/<kebab-nam
 - Colunas, filtros por relação, formulário e infolist derivados da spec, com rótulos `{ "pt-BR", en }` para traduzir depois.
 - Consulta com allowlist de campos, busca escapada no primeiro campo textual, ordenação só por colunas conhecidas e paginação `10/25/50/100`.
 - Mutações validam schema estrito no servidor e devolvem `fieldErrors`. Autorizam papel e escopo dentro da transação RLS e verificam se o registro pai está visível antes de escrever.
+- `can(role, operation, scope)` gerado checa só papéis declarados em `permissions`; `scope` (`identifier`, `role`, `userId`, `isAdmin`) fica disponível para regras de dono ou superadmin. Painéis `global` continuam recusados pela CLI.
+- Sem `actions` por padrão. Para ações de registro (ex.: arquivar), adicionar `actions: [{ name, label, icon?, destructive?, confirm?, bulk?, visible?, run }]` conforme `docs/UI.md`; `run` deve autorizar e validar como as mutações. Remover `create`/`update`/`delete` torna o resource somente leitura.
 
 O painel monta lista, criar, visualizar e editar a partir da definição; não há views geradas.
 
