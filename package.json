@@ -21,8 +21,7 @@
     "test:integration:events": "node -e \"if(process.env.EVENTS_TEST_INTEGRATION!=='true')throw new Error('Set EVENTS_TEST_INTEGRATION=true with disposable provisioned PostgreSQL and restricted worker')\" && pnpm --filter @vibe/events test",
     "test:e2e": "playwright test --config e2e/playwright.config.ts",
     "db:generate": "turbo run db:generate",
-    "db:migrate": "turbo run db:migrate",
-    "db:seed": "turbo run db:seed"
+    "db:migrate": "turbo run db:migrate"
   },
   "devDependencies": {
     "@better-auth/utils": "0.5.1",

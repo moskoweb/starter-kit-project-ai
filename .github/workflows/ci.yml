@@ -55,7 +55,6 @@ jobs:
           ALTER DEFAULT PRIVILEGES FOR ROLE app_owner IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO app_runtime;
           SQL
       - run: pnpm db:migrate
-      - run: pnpm db:seed
       - run: pnpm exec tsx --conditions=react-server --test tests/identity/tenant-rls.test.ts
         env:
           IDENTITY_TEST_DATABASE: 1
@@ -136,7 +135,6 @@ jobs:
           pnpm exec tsx packages/cli/src/index.ts resource Note --model note --panel app --with-model --migration --noninteractive \
             --spec '{"scope":"personal","fields":{"title":{"type":"string","required":true},"body":{"type":"text","optional":true}},"permissions":{"read":["personal"],"create":["personal"],"update":["personal"],"delete":["personal"]}}'
       - run: pnpm db:migrate
-      - run: pnpm db:seed
       - run: pnpm --filter app build
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e

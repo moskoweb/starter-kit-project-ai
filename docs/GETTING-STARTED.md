@@ -141,7 +141,6 @@ GRANT SELECT, INSERT, UPDATE, DELETE
   ON public."user", public.session, public.account, public.verification,
      public.organization, public.member, public.invitation, public.two_factor
   TO produto_app;
-GRANT SELECT, INSERT ON public.app_settings TO produto_app;
 GRANT SELECT, INSERT, UPDATE ON public.totp_replay TO produto_app;
 GRANT SELECT, INSERT, UPDATE ON public.rate_limit_windows TO produto_app;
 GRANT SELECT, INSERT ON public.event_outbox TO produto_app;
@@ -168,14 +167,13 @@ Notificações podem ser consultadas mesmo sem fila habilitada, mas só serão p
 
 Novas tabelas geradas exigem grants próprios revisados. Não use `GRANT ALL ON ALL TABLES`, ownership ou `BYPASSRLS` para resolver erro de permissão. Integrações opcionais requerem grants/provisionamento adicionais nos guias específicos. Nenhum comando deste guia dá credencial SQL a browser ou usuário final.
 
-## 5. Seed e diagnóstico
+## 5. Diagnóstico
 
 ```bash
-pnpm --filter @vibe/db db:seed
 pnpm exec tsx packages/cli/src/index.ts doctor
 ```
 
-Seed só insere `app_settings.app_name` quando ausente. Não cria admin, organização nem dados de demonstração e não sobrescreve nome customizado. `doctor` verifica presença de arquivos/scripts e variáveis obrigatórias; não testa conexão, grants, SMTP nem segurança do deploy. Não imprime valores dos segredos.
+Não há seed: o kit não cria dados de demonstração. `doctor` verifica presença de arquivos/scripts e variáveis obrigatórias; não testa conexão, grants, SMTP nem segurança do deploy. Não imprime valores dos segredos.
 
 ## 6. Provisionar administrador explicitamente
 

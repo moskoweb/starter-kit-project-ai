@@ -2,7 +2,7 @@
 
 ## Estado e fontes canônicas
 
-Este repositório tem fundação funcional, mas starter completo ainda está em implementação. Ler `.planning/STATE.md`, `.planning/PROJECT.md`, `.planning/REQUIREMENTS.md` e `.planning/ROADMAP.md` antes de alterar arquitetura. Pesquisa em `.planning/research/` distingue evidência de recomendação. Comandos existentes: `pnpm check-types`, `pnpm test`, `pnpm db:generate`, `pnpm db:migrate`, `pnpm db:seed`, `pnpm dev`, `pnpm build`. Tipos, testes de ambiente, migrations, seed e tracer web foram exercitados; build final e demais gates consultáveis em VERIFICATION.md, nunca presumir aprovação.
+Starter kit (scaffolding no estilo Filament): fornece infraestrutura, painel admin e CLI; não traz domínio de exemplo. Ler `.planning/STATE.md`, `.planning/PROJECT.md`, `.planning/REQUIREMENTS.md` e `.planning/ROADMAP.md` antes de alterar arquitetura. Pesquisa em `.planning/research/` distingue evidência de recomendação. Comandos existentes: `pnpm check-types`, `pnpm test`, `pnpm db:generate`, `pnpm db:migrate`, `pnpm lint`, `pnpm dev`, `pnpm build`, `pnpm test:e2e`. Nunca presumir aprovação de gates: rodar e reportar.
 
 Runtime usa `DATABASE_URL` com role DML; migrations exigem `MIGRATION_DATABASE_URL` separada. Injetar ambiente antes dos scripts, sem imprimir segredos. Neste checkout dev em 127.0.0.1:3001, infraestrutura documentada em `docs/DEVELOPMENT.md`. Preservar preview e hot reload.
 

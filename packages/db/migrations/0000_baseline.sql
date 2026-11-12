@@ -1,9 +1,3 @@
-CREATE TABLE "app_settings" (
-	"key" varchar(64) PRIMARY KEY NOT NULL,
-	"value" text NOT NULL,
-	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
-);
---> statement-breakpoint
 CREATE TABLE "account" (
 	"id" uuid PRIMARY KEY DEFAULT pg_catalog.gen_random_uuid() NOT NULL,
 	"account_id" text NOT NULL,

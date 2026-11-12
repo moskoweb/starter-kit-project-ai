@@ -19,7 +19,7 @@ EMAIL_ALLOW_INSECURE_LOOPBACK=true E2E_PORT=3010 BETTER_AUTH_URL=http://127.0.0.
 
 Sem `E2E_BASE_URL`, o Playwright copia `static` e `public` para o build standalone e sobe `server.js` na porta `E2E_PORT` (padrão 3000) com o ambiente do shell; `BETTER_AUTH_URL` deve apontar para a mesma origem. Com `E2E_BASE_URL=http://127.0.0.1:3001`, ele reutiliza um servidor já rodando. Cada teste cria um usuário único `e2e-*@example.test`; use banco descartável. Falhas guardam trace e relatório em `e2e/playwright-report`.
 
-No CI (`.github/workflows/ci.yml`), o job `e2e` roda depois de `checks`, com PostgreSQL 17 e Mailpit como serviços, e publica o relatório quando falha. Antes de migrar, ele exercita a CLI no checkout: `panel app --context personal --prefix /app` e `resource Note --model note --panel app --with-model --migration` (spec pessoal: `title` string obrigatório, `body` text opcional); depois `db:migrate`, seed, build e `test:e2e` com `E2E_GENERATED_RESOURCE=1`. Com painel pessoal registrado, o login cai em `/app` em vez de `/account`.
+No CI (`.github/workflows/ci.yml`), o job `e2e` roda depois de `checks`, com PostgreSQL 17 e Mailpit como serviços, e publica o relatório quando falha. Antes de migrar, ele exercita a CLI no checkout: `panel app --context personal --prefix /app` e `resource Note --model note --panel app --with-model --migration` (spec pessoal: `title` string obrigatório, `body` text opcional); depois `db:migrate`, build e `test:e2e` com `E2E_GENERATED_RESOURCE=1`. Com painel pessoal registrado, o login cai em `/app` em vez de `/account`.
 
 Para repetir localmente, rode os mesmos comandos de geração numa cópia descartável (nunca no checkout que você vai commitar), aplique migrations e exporte `E2E_GENERATED_RESOURCE=1`.
 

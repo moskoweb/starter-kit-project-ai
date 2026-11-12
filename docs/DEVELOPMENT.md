@@ -9,7 +9,7 @@ Infraestrutura de preparação; não copiar valores privados para projetos deriv
 - Role runtime `vibe_starter_app`: sem superuser/createdb/createrole, DML em tabelas do projeto.
 - Role migration `vibe_starter_owner`: proprietária apenas do banco do projeto, sem superuser/createdb/createrole.
 - Credenciais próprias em `/root/.local/share/vibe-stater-kit/development.env`, permissão 0600, fora do repo. Injetar no processo sem imprimir valores. Nunca passar credencial owner ao cliente ou requerê-la no runtime web.
-- Migrations0000–0005 e seed aplicados; DB runtime e worker têm roles separadas. Worker `vibe_starter_worker` não é owner/admin e usa grants/policies de provisionamento explícito.
+- Migrations `0000_baseline` e `0001_hardening` aplicadas; DB runtime e worker têm roles separadas. Worker `vibe_starter_worker` não é owner/admin e usa grants/policies de provisionamento explícito.
 
 ## Email de desenvolvimento
 

@@ -2,7 +2,7 @@
 
 ## Preparação
 
-Criar projeto derivado pela CLI, instalar com pnpm frozen-lockfile e configurar ambiente somente no derivado. Usar PostgreSQL isolado e roles runtime/migration distintas. Aplicar migrations e seed explicitamente. Não colocar credenciais no template.
+Criar projeto derivado pela CLI, instalar com pnpm frozen-lockfile e configurar ambiente somente no derivado. Usar PostgreSQL isolado e roles runtime/migration distintas. Aplicar migrations explicitamente. Não colocar credenciais no template.
 
 ## Fluxos
 

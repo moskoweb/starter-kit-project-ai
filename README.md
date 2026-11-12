@@ -33,7 +33,7 @@ Nomes e scripts abaixo correspondem aos manifests dos workspaces; todos são pri
 | `apps/web` | `@vibe/web` | Site público Astro estático, separado da aplicação autenticada | `dev`, `build`, `check`, `check-types`, `preview` |
 | `apps/worker` | `@vibe/worker` | Consumidor de jobs e relay supervisionados | `dev`, `build`, `start`, `relay`, `check-types` |
 | `packages/config` | `@vibe/config` | Ambiente validado com Zod e tsconfig compartilhado | `check-types`, `test` |
-| `packages/db` | `@vibe/db` | Schema Drizzle, client, RLS, migrations e seed | `check-types`, `db:generate`, `db:migrate`, `db:seed`, `db:rate-limit-cleanup` |
+| `packages/db` | `@vibe/db` | Schema Drizzle, client, RLS e migrations | `check-types`, `db:generate`, `db:migrate`, `db:rate-limit-cleanup` |
 | `packages/ui` | `@vibe/ui` | Primitivas e composição visual sem banco/autenticação | `check-types` |
 | `packages/auth` | `@vibe/auth` | Better Auth, sessão, permissões e resolução de tenant | `check-types`, `seed:admin` |
 | `packages/email` | `@vibe/email` | Templates React Email, render puro e transporte SMTP/Resend | `check-types`, `preview` |
@@ -61,12 +61,11 @@ pnpm install
 
 O destino deve não existir, ficar fora do template e ter diretório pai existente. A cópia exclui credenciais `.env*` (exceto `.env.example`), dependências, caches, `.git`, `.planning` e índice CodeGraph; gera `AGENTS.md` portátil, grava perfil no exemplo de ambiente e registra os painéis do perfil (`personal` → `app` em `/app`; `organizations` → `org` em `/org/<slug>`; `hybrid` → ambos; `admin` sempre). Não copia o ambiente de preparação. Inicie histórico Git próprio se desejar.
 
-Em seguida, siga [GETTING-STARTED](docs/GETTING-STARTED.md): provisionar roles, configurar ambiente, aplicar migrations, conceder grants, executar seed, provisionar admin e entrar. Resumo **após** esses preparativos:
+Em seguida, siga [GETTING-STARTED](docs/GETTING-STARTED.md): provisionar roles, configurar ambiente, aplicar migrations, conceder grants, provisionar admin e entrar. Resumo **após** esses preparativos:
 
 ```bash
 pnpm --filter @vibe/db db:migrate
-# Aplicar grants de runtime descritos no guia antes do seed.
-pnpm --filter @vibe/db db:seed
+# Aplicar grants de runtime descritos no guia.
 pnpm --filter app dev
 ```
 
@@ -141,7 +140,6 @@ Na raiz, Turborepo executa scripts existentes nos workspaces:
 | `pnpm test:integration:events` | Concorrência de eventos contra banco/worker provisionados; exige `EVENTS_TEST_INTEGRATION=true` |
 | `pnpm db:generate` | Gera SQL/snapshots e proteções de escopo pendentes; não aplica banco |
 | `pnpm db:migrate` | Aplica migrations com credencial DDL |
-| `pnpm db:seed` | Insere `app_name` se ausente, sem sobrescrever customizações |
 
 Use `pnpm --filter <nome> <script>` para processos isolados. Exemplos:
 

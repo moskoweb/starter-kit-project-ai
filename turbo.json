@@ -1,27 +1,54 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalPassThroughEnv": ["DATABASE_URL", "MIGRATION_DATABASE_URL", "BETTER_AUTH_*", "IDENTITY_*", "EMAIL_*", "SMTP_*", "RESEND_*", "JOBS_*", "WORKER_*", "EVENTS_*", "STORAGE_*", "S3_*", "AI_*", "PWA_*", "PUSH_*", "PORT"],
+  "globalPassThroughEnv": [
+    "DATABASE_URL",
+    "MIGRATION_DATABASE_URL",
+    "BETTER_AUTH_*",
+    "IDENTITY_*",
+    "EMAIL_*",
+    "SMTP_*",
+    "RESEND_*",
+    "JOBS_*",
+    "WORKER_*",
+    "EVENTS_*",
+    "STORAGE_*",
+    "S3_*",
+    "AI_*",
+    "PWA_*",
+    "PUSH_*",
+    "PORT"
+  ],
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
-      "env": ["SITE_URL", "PUBLIC_APP_URL", "NEXT_PUBLIC_*", "S3_PUBLIC_UPLOAD_ORIGIN"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+      "dependsOn": [
+        "^build"
+      ],
+      "env": [
+        "SITE_URL",
+        "PUBLIC_APP_URL",
+        "NEXT_PUBLIC_*",
+        "S3_PUBLIC_UPLOAD_ORIGIN"
+      ],
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**",
+        "dist/**"
+      ]
     },
     "dev": {
       "cache": false,
       "persistent": true
     },
     "check-types": {
-      "dependsOn": ["^check-types"]
+      "dependsOn": [
+        "^check-types"
+      ]
     },
     "test": {},
     "db:generate": {
       "cache": false
     },
     "db:migrate": {
-      "cache": false
-    },
-    "db:seed": {
       "cache": false
     }
   }
