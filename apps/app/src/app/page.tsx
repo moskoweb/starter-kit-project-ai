@@ -1,6 +1,10 @@
 import { getDb, appSettings } from "@vibe/db";
 import { eq } from "drizzle-orm";
 import { Badge, Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@vibe/ui";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { getAuth } from "@vibe/auth";
+import { landingPath } from "@/components/organization/landing";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +17,20 @@ function publicWebsite() {
     return null;
   }
 }
+/** Signed-in users go to their landing panel; visitors keep the public status page. */
+async function signedInLanding() {
+  try {
+    const currentHeaders = await headers();
+    const session = await getAuth().api.getSession({ headers: currentHeaders });
+    return session?.user.emailVerified ? await landingPath(currentHeaders) : null;
+  } catch {
+    return null; // DB/auth unavailable: fall back to status page diagnostics.
+  }
+}
+
 export default async function HomePage() {
+  const target = await signedInLanding();
+  if (target) redirect(target);
   let dbStatus: "connected" | "unreachable" = "unreachable";
   let appName: string | null = null;
   let lastUpdated: string | null = null;

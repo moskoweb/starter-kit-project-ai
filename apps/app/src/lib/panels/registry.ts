@@ -23,10 +23,12 @@ export const reservedPanelRoutes = [
   "verify-email",
   "security",
   "invitations",
+  "onboarding",
   "offline",
   "manifest.webmanifest",
   "sw.js",
   "icons",
+  "banned",
 ] as const;
 
 export const registry: readonly PanelConfig[] = validatePanels([
