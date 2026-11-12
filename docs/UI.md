@@ -26,6 +26,8 @@ Se `Cannot find module '@tailwindcss/postcss'` persistir após instalar dependê
 
 Primitivos são componentes oficiais shadcn/ui, estilo `base-nova` sobre [Base UI](https://base-ui.com) (`@base-ui/react`), ícones `lucide-react`, tokens `neutral`. A CLI instala tudo em `packages/ui/src/components/`. Importe por arquivo (`@vibe/ui/components/<nome>`) ou pelo entrypoint `@vibe/ui`. Docs: [ui.shadcn.com/docs/components](https://ui.shadcn.com/docs/components) (aba Base UI).
 
+Ícones: somente [`lucide-react`](https://lucide.dev/icons) (`iconLibrary: lucide` nos `components.json`). Em botões use `data-icon="inline-start|inline-end"`. Ícones de navegação vêm por chave de `apps/app/src/components/panels/nav-icons.ts`. SVG inline só para logos de marca ausentes no Lucide (ex.: Google).
+
 Composição em Base UI usa a prop `render`, não `asChild`: `<DropdownMenuTrigger render={<Button variant="ghost" />}>`. Para links estilizados como botão use `buttonVariants()` em `<Link className={...}>`. Quando um gatilho de diálogo renderiza algo que não é `<button>` (ex.: item de menu), passe `nativeButton={false}`.
 
 Seleção: sempre `Select` shadcn (`@vibe/ui/components/select`, Base UI); nunca `NativeSelect` nem `<select>` nativo. Em formulários use a prop `name` do `Select` (renderiza input oculto) ou valor controlado; passe `items` (`{ value, label }[]`) para o `SelectValue` mostrar o rótulo. Busca em muitas opções: `Combobox`.
