@@ -49,14 +49,14 @@ Nomes e scripts abaixo correspondem aos manifests dos workspaces; todos são pri
 
 Pré-requisitos: **Node.js >=22.23.0**, **pnpm 10.32.1** (versão fixada em `packageManager`), PostgreSQL 17 e acesso de operador para criar banco/roles. Docker é opcional; não substitui provisionamento e grants.
 
-A CLI não está publicada como pacote público. Clone o kit e gere o projeto a partir dele:
+A CLI roda dentro do repositório como `pnpm vibe <comando>` (ou `npm run vibe -- <comando>`); não precisa instalar nada global. Clone o kit e gere o projeto a partir dele:
 
 ```bash
 git clone https://github.com/moskoweb/starter-kit-project-ai.git vibe-kit
 cd vibe-kit
 pnpm install
-pnpm exec tsx packages/cli/src/index.ts create ../meu-produto --profile hybrid --preview --json
-pnpm exec tsx packages/cli/src/index.ts create ../meu-produto --profile hybrid --noninteractive
+pnpm vibe create ../meu-produto --profile hybrid --preview --json
+pnpm vibe create ../meu-produto --profile hybrid --noninteractive
 cd ../meu-produto
 pnpm install
 git init && git add -A && git commit -m "chore: initial import"
@@ -69,8 +69,8 @@ O destino deve não existir, ficar fora do template e ter diretório pai existen
 ```bash
 cd ../meu-produto
 git init && git add -A && git commit -m "chore: initial import"   # uma vez
-pnpm exec tsx packages/cli/src/index.ts upgrade --preview   # commits e migrations alteradas
-pnpm exec tsx packages/cli/src/index.ts upgrade             # merge em chore/upgrade-kit-<sha>, sem commit
+pnpm vibe upgrade --preview   # commits e migrations alteradas
+pnpm vibe upgrade             # merge em chore/upgrade-kit-<sha>, sem commit
 ```
 
 `upgrade` faz merge de três vias entre a base gravada, o kit atual e o projeto; conflitos ficam para resolução. Agentes seguem [`.agents/skills/upgrade-kit/SKILL.md`](.agents/skills/upgrade-kit/SKILL.md) (upstream é dono do mecanismo; projeto é dono de identidade e escopo; migrations aplicadas são imutáveis). Verifique, commite `chore: upgrade kit to <sha>` e faça fast-forward em `main`.
@@ -126,10 +126,10 @@ Painel organizacional declara `tenantIdentifier: "slug" | "uuid"`; padrão é sl
 **Model é schema Drizzle; resource compõe interface e operações.** Não há segunda camada ORM. Para trabalhar na CLI sem compilar:
 
 ```bash
-pnpm exec tsx packages/cli/src/index.ts doctor
-pnpm exec tsx packages/cli/src/index.ts panel sales --context organization --prefix /sales --preview --json
-pnpm exec tsx packages/cli/src/index.ts model Note --spec '{"scope":"personal","fields":{"title":{"type":"string","required":true}}}' --preview --json
-pnpm exec tsx packages/cli/src/index.ts resource Note --model note --panel app --with-model --spec '{"scope":"personal","fields":{"title":{"type":"string","required":true}},"permissions":{"read":["personal"],"create":["personal"],"update":["personal"],"delete":["personal"]}}' --preview --json
+pnpm vibe doctor
+pnpm vibe panel sales --context organization --prefix /sales --preview --json
+pnpm vibe model Note --spec '{"scope":"personal","fields":{"title":{"type":"string","required":true}}}' --preview --json
+pnpm vibe resource Note --model note --panel app --with-model --spec '{"scope":"personal","fields":{"title":{"type":"string","required":true}},"permissions":{"read":["personal"],"create":["personal"],"update":["personal"],"delete":["personal"]}}' --preview --json
 ```
 
 Exemplos acima são previews independentes. Para gerar Note com modelo e CRUD, execute **somente** comando `resource --with-model` sem `--preview`; não gere previamente o mesmo model. Revise arquivos e execute `pnpm db:generate`, revise SQL e aplique migrations separadamente. CLI recusa conflitos; não sobrescreve customizações. Resources gerados usam allowlists, autorização e contexto RLS, não inferem qualquer schema arbitrário. [Tipos, relações, limites e rollback](docs/CLI-RESOURCES.md).

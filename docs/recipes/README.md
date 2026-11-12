@@ -11,7 +11,7 @@ As receitas nasceram da experiência com um produto multi-tenant mais antigo e c
 1. Confirme que o produto precisa da capacidade. Se não precisa, não adicione. Integração desabilitada nunca pode exigir credenciais nem bloquear o startup.
 2. Leia a receita inteira e a seção de armadilhas antes de escrever código.
 3. Planeje em `.planning/` do projeto derivado. Cada receita vira uma fase ou um conjunto de tarefas com o checklist de aceite da própria receita.
-4. Prefira o gerador da CLI (`pnpm exec tsx packages/cli/src/index.ts model` e `resource`, ver `docs/CLI.md`) para o CRUD de tabelas de tenant. O `model` aceita string, text, integer, boolean, timestamp e uuid e exige `ownerUserId` e `organizationId`. O `resource` não aceita timestamp. Para arrays, enums, JSON, vetores e tabelas de plataforma, escreva o schema Drizzle e as políticas RLS à mão, seguindo `packages/db/src/ai-schema.ts`.
+4. Prefira o gerador da CLI (`pnpm vibe model` e `resource`, ver `docs/CLI.md`) para o CRUD de tabelas de tenant. O `model` aceita string, text, integer, boolean, timestamp e uuid e exige `ownerUserId` e `organizationId`. O `resource` não aceita timestamp. Para arrays, enums, JSON, vetores e tabelas de plataforma, escreva o schema Drizzle e as políticas RLS à mão, seguindo `packages/db/src/ai-schema.ts`.
 
 ## Índice
 

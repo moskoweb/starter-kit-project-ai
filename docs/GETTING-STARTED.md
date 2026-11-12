@@ -17,16 +17,16 @@ Clone o kit; o diretório pai do destino precisa existir:
 git clone https://github.com/moskoweb/starter-kit-project-ai.git vibe-kit
 cd vibe-kit
 pnpm install
-pnpm exec tsx packages/cli/src/index.ts create ../meu-produto --profile hybrid --preview --json
-pnpm exec tsx packages/cli/src/index.ts create ../meu-produto --profile hybrid --noninteractive
+pnpm vibe create ../meu-produto --profile hybrid --preview --json
+pnpm vibe create ../meu-produto --profile hybrid --noninteractive
 cd ../meu-produto
 pnpm install
 git init && git add -A && git commit -m "chore: initial import"
 ```
 
-Troque `hybrid` por `personal` ou `organizations` conforme produto. O kit não traz domínio de exemplo: o template só tem o painel `admin` (`/admin`). `create` registra os painéis de trabalho do perfil, como `vibe panel` faria (`apps/app/src/lib/panels/<id>.config.ts` + import em `registry.ts`): `personal` → painel `app` em `/app`; `organizations` → painel `org` em `/org/<slug>`; `hybrid` → ambos. Destino deve não existir, não pode ser symlink nem ficar dentro do kit. CLI copia fonte, não `.git`, `.planning`, dependências, caches ou credenciais reais. O novo `AGENTS.md` é portátil; histórico e configuração de agentes do kit não são transferidos. Atualizações do kit não chegam sozinhas: `.vibe-kit.json` registra a base e `pnpm exec tsx packages/cli/src/index.ts upgrade` faz merge revisável (ver [CLI](CLI.md)).
+Troque `hybrid` por `personal` ou `organizations` conforme produto. O kit não traz domínio de exemplo: o template só tem o painel `admin` (`/admin`). `create` registra os painéis de trabalho do perfil, como `vibe panel` faria (`apps/app/src/lib/panels/<id>.config.ts` + import em `registry.ts`): `personal` → painel `app` em `/app`; `organizations` → painel `org` em `/org/<slug>`; `hybrid` → ambos. Destino deve não existir, não pode ser symlink nem ficar dentro do kit. CLI copia fonte, não `.git`, `.planning`, dependências, caches ou credenciais reais. O novo `AGENTS.md` é portátil; histórico e configuração de agentes do kit não são transferidos. Atualizações do kit não chegam sozinhas: `.vibe-kit.json` registra a base e `pnpm vibe upgrade` faz merge revisável (ver [CLI](CLI.md)).
 
-Não há `pnpm create` publicado nem necessidade de instalar `vibe` globalmente. Todos comandos CLI deste guia rodam pela fonte local.
+`pnpm vibe` é um script do `package.json` que roda a CLI pela fonte local; o projeto gerado traz o mesmo script. Não há instalação global.
 
 ## 2. Provisionar PostgreSQL
 
@@ -173,7 +173,7 @@ Novas tabelas geradas exigem grants próprios revisados. Não use `GRANT ALL ON 
 ## 5. Diagnóstico
 
 ```bash
-pnpm exec tsx packages/cli/src/index.ts doctor
+pnpm vibe doctor
 ```
 
 Não há seed: o kit não cria dados de demonstração. `doctor` verifica presença de arquivos/scripts e variáveis obrigatórias; não testa conexão, grants, SMTP nem segurança do deploy. Não imprime valores dos segredos.
@@ -232,7 +232,7 @@ Painéis ficam em `apps/app/src/lib/panels/registry.ts`: `/admin` sempre; `/app`
 No projeto derivado (perfil `personal` ou `hybrid`, painel `app`):
 
 ```bash
-pnpm exec tsx packages/cli/src/index.ts resource Note --model note --panel app --with-model --spec '{"scope":"personal","fields":{"title":{"type":"string","required":true}},"permissions":{"read":["personal"],"create":["personal"],"update":["personal"],"delete":["personal"]}}' --preview --json
+pnpm vibe resource Note --model note --panel app --with-model --spec '{"scope":"personal","fields":{"title":{"type":"string","required":true}},"permissions":{"read":["personal"],"create":["personal"],"update":["personal"],"delete":["personal"]}}' --preview --json
 ```
 
 Revise preview, execute mesmo comando sem `--preview`, gere/revise/aplique migrations. Como owner, conceda `SELECT, INSERT, DELETE` na tabela gerada e `UPDATE` só nos campos editáveis; preserve identidade/escopo imutáveis. Consulte nome SQL efetivamente gerado, não adivinhe pluralização. Entre e abra `/app/note` (slug = nome em kebab-case, sem pluralizar). Com `JOBS_ENABLED=true`, criar registro enfileira evento `note.created` na mesma transação.

@@ -34,9 +34,9 @@ Autorização: `resource-actions.ts` é a única porta de Server Actions. Antes 
 ## Adicionar painel
 
 ```bash
-pnpm exec tsx packages/cli/src/index.ts panel app --context personal --prefix /app --label Personal
-pnpm exec tsx packages/cli/src/index.ts panel org --context organization --prefix /org --label Organization --identifier slug
-pnpm exec tsx packages/cli/src/index.ts panel sales --context organization --prefix /sales --preview --json
+pnpm vibe panel app --context personal --prefix /app --label Personal
+pnpm vibe panel org --context organization --prefix /org --label Organization --identifier slug
+pnpm vibe panel sales --context organization --prefix /sales --preview --json
 ```
 
 Gera `<id>.config.ts` e registra em `registry.ts`; recusa id/prefixo duplicado, sobreposto ou reservado. Depois associe resources por `panelIds` (`vibe resource ... --panel <id>`). Perfil de identidade (`IDENTITY_PROFILE`) continua valendo em runtime: painel de organização retorna 404 no perfil `personal`, e o perfil `organizations` não usa painel pessoal como landing.

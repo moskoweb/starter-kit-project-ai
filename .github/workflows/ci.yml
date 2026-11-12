@@ -131,8 +131,8 @@ jobs:
           SQL
       - name: Generate personal panel and Note resource (exercises CLI output end to end)
         run: |
-          pnpm exec tsx packages/cli/src/index.ts panel app --context personal --prefix /app --noninteractive
-          pnpm exec tsx packages/cli/src/index.ts resource Note --model note --panel app --with-model --migration --noninteractive \
+          pnpm vibe panel app --context personal --prefix /app --noninteractive
+          pnpm vibe resource Note --model note --panel app --with-model --migration --noninteractive \
             --spec '{"scope":"personal","fields":{"title":{"type":"string","required":true},"body":{"type":"text","optional":true}},"permissions":{"read":["personal"],"create":["personal"],"update":["personal"],"delete":["personal"]}}'
       - run: pnpm db:migrate
       - run: pnpm --filter app build

@@ -1,6 +1,6 @@
 # CLI
 
-Run local CLI through `pnpm exec tsx packages/cli/src/index.ts`.
+Run the CLI with `pnpm vibe <command>` (root `package.json` script running `packages/cli/src/index.ts` via tsx); derived projects ship the same script. `npm run vibe -- <command>` also works.
 
 - `create <dir> --profile personal|organizations|hybrid` copies source kit into a new directory and registers the profile's workspace panels with the same generator as `panel` (`apps/app/src/lib/panels/<id>.config.ts` + `registry.ts` import): `personal` → `app` (`/app`, context personal); `organizations` → `org` (`/org/<slug>`, context organization, `tenantIdentifier: "slug"`); `hybrid` → both. The template itself ships only the `admin` panel and no sample domain; build the domain with `resource`. When the kit is a git checkout, `create` writes `.vibe-kit.json` (origin URL, branch, commit) as the base for `upgrade`.
 - `upgrade [--ref branch] [--preview] [--json]` runs inside a derived project (git repo, clean tree). It fetches the kit from `.vibe-kit.json` into remote `kit`, refuses when upstream changed an existing `packages/db/migrations/*.sql`, and three-way merges on branch `chore/upgrade-kit-<sha>` with `zdiff3` and `--no-commit`. The first run records the kit base as ancestor (`merge -s ours`, tree unchanged). Kit-only paths (`.planning`, `.mcp.json`) stay out; `.vibe-kit.json` advances. Resolve conflicts with `.agents/skills/upgrade-kit/SKILL.md`.

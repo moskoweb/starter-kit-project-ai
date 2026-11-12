@@ -25,8 +25,8 @@ Prerequisites: the project is a git repository with a clean tree on `main` (firs
 
 ```bash
 git status --short                                              # must be clean
-pnpm exec tsx packages/cli/src/index.ts upgrade --preview      # upstream commits and changed migrations; read before resolving
-pnpm exec tsx packages/cli/src/index.ts upgrade                # switches to chore/upgrade-kit-<sha>, merges with zdiff3, never commits
+pnpm vibe upgrade --preview      # upstream commits and changed migrations; read before resolving
+pnpm vibe upgrade                # switches to chore/upgrade-kit-<sha>, merges with zdiff3, never commits
 git diff --name-only --diff-filter=U                            # unresolved conflicts
 ```
 

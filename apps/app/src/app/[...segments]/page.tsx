@@ -109,7 +109,7 @@ export default async function PanelPage({ params, searchParams }: Props) {
           <EmptyTitle>{copy.emptyDashboard}</EmptyTitle>
           <EmptyDescription>{copy.emptyDashboardDescription}</EmptyDescription>
         </EmptyHeader>
-        {process.env.NODE_ENV !== "production" && <EmptyContent><p className="text-sm text-muted-foreground">{copy.emptyDashboardHint} <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">pnpm exec tsx packages/cli/src/index.ts resource</code></p></EmptyContent>}
+        {process.env.NODE_ENV !== "production" && <EmptyContent><p className="text-sm text-muted-foreground">{copy.emptyDashboardHint} <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">pnpm vibe resource</code></p></EmptyContent>}
       </Empty>
       {process.env.WEBHOOKS_OUTBOUND_ENABLED === "true" && <WebhookDeliveries tenantIdentifier={identifier} locale={locale} />}
       {process.env.PUSH_ENABLED === "true" && <PushSettings key={identifier ?? "personal"} enabled tenantIdentifier={identifier} locale={locale} />}
