@@ -9,6 +9,8 @@
     ".": "./src/index.tsx",
     "./theme.css": "./src/styles/theme.css",
     "./components/*": "./src/components/*.tsx",
+    "./components/resource/*": "./src/components/resource/*.tsx",
+    "./components/resource/types": "./src/components/resource/types.ts",
     "./lib/*": "./src/lib/*.ts",
     "./hooks/*": "./src/hooks/*.ts"
   },
@@ -16,21 +18,27 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@hookform/resolvers": "^5.2.2",
-    "@tanstack/react-table": "^8.21.3",
+    "@base-ui/react": "^1.9.0",
     "class-variance-authority": "^0.7.1",
+    "cmdk": "^1.1.1",
     "cn": "^0.5.2",
+    "date-fns": "^4.4.0",
     "lucide-react": "^1.72.0",
-    "radix-ui": "^1.8.1",
+    "next-themes": "^0.4.6",
     "react": "19.3.1",
+    "react-day-picker": "^10.0.2",
     "react-dom": "19.3.1",
-    "react-hook-form": "^7.66.0",
-    "recharts": "^3.4.1",
+    "recharts": "^3.8.0",
+    "sonner": "^2.0.8",
     "zod": "^4.1.12"
   },
   "devDependencies": {
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "next": "16.4.6",
     "typescript": "5.9.3"
+  },
+  "peerDependencies": {
+    "next": ">=16"
   }
 }
