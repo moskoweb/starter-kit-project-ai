@@ -233,6 +233,7 @@ O kit entrega código e fluxos de exemplo, não certificação de segurança, op
 
 - **Primeira execução:** [GETTING-STARTED](docs/GETTING-STARTED.md)
 - **Extensão:** [CLI](docs/CLI.md), [resources/painéis](docs/CLI-RESOURCES.md), [painéis](docs/PANELS.md)
+- **Receitas opcionais (IA, KB/RAG, MCP, API pública, SSE, auditoria, segredos):** [docs/recipes](docs/recipes/README.md). Orientação, não código entregue.
 - **Identidade:** [rotas](docs/AUTH-ROUTES.md), [single-tenant](docs/SINGLE-TENANT.md)
 - **Interface:** [UI, resources e licença das adaptações](docs/UI.md), [localização](docs/I18N.md)
 - **Operação:** [deployment](docs/DEPLOYMENT.md), [logs/analytics/SEO](docs/OPERATIONS.md), [controles de segurança](docs/SECURITY.md)
