@@ -238,4 +238,4 @@ O kit entrega código e fluxos de exemplo, não certificação de segurança, op
 - **Operação:** [deployment](docs/DEPLOYMENT.md), [logs/analytics/SEO](docs/OPERATIONS.md), [controles de segurança](docs/SECURITY.md)
 - **Aceite:** [roteiro integrado](docs/ACCEPTANCE.md), [testes de identidade](tests/identity)
 
-Não há licença geral declarada no manifest raiz. Antes de redistribuir, defina licença do seu produto e preserve atribuições de dependências e adaptações; a licença das adaptações shadcn/ui está em `docs/UI.md`.
+Licença [MIT](LICENSE) © moskoweb <Alan Mosko>. Atribuições de terceiros: adaptações shadcn/ui (MIT) em `docs/UI.md`; skills vendored em `.agents/skills/*/LICENSE*`. Projetos derivados podem relicenciar o próprio código, preservando esses avisos. Mudanças por versão em [CHANGELOG](CHANGELOG.md).
