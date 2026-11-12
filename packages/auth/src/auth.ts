@@ -79,9 +79,11 @@ function createAuth() {
           throw new APIError("FORBIDDEN", { message: "Organizações desabilitadas neste perfil." });
         }
         if ((ctx.path === "/organization/create" || ctx.path === "/organization/update") && ctx.body) {
-          const slug = ctx.body.slug ?? ctx.body.data?.slug;
-          if (slug !== undefined && (typeof slug !== "string" || slug.length > 80 || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug) || ["new", "settings", "members", "invitations", "admin", "personal"].includes(slug))) {
-            throw new APIError("BAD_REQUEST", { message: "Slug inválido ou reservado." });
+          // Check every place a slug can arrive: create reads `slug`, update persists `data.slug`.
+          for (const slug of [ctx.body.slug, ctx.body.data?.slug]) {
+            if (slug !== undefined && (typeof slug !== "string" || slug.length > 80 || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug) || ["new", "settings", "members", "invitations", "admin", "personal"].includes(slug))) {
+              throw new APIError("BAD_REQUEST", { message: "Slug inválido ou reservado." });
+            }
           }
         }
       }),
