@@ -1,4 +1,4 @@
-import { canAccessProject } from "@vibe/auth/permissions";
+import { canAccessScope } from "@vibe/auth/permissions";
 import { parseJobEnvelope, type JobEnvelope, type JobHandlers } from "@vibe/jobs";
 import { checkedWorkerSql } from "./connection";
 export { closeConnections } from "./connection";
@@ -11,21 +11,19 @@ export async function processEvent(input: JobEnvelope): Promise<void> {
     const [event] = await tx`select * from event_outbox where id = ${envelope.eventId} for update`;
     if (!event) throw new Error("EVENT_NOT_FOUND");
     const organizationId = envelope.context.kind === "organization" ? envelope.context.organizationId : null;
-    if (event.actor_user_id !== envelope.actorUserId || event.organization_id !== organizationId || event.entity_id !== envelope.entityId || event.type !== "project.created" || envelope.correlationId !== event.id) throw new Error("EVENT_ENVELOPE_MISMATCH");
+    if (event.actor_user_id !== envelope.actorUserId || event.organization_id !== organizationId || event.entity_id !== envelope.entityId || envelope.correlationId !== event.id) throw new Error("EVENT_ENVELOPE_MISMATCH");
     if (event.status === "done") return;
     await tx`select set_config('app.current_user_id', ${event.actor_user_id}, true), set_config('app.current_tenant_id', ${event.organization_id ?? ""}, true)`;
     const [actor] = await tx`select id, banned, ban_expires from "user" where id = ${event.actor_user_id}`;
     let authorized = !!actor && (!actor.banned || (actor.ban_expires !== null && new Date(actor.ban_expires) <= new Date()));
     if (event.organization_id !== null) {
       const members = await tx`select id, role from member where user_id = ${event.actor_user_id} and organization_id = ${event.organization_id}`;
-      authorized = authorized && members.some((membership) => canAccessProject(membership.role, "create"));
+      authorized = authorized && members.some((membership) => canAccessScope(membership.role, "read"));
     }
-    // Domain RLS independently enforces actor/tenant access after membership revalidation.
-    const [project] = authorized ? await tx`select id, owner_user_id, organization_id from projects where id = ${event.entity_id}` : [];
-    authorized = authorized && !!project && project.owner_user_id === event.actor_user_id && project.organization_id === event.organization_id;
+    // Notification RLS independently enforces actor/tenant scope; domain rows are not looked up here.
     if (authorized) {
       await tx`insert into notifications (recipient_user_id, organization_id, event_id, payload)
-        values (${event.actor_user_id}, ${event.organization_id}, ${event.id}, ${tx.json({ type: "project.created", projectId: event.entity_id })})
+        values (${event.actor_user_id}, ${event.organization_id}, ${event.id}, ${tx.json({ type: event.type, entityId: event.entity_id })})
         on conflict (event_id) do nothing`;
       if (process.env.PUSH_ENABLED === "true") {
         await tx`insert into push_deliveries(event_id,subscription_id,notification_id)

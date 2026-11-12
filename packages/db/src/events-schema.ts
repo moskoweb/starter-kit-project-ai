@@ -22,7 +22,7 @@ export const eventOutbox = pgTable("event_outbox", {
 }, (t) => {
   const scope = sql`${actor} is not null and ${t.actorUserId} = ${actor} and ((${tenant} is null and ${t.organizationId} is null) or (${t.organizationId} = ${tenant} and ${membership}))`;
   return [index("event_outbox_pending_idx").on(t.status, t.availableAt),
-    check("event_outbox_type", sql`${t.type} = 'project.created'`),
+    check("event_outbox_type", sql`char_length(${t.type}) <= 100 and ${t.type} ~ '^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$'`),
     check("event_outbox_status", sql`${t.status} in ('pending', 'dispatched', 'done')`),
     check("event_outbox_attempts", sql`${t.attempts} >= 0`),
     pgPolicy("outbox_actor_read", { for: "select", to: "public", using: scope }),
@@ -35,14 +35,14 @@ export const notifications = pgTable("notifications", {
   organizationId: uuid("organization_id").references(() => organization.id, { onDelete: "cascade" }),
   eventId: uuid("event_id").notNull().unique().references(() => eventOutbox.id, { onDelete: "cascade" }),
   readAt: timestamp("read_at", { withTimezone: true }),
-  payload: jsonb("payload").$type<{ type: "project.created"; projectId: string }>().notNull(),
+  payload: jsonb("payload").$type<{ type: string; entityId: string }>().notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (t) => {
   const scope = sql`${actor} is not null and ${t.recipientUserId} = ${actor} and ((${tenant} is null and ${t.organizationId} is null) or (${t.organizationId} = ${tenant} and ${membership}))`;
   return [index("notifications_recipient_idx").on(t.recipientUserId, t.organizationId),
-    check("notification_payload", sql`jsonb_typeof(${t.payload}) = 'object' and ${t.payload}->>'type' = 'project.created' and ${t.payload} ? 'projectId' and ${t.payload} - 'type' - 'projectId' = '{}'::jsonb`),
+    check("notification_payload", sql`jsonb_typeof(${t.payload}) = 'object' and jsonb_typeof(${t.payload}->'type') = 'string' and jsonb_typeof(${t.payload}->'entityId') = 'string' and ${t.payload} - 'type' - 'entityId' = '{}'::jsonb`),
     pgPolicy("notification_read", { for: "select", to: "public", using: scope }),
-    pgPolicy("notification_insert", { for: "insert", to: "public", withCheck: sql`${scope} and exists (select 1 from event_outbox e where e.id = ${t.eventId} and e.actor_user_id = ${t.recipientUserId} and e.organization_id is not distinct from ${t.organizationId} and ${t.payload} = jsonb_build_object('type', e.type, 'projectId', e.entity_id::text))` }),
+    pgPolicy("notification_insert", { for: "insert", to: "public", withCheck: sql`${scope} and exists (select 1 from event_outbox e where e.id = ${t.eventId} and e.actor_user_id = ${t.recipientUserId} and e.organization_id is not distinct from ${t.organizationId} and ${t.payload} = jsonb_build_object('type', e.type, 'entityId', e.entity_id::text))` }),
     pgPolicy("notification_update", { for: "update", to: "public", using: scope, withCheck: scope }),
     pgPolicy("notification_delete", { for: "delete", to: "public", using: scope })];
 }).enableRLS();

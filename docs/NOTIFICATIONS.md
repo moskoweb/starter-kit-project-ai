@@ -4,7 +4,7 @@ Personal notifications use `@vibe/db/events-schema` `notifications`, recipient/t
 
 ## Routes
 
-- `GET /api/notifications?tenantIdentifier=<optional>&page=1`: requires session; resolves organization membership when identifier supplied and requires an organization context for organization-profile deployments. Reads within `withTenantTransaction`, no project-read permission gate. Returns `{ items, unreadCount, page, pageSize: 20 }`; items sorted newest first and paginated in batches of 20. Unread count covers current user and active tenant, not just current page. `Cache-Control: no-store`.
+- `GET /api/notifications?tenantIdentifier=<optional>&page=1`: requires session; resolves organization membership when identifier supplied and requires an organization context for organization-profile deployments. Reads within `withTenantTransaction`, no scope-permission gate. Returns `{ items, unreadCount, page, pageSize: 20 }`; items sorted newest first and paginated in batches of 20. Unread count covers current user and active tenant, not just current page. `Cache-Control: no-store`.
 - `POST /api/notifications`: requires exact same-origin `Origin` and session. Strict JSON body supports `{ id, tenantIdentifier? }` to persist read timestamp for one UUID or `{ markAll: true, tenantIdentifier? }` to persist all current-scope unread timestamps. Other body shapes rejected. RLS confines updates to authenticated recipient and tenant.
 - `POST /api/notifications/[id]/read`: same handler contract, intended for `{ id, tenantIdentifier? }`; ID must be UUID. Also applies origin check.
 

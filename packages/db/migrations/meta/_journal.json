@@ -5,64 +5,15 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1794417818106,
-      "tag": "0000_conscious_agent_brand",
+      "when": 1794455950691,
+      "tag": "0000_baseline",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
-      "when": 1794419508698,
-      "tag": "0001_identity",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1794419891865,
-      "tag": "0002_totp_replay",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1794421043342,
-      "tag": "0003_events",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1794421328545,
-      "tag": "0004_task_scope",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1794422938028,
-      "tag": "0005_optional_integrations",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
-      "when": 1794426411601,
-      "tag": "0006_storage_parent_scope",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "7",
-      "when": 1794433699004,
-      "tag": "0007_lucky_living_lightning",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "7",
-      "when": 1794438912597,
-      "tag": "0008_quick_warbird",
+      "when": 1794455951742,
+      "tag": "0001_hardening",
       "breakpoints": true
     }
   ]

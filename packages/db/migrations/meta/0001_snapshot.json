@@ -1,6 +1,6 @@
 {
-  "id": "50c43575-de79-4819-ac0d-126e7dda24a2",
-  "prevId": "323ddef8-d554-4584-942f-cb6b79fbc68f",
+  "id": "78dff040-367d-4279-86fc-a0bb34051e0e",
+  "prevId": "c3499c6a-716a-47d3-b7e8-8fa442908828",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -133,24 +133,24 @@
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "account_user_id_user_id_fk": {
           "name": "account_user_id_user_id_fk",
           "tableFrom": "account",
-          "tableTo": "user",
           "columnsFrom": [
             "user_id"
           ],
+          "tableTo": "user",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -227,9 +227,9 @@
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         },
         "invitation_email_idx": {
           "name": "invitation_email_idx",
@@ -242,37 +242,37 @@
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "invitation_organization_id_organization_id_fk": {
           "name": "invitation_organization_id_organization_id_fk",
           "tableFrom": "invitation",
-          "tableTo": "organization",
           "columnsFrom": [
             "organization_id"
           ],
+          "tableTo": "organization",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "invitation_inviter_id_user_id_fk": {
           "name": "invitation_inviter_id_user_id_fk",
           "tableFrom": "invitation",
-          "tableTo": "user",
           "columnsFrom": [
             "inviter_id"
           ],
+          "tableTo": "user",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -330,9 +330,9 @@
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         },
         "member_userId_idx": {
           "name": "member_userId_idx",
@@ -345,9 +345,9 @@
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         },
         "member_organization_user_unique": {
           "name": "member_organization_user_unique",
@@ -366,37 +366,37 @@
             }
           ],
           "isUnique": true,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "member_organization_id_organization_id_fk": {
           "name": "member_organization_id_organization_id_fk",
           "tableFrom": "member",
-          "tableTo": "organization",
           "columnsFrom": [
             "organization_id"
           ],
+          "tableTo": "organization",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "member_user_id_user_id_fk": {
           "name": "member_user_id_user_id_fk",
           "tableFrom": "member",
-          "tableTo": "user",
           "columnsFrom": [
             "user_id"
           ],
+          "tableTo": "user",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -453,10 +453,10 @@
       "uniqueConstraints": {
         "organization_slug_unique": {
           "name": "organization_slug_unique",
-          "nullsNotDistinct": false,
           "columns": [
             "slug"
-          ]
+          ],
+          "nullsNotDistinct": false
         }
       },
       "policies": {},
@@ -542,60 +542,60 @@
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "session_user_id_user_id_fk": {
           "name": "session_user_id_user_id_fk",
           "tableFrom": "session",
-          "tableTo": "user",
           "columnsFrom": [
             "user_id"
           ],
+          "tableTo": "user",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "session_impersonated_by_user_id_fk": {
           "name": "session_impersonated_by_user_id_fk",
           "tableFrom": "session",
-          "tableTo": "user",
           "columnsFrom": [
             "impersonated_by"
           ],
+          "tableTo": "user",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "set null"
         },
         "session_active_organization_id_organization_id_fk": {
           "name": "session_active_organization_id_organization_id_fk",
           "tableFrom": "session",
-          "tableTo": "organization",
           "columnsFrom": [
             "active_organization_id"
           ],
+          "tableTo": "organization",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "set null"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "session_token_unique": {
           "name": "session_token_unique",
-          "nullsNotDistinct": false,
           "columns": [
             "token"
-          ]
+          ],
+          "nullsNotDistinct": false
         }
       },
       "policies": {},
@@ -664,9 +664,9 @@
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         },
         "twoFactor_userId_idx": {
           "name": "twoFactor_userId_idx",
@@ -679,24 +679,24 @@
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "two_factor_user_id_user_id_fk": {
           "name": "two_factor_user_id_user_id_fk",
           "tableFrom": "two_factor",
-          "tableTo": "user",
           "columnsFrom": [
             "user_id"
           ],
+          "tableTo": "user",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -794,10 +794,10 @@
       "uniqueConstraints": {
         "user_email_unique": {
           "name": "user_email_unique",
-          "nullsNotDistinct": false,
           "columns": [
             "email"
-          ]
+          ],
+          "nullsNotDistinct": false
         }
       },
       "policies": {},
@@ -860,9 +860,9 @@
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {},
@@ -872,16 +872,54 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.projects": {
-      "name": "projects",
+    "public.totp_replay": {
+      "name": "totp_replay",
       "schema": "",
       "columns": {
-        "id": {
-          "name": "id",
+        "user_id": {
+          "name": "user_id",
           "type": "uuid",
           "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
+          "notNull": true
+        },
+        "last_step": {
+          "name": "last_step",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "totp_replay_user_id_user_id_fk": {
+          "name": "totp_replay_user_id_user_id_fk",
+          "tableFrom": "totp_replay",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "tableTo": "user",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.ai_usage_daily": {
+      "name": "ai_usage_daily",
+      "schema": "",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
         },
         "organization_id": {
           "name": "organization_id",
@@ -889,136 +927,149 @@
           "primaryKey": false,
           "notNull": false
         },
-        "owner_user_id": {
-          "name": "owner_user_id",
-          "type": "uuid",
+        "usage_date": {
+          "name": "usage_date",
+          "type": "date",
           "primaryKey": false,
           "notNull": true
         },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
+        "requests": {
+          "name": "requests",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "default": "now()"
+          "default": 0
         },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
+        "reserved_output_tokens": {
+          "name": "reserved_output_tokens",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "default": "now()"
+          "default": 0
         }
       },
       "indexes": {
-        "projects_scope_idx": {
-          "name": "projects_scope_idx",
+        "ai_usage_daily_personal_unique": {
+          "name": "ai_usage_daily_personal_unique",
           "columns": [
             {
-              "expression": "organization_id",
+              "expression": "user_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
             },
             {
-              "expression": "owner_user_id",
+              "expression": "usage_date",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
             }
           ],
-          "isUnique": false,
-          "concurrently": false,
+          "isUnique": true,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"ai_usage_daily\".\"organization_id\" is null",
+          "concurrently": false
+        },
+        "ai_usage_daily_tenant_unique": {
+          "name": "ai_usage_daily_tenant_unique",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "usage_date",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "organization_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "with": {},
+          "method": "btree",
+          "where": "\"ai_usage_daily\".\"organization_id\" is not null",
+          "concurrently": false
         }
       },
       "foreignKeys": {
-        "projects_organization_id_organization_id_fk": {
-          "name": "projects_organization_id_organization_id_fk",
-          "tableFrom": "projects",
-          "tableTo": "organization",
+        "ai_usage_daily_user_id_user_id_fk": {
+          "name": "ai_usage_daily_user_id_user_id_fk",
+          "tableFrom": "ai_usage_daily",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "tableTo": "user",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "ai_usage_daily_organization_id_organization_id_fk": {
+          "name": "ai_usage_daily_organization_id_organization_id_fk",
+          "tableFrom": "ai_usage_daily",
           "columnsFrom": [
             "organization_id"
           ],
+          "tableTo": "organization",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "projects_owner_user_id_user_id_fk": {
-          "name": "projects_owner_user_id_user_id_fk",
-          "tableFrom": "projects",
-          "tableTo": "user",
-          "columnsFrom": [
-            "owner_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {
-        "domain_read": {
-          "name": "domain_read",
+        "ai_usage_daily_read": {
+          "name": "ai_usage_daily_read",
           "as": "PERMISSIVE",
           "for": "SELECT",
           "to": [
             "public"
           ],
-          "using": "nullif(current_setting('app.current_user_id', true), '')::uuid is not null and ((nullif(current_setting('app.current_tenant_id', true), '')::uuid is null and \"projects\".\"organization_id\" is null and \"projects\".\"owner_user_id\" = nullif(current_setting('app.current_user_id', true), '')::uuid) or (nullif(current_setting('app.current_tenant_id', true), '')::uuid is not null and \"projects\".\"organization_id\" = nullif(current_setting('app.current_tenant_id', true), '')::uuid and exists (select 1 from member m where m.organization_id = nullif(current_setting('app.current_tenant_id', true), '')::uuid and m.user_id = nullif(current_setting('app.current_user_id', true), '')::uuid)))"
+          "using": "nullif(current_setting('app.current_user_id', true), '')::uuid is not null and nullif(current_setting('app.current_user_id', true), '')::uuid = \"ai_usage_daily\".\"user_id\" and nullif(current_setting('app.current_tenant_id', true), '')::uuid is not distinct from \"ai_usage_daily\".\"organization_id\""
         },
-        "domain_create": {
-          "name": "domain_create",
+        "ai_usage_daily_insert": {
+          "name": "ai_usage_daily_insert",
           "as": "PERMISSIVE",
           "for": "INSERT",
           "to": [
             "public"
           ],
-          "withCheck": "(nullif(current_setting('app.current_user_id', true), '')::uuid is not null and ((nullif(current_setting('app.current_tenant_id', true), '')::uuid is null and \"projects\".\"organization_id\" is null and \"projects\".\"owner_user_id\" = nullif(current_setting('app.current_user_id', true), '')::uuid) or (nullif(current_setting('app.current_tenant_id', true), '')::uuid is not null and \"projects\".\"organization_id\" = nullif(current_setting('app.current_tenant_id', true), '')::uuid and exists (select 1 from member m where m.organization_id = nullif(current_setting('app.current_tenant_id', true), '')::uuid and m.user_id = nullif(current_setting('app.current_user_id', true), '')::uuid)))) and \"projects\".\"owner_user_id\" = nullif(current_setting('app.current_user_id', true), '')::uuid"
+          "withCheck": "nullif(current_setting('app.current_user_id', true), '')::uuid is not null and nullif(current_setting('app.current_user_id', true), '')::uuid = \"ai_usage_daily\".\"user_id\" and nullif(current_setting('app.current_tenant_id', true), '')::uuid is not distinct from \"ai_usage_daily\".\"organization_id\""
         },
-        "domain_update": {
-          "name": "domain_update",
+        "ai_usage_daily_update": {
+          "name": "ai_usage_daily_update",
           "as": "PERMISSIVE",
           "for": "UPDATE",
           "to": [
             "public"
           ],
-          "using": "nullif(current_setting('app.current_user_id', true), '')::uuid is not null and ((nullif(current_setting('app.current_tenant_id', true), '')::uuid is null and \"projects\".\"organization_id\" is null and \"projects\".\"owner_user_id\" = nullif(current_setting('app.current_user_id', true), '')::uuid) or (nullif(current_setting('app.current_tenant_id', true), '')::uuid is not null and \"projects\".\"organization_id\" = nullif(current_setting('app.current_tenant_id', true), '')::uuid and exists (select 1 from member m where m.organization_id = nullif(current_setting('app.current_tenant_id', true), '')::uuid and m.user_id = nullif(current_setting('app.current_user_id', true), '')::uuid)))",
-          "withCheck": "nullif(current_setting('app.current_user_id', true), '')::uuid is not null and ((nullif(current_setting('app.current_tenant_id', true), '')::uuid is null and \"projects\".\"organization_id\" is null and \"projects\".\"owner_user_id\" = nullif(current_setting('app.current_user_id', true), '')::uuid) or (nullif(current_setting('app.current_tenant_id', true), '')::uuid is not null and \"projects\".\"organization_id\" = nullif(current_setting('app.current_tenant_id', true), '')::uuid and exists (select 1 from member m where m.organization_id = nullif(current_setting('app.current_tenant_id', true), '')::uuid and m.user_id = nullif(current_setting('app.current_user_id', true), '')::uuid)))"
-        },
-        "domain_delete": {
-          "name": "domain_delete",
-          "as": "PERMISSIVE",
-          "for": "DELETE",
-          "to": [
-            "public"
-          ],
-          "using": "nullif(current_setting('app.current_user_id', true), '')::uuid is not null and ((nullif(current_setting('app.current_tenant_id', true), '')::uuid is null and \"projects\".\"organization_id\" is null and \"projects\".\"owner_user_id\" = nullif(current_setting('app.current_user_id', true), '')::uuid) or (nullif(current_setting('app.current_tenant_id', true), '')::uuid is not null and \"projects\".\"organization_id\" = nullif(current_setting('app.current_tenant_id', true), '')::uuid and exists (select 1 from member m where m.organization_id = nullif(current_setting('app.current_tenant_id', true), '')::uuid and m.user_id = nullif(current_setting('app.current_user_id', true), '')::uuid)))"
+          "using": "nullif(current_setting('app.current_user_id', true), '')::uuid is not null and nullif(current_setting('app.current_user_id', true), '')::uuid = \"ai_usage_daily\".\"user_id\" and nullif(current_setting('app.current_tenant_id', true), '')::uuid is not distinct from \"ai_usage_daily\".\"organization_id\"",
+          "withCheck": "nullif(current_setting('app.current_user_id', true), '')::uuid is not null and nullif(current_setting('app.current_user_id', true), '')::uuid = \"ai_usage_daily\".\"user_id\" and nullif(current_setting('app.current_tenant_id', true), '')::uuid is not distinct from \"ai_usage_daily\".\"organization_id\""
         }
       },
-      "checkConstraints": {},
+      "checkConstraints": {
+        "ai_usage_daily_positive": {
+          "name": "ai_usage_daily_positive",
+          "value": "\"ai_usage_daily\".\"requests\" > 0 and \"ai_usage_daily\".\"reserved_output_tokens\" >= 0"
+        }
+      },
       "isRLSEnabled": true
     },
-    "public.tasks": {
-      "name": "tasks",
+    "public.event_outbox": {
+      "name": "event_outbox",
       "schema": "",
       "columns": {
         "id": {
@@ -1028,8 +1079,8 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "project_id": {
-          "name": "project_id",
+        "actor_user_id": {
+          "name": "actor_user_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -1040,15 +1091,192 @@
           "primaryKey": false,
           "notNull": false
         },
-        "owner_user_id": {
-          "name": "owner_user_id",
+        "entity_id": {
+          "name": "entity_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
-        "title": {
-          "name": "title",
+        "type": {
+          "name": "type",
           "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "attempts": {
+          "name": "attempts",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "available_at": {
+          "name": "available_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "dispatched_at": {
+          "name": "dispatched_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "done_at": {
+          "name": "done_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_error": {
+          "name": "last_error",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "event_outbox_pending_idx": {
+          "name": "event_outbox_pending_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "available_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "with": {},
+          "method": "btree",
+          "concurrently": false
+        }
+      },
+      "foreignKeys": {
+        "event_outbox_actor_user_id_user_id_fk": {
+          "name": "event_outbox_actor_user_id_user_id_fk",
+          "tableFrom": "event_outbox",
+          "columnsFrom": [
+            "actor_user_id"
+          ],
+          "tableTo": "user",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "event_outbox_organization_id_organization_id_fk": {
+          "name": "event_outbox_organization_id_organization_id_fk",
+          "tableFrom": "event_outbox",
+          "columnsFrom": [
+            "organization_id"
+          ],
+          "tableTo": "organization",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "outbox_actor_read": {
+          "name": "outbox_actor_read",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "public"
+          ],
+          "using": "nullif(current_setting('app.current_user_id', true), '')::uuid is not null and \"event_outbox\".\"actor_user_id\" = nullif(current_setting('app.current_user_id', true), '')::uuid and ((nullif(current_setting('app.current_tenant_id', true), '')::uuid is null and \"event_outbox\".\"organization_id\" is null) or (\"event_outbox\".\"organization_id\" = nullif(current_setting('app.current_tenant_id', true), '')::uuid and exists (select 1 from member m where m.user_id = nullif(current_setting('app.current_user_id', true), '')::uuid and m.organization_id = nullif(current_setting('app.current_tenant_id', true), '')::uuid)))"
+        },
+        "outbox_actor_insert": {
+          "name": "outbox_actor_insert",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "public"
+          ],
+          "withCheck": "nullif(current_setting('app.current_user_id', true), '')::uuid is not null and \"event_outbox\".\"actor_user_id\" = nullif(current_setting('app.current_user_id', true), '')::uuid and ((nullif(current_setting('app.current_tenant_id', true), '')::uuid is null and \"event_outbox\".\"organization_id\" is null) or (\"event_outbox\".\"organization_id\" = nullif(current_setting('app.current_tenant_id', true), '')::uuid and exists (select 1 from member m where m.user_id = nullif(current_setting('app.current_user_id', true), '')::uuid and m.organization_id = nullif(current_setting('app.current_tenant_id', true), '')::uuid))) and \"event_outbox\".\"status\" = 'pending'"
+        }
+      },
+      "checkConstraints": {
+        "event_outbox_type": {
+          "name": "event_outbox_type",
+          "value": "char_length(\"event_outbox\".\"type\") <= 100 and \"event_outbox\".\"type\" ~ '^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$'"
+        },
+        "event_outbox_status": {
+          "name": "event_outbox_status",
+          "value": "\"event_outbox\".\"status\" in ('pending', 'dispatched', 'done')"
+        },
+        "event_outbox_attempts": {
+          "name": "event_outbox_attempts",
+          "value": "\"event_outbox\".\"attempts\" >= 0"
+        }
+      },
+      "isRLSEnabled": true
+    },
+    "public.notifications": {
+      "name": "notifications",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "recipient_user_id": {
+          "name": "recipient_user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "organization_id": {
+          "name": "organization_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "read_at": {
+          "name": "read_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "payload": {
+          "name": "payload",
+          "type": "jsonb",
           "primaryKey": false,
           "notNull": true
         },
@@ -1058,9 +1286,199 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        }
+      },
+      "indexes": {
+        "notifications_recipient_idx": {
+          "name": "notifications_recipient_idx",
+          "columns": [
+            {
+              "expression": "recipient_user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "organization_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "with": {},
+          "method": "btree",
+          "concurrently": false
+        }
+      },
+      "foreignKeys": {
+        "notifications_recipient_user_id_user_id_fk": {
+          "name": "notifications_recipient_user_id_user_id_fk",
+          "tableFrom": "notifications",
+          "columnsFrom": [
+            "recipient_user_id"
+          ],
+          "tableTo": "user",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
-        "updated_at": {
-          "name": "updated_at",
+        "notifications_organization_id_organization_id_fk": {
+          "name": "notifications_organization_id_organization_id_fk",
+          "tableFrom": "notifications",
+          "columnsFrom": [
+            "organization_id"
+          ],
+          "tableTo": "organization",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "notifications_event_id_event_outbox_id_fk": {
+          "name": "notifications_event_id_event_outbox_id_fk",
+          "tableFrom": "notifications",
+          "columnsFrom": [
+            "event_id"
+          ],
+          "tableTo": "event_outbox",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "notifications_event_id_unique": {
+          "name": "notifications_event_id_unique",
+          "columns": [
+            "event_id"
+          ],
+          "nullsNotDistinct": false
+        }
+      },
+      "policies": {
+        "notification_read": {
+          "name": "notification_read",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "public"
+          ],
+          "using": "nullif(current_setting('app.current_user_id', true), '')::uuid is not null and \"notifications\".\"recipient_user_id\" = nullif(current_setting('app.current_user_id', true), '')::uuid and ((nullif(current_setting('app.current_tenant_id', true), '')::uuid is null and \"notifications\".\"organization_id\" is null) or (\"notifications\".\"organization_id\" = nullif(current_setting('app.current_tenant_id', true), '')::uuid and exists (select 1 from member m where m.user_id = nullif(current_setting('app.current_user_id', true), '')::uuid and m.organization_id = nullif(current_setting('app.current_tenant_id', true), '')::uuid)))"
+        },
+        "notification_insert": {
+          "name": "notification_insert",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "public"
+          ],
+          "withCheck": "nullif(current_setting('app.current_user_id', true), '')::uuid is not null and \"notifications\".\"recipient_user_id\" = nullif(current_setting('app.current_user_id', true), '')::uuid and ((nullif(current_setting('app.current_tenant_id', true), '')::uuid is null and \"notifications\".\"organization_id\" is null) or (\"notifications\".\"organization_id\" = nullif(current_setting('app.current_tenant_id', true), '')::uuid and exists (select 1 from member m where m.user_id = nullif(current_setting('app.current_user_id', true), '')::uuid and m.organization_id = nullif(current_setting('app.current_tenant_id', true), '')::uuid))) and exists (select 1 from event_outbox e where e.id = \"notifications\".\"event_id\" and e.actor_user_id = \"notifications\".\"recipient_user_id\" and e.organization_id is not distinct from \"notifications\".\"organization_id\" and \"notifications\".\"payload\" = jsonb_build_object('type', e.type, 'entityId', e.entity_id::text))"
+        },
+        "notification_update": {
+          "name": "notification_update",
+          "as": "PERMISSIVE",
+          "for": "UPDATE",
+          "to": [
+            "public"
+          ],
+          "using": "nullif(current_setting('app.current_user_id', true), '')::uuid is not null and \"notifications\".\"recipient_user_id\" = nullif(current_setting('app.current_user_id', true), '')::uuid and ((nullif(current_setting('app.current_tenant_id', true), '')::uuid is null and \"notifications\".\"organization_id\" is null) or (\"notifications\".\"organization_id\" = nullif(current_setting('app.current_tenant_id', true), '')::uuid and exists (select 1 from member m where m.user_id = nullif(current_setting('app.current_user_id', true), '')::uuid and m.organization_id = nullif(current_setting('app.current_tenant_id', true), '')::uuid)))",
+          "withCheck": "nullif(current_setting('app.current_user_id', true), '')::uuid is not null and \"notifications\".\"recipient_user_id\" = nullif(current_setting('app.current_user_id', true), '')::uuid and ((nullif(current_setting('app.current_tenant_id', true), '')::uuid is null and \"notifications\".\"organization_id\" is null) or (\"notifications\".\"organization_id\" = nullif(current_setting('app.current_tenant_id', true), '')::uuid and exists (select 1 from member m where m.user_id = nullif(current_setting('app.current_user_id', true), '')::uuid and m.organization_id = nullif(current_setting('app.current_tenant_id', true), '')::uuid)))"
+        },
+        "notification_delete": {
+          "name": "notification_delete",
+          "as": "PERMISSIVE",
+          "for": "DELETE",
+          "to": [
+            "public"
+          ],
+          "using": "nullif(current_setting('app.current_user_id', true), '')::uuid is not null and \"notifications\".\"recipient_user_id\" = nullif(current_setting('app.current_user_id', true), '')::uuid and ((nullif(current_setting('app.current_tenant_id', true), '')::uuid is null and \"notifications\".\"organization_id\" is null) or (\"notifications\".\"organization_id\" = nullif(current_setting('app.current_tenant_id', true), '')::uuid and exists (select 1 from member m where m.user_id = nullif(current_setting('app.current_user_id', true), '')::uuid and m.organization_id = nullif(current_setting('app.current_tenant_id', true), '')::uuid)))"
+        }
+      },
+      "checkConstraints": {
+        "notification_payload": {
+          "name": "notification_payload",
+          "value": "jsonb_typeof(\"notifications\".\"payload\") = 'object' and jsonb_typeof(\"notifications\".\"payload\"->'type') = 'string' and jsonb_typeof(\"notifications\".\"payload\"->'entityId') = 'string' and \"notifications\".\"payload\" - 'type' - 'entityId' = '{}'::jsonb"
+        }
+      },
+      "isRLSEnabled": true
+    },
+    "public.webhook_deliveries": {
+      "name": "webhook_deliveries",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "actor_user_id": {
+          "name": "actor_user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "organization_id": {
+          "name": "organization_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "event": {
+          "name": "event",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payload": {
+          "name": "payload",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "attempts": {
+          "name": "attempts",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "next_at": {
+          "name": "next_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "last_status_code": {
+          "name": "last_status_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true,
@@ -1068,23 +1486,670 @@
         }
       },
       "indexes": {
-        "tasks_project_idx": {
-          "name": "tasks_project_idx",
+        "webhook_deliveries_due_idx": {
+          "name": "webhook_deliveries_due_idx",
           "columns": [
             {
-              "expression": "project_id",
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "next_at",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         },
-        "tasks_scope_idx": {
-          "name": "tasks_scope_idx",
+        "webhook_deliveries_event_unique": {
+          "name": "webhook_deliveries_event_unique",
+          "columns": [
+            {
+              "expression": "actor_user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "organization_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "event_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "with": {},
+          "method": "btree",
+          "concurrently": false
+        },
+        "webhook_deliveries_personal_event_unique": {
+          "name": "webhook_deliveries_personal_event_unique",
+          "columns": [
+            {
+              "expression": "actor_user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "event_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "with": {},
+          "method": "btree",
+          "where": "\"webhook_deliveries\".\"organization_id\" is null",
+          "concurrently": false
+        }
+      },
+      "foreignKeys": {
+        "webhook_deliveries_actor_user_id_user_id_fk": {
+          "name": "webhook_deliveries_actor_user_id_user_id_fk",
+          "tableFrom": "webhook_deliveries",
+          "columnsFrom": [
+            "actor_user_id"
+          ],
+          "tableTo": "user",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "webhook_deliveries_organization_id_organization_id_fk": {
+          "name": "webhook_deliveries_organization_id_organization_id_fk",
+          "tableFrom": "webhook_deliveries",
+          "columnsFrom": [
+            "organization_id"
+          ],
+          "tableTo": "organization",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "webhook_deliveries_actor_read": {
+          "name": "webhook_deliveries_actor_read",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "public"
+          ],
+          "using": "nullif(current_setting('app.current_user_id', true), '')::uuid is not null and \"webhook_deliveries\".\"actor_user_id\" = nullif(current_setting('app.current_user_id', true), '')::uuid and ((nullif(current_setting('app.current_tenant_id', true), '')::uuid is null and \"webhook_deliveries\".\"organization_id\" is null) or (\"webhook_deliveries\".\"organization_id\" = nullif(current_setting('app.current_tenant_id', true), '')::uuid and exists (select 1 from member m where m.user_id = nullif(current_setting('app.current_user_id', true), '')::uuid and m.organization_id = nullif(current_setting('app.current_tenant_id', true), '')::uuid)))"
+        },
+        "webhook_deliveries_actor_insert": {
+          "name": "webhook_deliveries_actor_insert",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "public"
+          ],
+          "withCheck": "nullif(current_setting('app.current_user_id', true), '')::uuid is not null and \"webhook_deliveries\".\"actor_user_id\" = nullif(current_setting('app.current_user_id', true), '')::uuid and ((nullif(current_setting('app.current_tenant_id', true), '')::uuid is null and \"webhook_deliveries\".\"organization_id\" is null) or (\"webhook_deliveries\".\"organization_id\" = nullif(current_setting('app.current_tenant_id', true), '')::uuid and exists (select 1 from member m where m.user_id = nullif(current_setting('app.current_user_id', true), '')::uuid and m.organization_id = nullif(current_setting('app.current_tenant_id', true), '')::uuid))) and \"webhook_deliveries\".\"status\" = 'pending'"
+        },
+        "webhook_deliveries_actor_update": {
+          "name": "webhook_deliveries_actor_update",
+          "as": "PERMISSIVE",
+          "for": "UPDATE",
+          "to": [
+            "public"
+          ],
+          "using": "nullif(current_setting('app.current_user_id', true), '')::uuid is not null and \"webhook_deliveries\".\"actor_user_id\" = nullif(current_setting('app.current_user_id', true), '')::uuid and ((nullif(current_setting('app.current_tenant_id', true), '')::uuid is null and \"webhook_deliveries\".\"organization_id\" is null) or (\"webhook_deliveries\".\"organization_id\" = nullif(current_setting('app.current_tenant_id', true), '')::uuid and exists (select 1 from member m where m.user_id = nullif(current_setting('app.current_user_id', true), '')::uuid and m.organization_id = nullif(current_setting('app.current_tenant_id', true), '')::uuid)))",
+          "withCheck": "nullif(current_setting('app.current_user_id', true), '')::uuid is not null and \"webhook_deliveries\".\"actor_user_id\" = nullif(current_setting('app.current_user_id', true), '')::uuid and ((nullif(current_setting('app.current_tenant_id', true), '')::uuid is null and \"webhook_deliveries\".\"organization_id\" is null) or (\"webhook_deliveries\".\"organization_id\" = nullif(current_setting('app.current_tenant_id', true), '')::uuid and exists (select 1 from member m where m.user_id = nullif(current_setting('app.current_user_id', true), '')::uuid and m.organization_id = nullif(current_setting('app.current_tenant_id', true), '')::uuid)))"
+        }
+      },
+      "checkConstraints": {
+        "webhook_deliveries_status": {
+          "name": "webhook_deliveries_status",
+          "value": "\"webhook_deliveries\".\"status\" in ('pending', 'queued', 'delivered', 'failed')"
+        }
+      },
+      "isRLSEnabled": true
+    },
+    "public.webhook_receipts": {
+      "name": "webhook_receipts",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "endpoint_id": {
+          "name": "endpoint_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "body_hash": {
+          "name": "body_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payload": {
+          "name": "payload",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "received_at": {
+          "name": "received_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "webhook_receipts_endpoint_event_unique": {
+          "name": "webhook_receipts_endpoint_event_unique",
+          "columns": [
+            {
+              "expression": "endpoint_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "event_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "with": {},
+          "method": "btree",
+          "concurrently": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "webhook_receipts_hash": {
+          "name": "webhook_receipts_hash",
+          "value": "\"webhook_receipts\".\"body_hash\" ~ '^[0-9a-f]{64}$'"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.rate_limit_windows": {
+      "name": "rate_limit_windows",
+      "schema": "",
+      "columns": {
+        "key": {
+          "name": "key",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "window_start": {
+          "name": "window_start",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "count": {
+          "name": "count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.push_deliveries": {
+      "name": "push_deliveries",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "subscription_id": {
+          "name": "subscription_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "notification_id": {
+          "name": "notification_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "attempts": {
+          "name": "attempts",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "next_at": {
+          "name": "next_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "lease_until": {
+          "name": "lease_until",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_error": {
+          "name": "last_error",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "push_deliveries_event_subscription_unique": {
+          "name": "push_deliveries_event_subscription_unique",
+          "columns": [
+            {
+              "expression": "event_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "subscription_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "with": {},
+          "method": "btree",
+          "concurrently": false
+        },
+        "push_deliveries_due_idx": {
+          "name": "push_deliveries_due_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "next_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "with": {},
+          "method": "btree",
+          "concurrently": false
+        }
+      },
+      "foreignKeys": {
+        "push_deliveries_event_id_event_outbox_id_fk": {
+          "name": "push_deliveries_event_id_event_outbox_id_fk",
+          "tableFrom": "push_deliveries",
+          "columnsFrom": [
+            "event_id"
+          ],
+          "tableTo": "event_outbox",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "push_deliveries_subscription_id_push_subscriptions_id_fk": {
+          "name": "push_deliveries_subscription_id_push_subscriptions_id_fk",
+          "tableFrom": "push_deliveries",
+          "columnsFrom": [
+            "subscription_id"
+          ],
+          "tableTo": "push_subscriptions",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "push_deliveries_notification_id_notifications_id_fk": {
+          "name": "push_deliveries_notification_id_notifications_id_fk",
+          "tableFrom": "push_deliveries",
+          "columnsFrom": [
+            "notification_id"
+          ],
+          "tableTo": "notifications",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "push_deliveries_attempts": {
+          "name": "push_deliveries_attempts",
+          "value": "\"push_deliveries\".\"attempts\" >= 0"
+        },
+        "push_deliveries_status": {
+          "name": "push_deliveries_status",
+          "value": "\"push_deliveries\".\"status\" in ('pending', 'leased', 'delivered', 'failed')"
+        }
+      },
+      "isRLSEnabled": true
+    },
+    "public.push_subscriptions": {
+      "name": "push_subscriptions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "organization_id": {
+          "name": "organization_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "endpoint": {
+          "name": "endpoint",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "p256dh": {
+          "name": "p256dh",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "auth": {
+          "name": "auth",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "enabled": {
+          "name": "enabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "push_subscriptions_endpoint_unique": {
+          "name": "push_subscriptions_endpoint_unique",
+          "columns": [
+            {
+              "expression": "endpoint",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "with": {},
+          "method": "btree",
+          "concurrently": false
+        },
+        "push_subscriptions_user_scope_idx": {
+          "name": "push_subscriptions_user_scope_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "organization_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "with": {},
+          "method": "btree",
+          "concurrently": false
+        }
+      },
+      "foreignKeys": {
+        "push_subscriptions_user_id_user_id_fk": {
+          "name": "push_subscriptions_user_id_user_id_fk",
+          "tableFrom": "push_subscriptions",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "tableTo": "user",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "push_subscriptions_organization_id_organization_id_fk": {
+          "name": "push_subscriptions_organization_id_organization_id_fk",
+          "tableFrom": "push_subscriptions",
+          "columnsFrom": [
+            "organization_id"
+          ],
+          "tableTo": "organization",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "push_subscriptions_actor_read": {
+          "name": "push_subscriptions_actor_read",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "public"
+          ],
+          "using": "nullif(current_setting('app.current_user_id', true), '')::uuid is not null and \"push_subscriptions\".\"user_id\" = nullif(current_setting('app.current_user_id', true), '')::uuid and ((nullif(current_setting('app.current_tenant_id', true), '')::uuid is null and \"push_subscriptions\".\"organization_id\" is null) or (\"push_subscriptions\".\"organization_id\" = nullif(current_setting('app.current_tenant_id', true), '')::uuid and exists (select 1 from member m where m.user_id = nullif(current_setting('app.current_user_id', true), '')::uuid and m.organization_id = nullif(current_setting('app.current_tenant_id', true), '')::uuid)))"
+        },
+        "push_subscriptions_actor_insert": {
+          "name": "push_subscriptions_actor_insert",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "public"
+          ],
+          "withCheck": "nullif(current_setting('app.current_user_id', true), '')::uuid is not null and \"push_subscriptions\".\"user_id\" = nullif(current_setting('app.current_user_id', true), '')::uuid and ((nullif(current_setting('app.current_tenant_id', true), '')::uuid is null and \"push_subscriptions\".\"organization_id\" is null) or (\"push_subscriptions\".\"organization_id\" = nullif(current_setting('app.current_tenant_id', true), '')::uuid and exists (select 1 from member m where m.user_id = nullif(current_setting('app.current_user_id', true), '')::uuid and m.organization_id = nullif(current_setting('app.current_tenant_id', true), '')::uuid)))"
+        },
+        "push_subscriptions_actor_update": {
+          "name": "push_subscriptions_actor_update",
+          "as": "PERMISSIVE",
+          "for": "UPDATE",
+          "to": [
+            "public"
+          ],
+          "using": "nullif(current_setting('app.current_user_id', true), '')::uuid is not null and \"push_subscriptions\".\"user_id\" = nullif(current_setting('app.current_user_id', true), '')::uuid and ((nullif(current_setting('app.current_tenant_id', true), '')::uuid is null and \"push_subscriptions\".\"organization_id\" is null) or (\"push_subscriptions\".\"organization_id\" = nullif(current_setting('app.current_tenant_id', true), '')::uuid and exists (select 1 from member m where m.user_id = nullif(current_setting('app.current_user_id', true), '')::uuid and m.organization_id = nullif(current_setting('app.current_tenant_id', true), '')::uuid)))",
+          "withCheck": "nullif(current_setting('app.current_user_id', true), '')::uuid is not null and \"push_subscriptions\".\"user_id\" = nullif(current_setting('app.current_user_id', true), '')::uuid and ((nullif(current_setting('app.current_tenant_id', true), '')::uuid is null and \"push_subscriptions\".\"organization_id\" is null) or (\"push_subscriptions\".\"organization_id\" = nullif(current_setting('app.current_tenant_id', true), '')::uuid and exists (select 1 from member m where m.user_id = nullif(current_setting('app.current_user_id', true), '')::uuid and m.organization_id = nullif(current_setting('app.current_tenant_id', true), '')::uuid)))"
+        },
+        "push_subscriptions_actor_delete": {
+          "name": "push_subscriptions_actor_delete",
+          "as": "PERMISSIVE",
+          "for": "DELETE",
+          "to": [
+            "public"
+          ],
+          "using": "nullif(current_setting('app.current_user_id', true), '')::uuid is not null and \"push_subscriptions\".\"user_id\" = nullif(current_setting('app.current_user_id', true), '')::uuid and ((nullif(current_setting('app.current_tenant_id', true), '')::uuid is null and \"push_subscriptions\".\"organization_id\" is null) or (\"push_subscriptions\".\"organization_id\" = nullif(current_setting('app.current_tenant_id', true), '')::uuid and exists (select 1 from member m where m.user_id = nullif(current_setting('app.current_user_id', true), '')::uuid and m.organization_id = nullif(current_setting('app.current_tenant_id', true), '')::uuid)))"
+        }
+      },
+      "checkConstraints": {
+        "push_subscriptions_enabled": {
+          "name": "push_subscriptions_enabled",
+          "value": "\"push_subscriptions\".\"enabled\" in (true, false)"
+        }
+      },
+      "isRLSEnabled": true
+    },
+    "public.storage_objects": {
+      "name": "storage_objects",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "owner_user_id": {
+          "name": "owner_user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "organization_id": {
+          "name": "organization_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "entity_type": {
+          "name": "entity_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "entity_id": {
+          "name": "entity_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "object_key": {
+          "name": "object_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "content_type": {
+          "name": "content_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "size": {
+          "name": "size",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "storage_objects_scope_idx": {
+          "name": "storage_objects_scope_idx",
           "columns": [
             {
               "expression": "organization_id",
@@ -1097,106 +2162,139 @@
               "isExpression": false,
               "asc": true,
               "nulls": "last"
+            },
+            {
+              "expression": "entity_type",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "entity_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
+        },
+        "storage_objects_key_idx": {
+          "name": "storage_objects_key_idx",
+          "columns": [
+            {
+              "expression": "object_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "with": {},
+          "method": "btree",
+          "concurrently": false
         }
       },
       "foreignKeys": {
-        "tasks_project_id_projects_id_fk": {
-          "name": "tasks_project_id_projects_id_fk",
-          "tableFrom": "tasks",
-          "tableTo": "projects",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "tasks_organization_id_organization_id_fk": {
-          "name": "tasks_organization_id_organization_id_fk",
-          "tableFrom": "tasks",
-          "tableTo": "organization",
-          "columnsFrom": [
-            "organization_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "tasks_owner_user_id_user_id_fk": {
-          "name": "tasks_owner_user_id_user_id_fk",
-          "tableFrom": "tasks",
-          "tableTo": "user",
+        "storage_objects_owner_user_id_user_id_fk": {
+          "name": "storage_objects_owner_user_id_user_id_fk",
+          "tableFrom": "storage_objects",
           "columnsFrom": [
             "owner_user_id"
           ],
+          "tableTo": "user",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "storage_objects_organization_id_organization_id_fk": {
+          "name": "storage_objects_organization_id_organization_id_fk",
+          "tableFrom": "storage_objects",
+          "columnsFrom": [
+            "organization_id"
+          ],
+          "tableTo": "organization",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {
-        "domain_read": {
-          "name": "domain_read",
+        "storage_objects_read": {
+          "name": "storage_objects_read",
           "as": "PERMISSIVE",
           "for": "SELECT",
           "to": [
             "public"
           ],
-          "using": "nullif(current_setting('app.current_user_id', true), '')::uuid is not null and ((nullif(current_setting('app.current_tenant_id', true), '')::uuid is null and \"tasks\".\"organization_id\" is null and \"tasks\".\"owner_user_id\" = nullif(current_setting('app.current_user_id', true), '')::uuid) or (nullif(current_setting('app.current_tenant_id', true), '')::uuid is not null and \"tasks\".\"organization_id\" = nullif(current_setting('app.current_tenant_id', true), '')::uuid and exists (select 1 from member m where m.organization_id = nullif(current_setting('app.current_tenant_id', true), '')::uuid and m.user_id = nullif(current_setting('app.current_user_id', true), '')::uuid)))"
+          "using": "nullif(current_setting('app.current_user_id', true), '')::uuid is not null and ((nullif(current_setting('app.current_tenant_id', true), '')::uuid is null and \"storage_objects\".\"organization_id\" is null and \"storage_objects\".\"owner_user_id\" = nullif(current_setting('app.current_user_id', true), '')::uuid) or (nullif(current_setting('app.current_tenant_id', true), '')::uuid is not null and \"storage_objects\".\"organization_id\" = nullif(current_setting('app.current_tenant_id', true), '')::uuid and exists (select 1 from member m where m.organization_id = nullif(current_setting('app.current_tenant_id', true), '')::uuid and m.user_id = nullif(current_setting('app.current_user_id', true), '')::uuid)))"
         },
-        "domain_create": {
-          "name": "domain_create",
+        "storage_objects_create": {
+          "name": "storage_objects_create",
           "as": "PERMISSIVE",
           "for": "INSERT",
           "to": [
             "public"
           ],
-          "withCheck": "(nullif(current_setting('app.current_user_id', true), '')::uuid is not null and ((nullif(current_setting('app.current_tenant_id', true), '')::uuid is null and \"tasks\".\"organization_id\" is null and \"tasks\".\"owner_user_id\" = nullif(current_setting('app.current_user_id', true), '')::uuid) or (nullif(current_setting('app.current_tenant_id', true), '')::uuid is not null and \"tasks\".\"organization_id\" = nullif(current_setting('app.current_tenant_id', true), '')::uuid and exists (select 1 from member m where m.organization_id = nullif(current_setting('app.current_tenant_id', true), '')::uuid and m.user_id = nullif(current_setting('app.current_user_id', true), '')::uuid)))) and \"tasks\".\"owner_user_id\" = nullif(current_setting('app.current_user_id', true), '')::uuid"
+          "withCheck": "(nullif(current_setting('app.current_user_id', true), '')::uuid is not null and ((nullif(current_setting('app.current_tenant_id', true), '')::uuid is null and \"storage_objects\".\"organization_id\" is null and \"storage_objects\".\"owner_user_id\" = nullif(current_setting('app.current_user_id', true), '')::uuid) or (nullif(current_setting('app.current_tenant_id', true), '')::uuid is not null and \"storage_objects\".\"organization_id\" = nullif(current_setting('app.current_tenant_id', true), '')::uuid and exists (select 1 from member m where m.organization_id = nullif(current_setting('app.current_tenant_id', true), '')::uuid and m.user_id = nullif(current_setting('app.current_user_id', true), '')::uuid)))) and \"storage_objects\".\"owner_user_id\" = nullif(current_setting('app.current_user_id', true), '')::uuid"
         },
-        "domain_update": {
-          "name": "domain_update",
+        "storage_objects_update": {
+          "name": "storage_objects_update",
           "as": "PERMISSIVE",
           "for": "UPDATE",
           "to": [
             "public"
           ],
-          "using": "nullif(current_setting('app.current_user_id', true), '')::uuid is not null and ((nullif(current_setting('app.current_tenant_id', true), '')::uuid is null and \"tasks\".\"organization_id\" is null and \"tasks\".\"owner_user_id\" = nullif(current_setting('app.current_user_id', true), '')::uuid) or (nullif(current_setting('app.current_tenant_id', true), '')::uuid is not null and \"tasks\".\"organization_id\" = nullif(current_setting('app.current_tenant_id', true), '')::uuid and exists (select 1 from member m where m.organization_id = nullif(current_setting('app.current_tenant_id', true), '')::uuid and m.user_id = nullif(current_setting('app.current_user_id', true), '')::uuid)))",
-          "withCheck": "nullif(current_setting('app.current_user_id', true), '')::uuid is not null and ((nullif(current_setting('app.current_tenant_id', true), '')::uuid is null and \"tasks\".\"organization_id\" is null and \"tasks\".\"owner_user_id\" = nullif(current_setting('app.current_user_id', true), '')::uuid) or (nullif(current_setting('app.current_tenant_id', true), '')::uuid is not null and \"tasks\".\"organization_id\" = nullif(current_setting('app.current_tenant_id', true), '')::uuid and exists (select 1 from member m where m.organization_id = nullif(current_setting('app.current_tenant_id', true), '')::uuid and m.user_id = nullif(current_setting('app.current_user_id', true), '')::uuid)))"
+          "using": "nullif(current_setting('app.current_user_id', true), '')::uuid is not null and ((nullif(current_setting('app.current_tenant_id', true), '')::uuid is null and \"storage_objects\".\"organization_id\" is null and \"storage_objects\".\"owner_user_id\" = nullif(current_setting('app.current_user_id', true), '')::uuid) or (nullif(current_setting('app.current_tenant_id', true), '')::uuid is not null and \"storage_objects\".\"organization_id\" = nullif(current_setting('app.current_tenant_id', true), '')::uuid and exists (select 1 from member m where m.organization_id = nullif(current_setting('app.current_tenant_id', true), '')::uuid and m.user_id = nullif(current_setting('app.current_user_id', true), '')::uuid)))",
+          "withCheck": "nullif(current_setting('app.current_user_id', true), '')::uuid is not null and ((nullif(current_setting('app.current_tenant_id', true), '')::uuid is null and \"storage_objects\".\"organization_id\" is null and \"storage_objects\".\"owner_user_id\" = nullif(current_setting('app.current_user_id', true), '')::uuid) or (nullif(current_setting('app.current_tenant_id', true), '')::uuid is not null and \"storage_objects\".\"organization_id\" = nullif(current_setting('app.current_tenant_id', true), '')::uuid and exists (select 1 from member m where m.organization_id = nullif(current_setting('app.current_tenant_id', true), '')::uuid and m.user_id = nullif(current_setting('app.current_user_id', true), '')::uuid)))"
         },
-        "domain_delete": {
-          "name": "domain_delete",
+        "storage_objects_delete": {
+          "name": "storage_objects_delete",
           "as": "PERMISSIVE",
           "for": "DELETE",
           "to": [
             "public"
           ],
-          "using": "nullif(current_setting('app.current_user_id', true), '')::uuid is not null and ((nullif(current_setting('app.current_tenant_id', true), '')::uuid is null and \"tasks\".\"organization_id\" is null and \"tasks\".\"owner_user_id\" = nullif(current_setting('app.current_user_id', true), '')::uuid) or (nullif(current_setting('app.current_tenant_id', true), '')::uuid is not null and \"tasks\".\"organization_id\" = nullif(current_setting('app.current_tenant_id', true), '')::uuid and exists (select 1 from member m where m.organization_id = nullif(current_setting('app.current_tenant_id', true), '')::uuid and m.user_id = nullif(current_setting('app.current_user_id', true), '')::uuid)))"
+          "using": "nullif(current_setting('app.current_user_id', true), '')::uuid is not null and ((nullif(current_setting('app.current_tenant_id', true), '')::uuid is null and \"storage_objects\".\"organization_id\" is null and \"storage_objects\".\"owner_user_id\" = nullif(current_setting('app.current_user_id', true), '')::uuid) or (nullif(current_setting('app.current_tenant_id', true), '')::uuid is not null and \"storage_objects\".\"organization_id\" = nullif(current_setting('app.current_tenant_id', true), '')::uuid and exists (select 1 from member m where m.organization_id = nullif(current_setting('app.current_tenant_id', true), '')::uuid and m.user_id = nullif(current_setting('app.current_user_id', true), '')::uuid)))"
         }
       },
-      "checkConstraints": {},
+      "checkConstraints": {
+        "storage_objects_entity_type_check": {
+          "name": "storage_objects_entity_type_check",
+          "value": "\"storage_objects\".\"entity_type\" ~ '^[a-z][a-z0-9_-]{0,63}$'"
+        },
+        "storage_objects_size_check": {
+          "name": "storage_objects_size_check",
+          "value": "\"storage_objects\".\"size\" between 1 and 10485760"
+        },
+        "storage_objects_status_check": {
+          "name": "storage_objects_status_check",
+          "value": "\"storage_objects\".\"status\" in ('pending', 'ready')"
+        }
+      },
       "isRLSEnabled": true
     }
   },
   "enums": {},
   "schemas": {},
+  "views": {},
   "sequences": {},
   "roles": {},
   "policies": {},
-  "views": {},
   "_meta": {
     "columns": {},
     "schemas": {},

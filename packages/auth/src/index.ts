@@ -1,4 +1,4 @@
 import "server-only";
 export { getAuth } from "./auth";
-export { requireSession, resolveTenant, withAuthorizedProjects } from "./tenant-resolver";
-export { canAccessProject, type ProjectAction } from "./permissions";
+export { requireSession, resolveTenant, withTenantScope } from "./tenant-resolver";
+export { canAccessScope, type ScopeAction } from "./permissions";

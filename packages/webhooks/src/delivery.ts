@@ -1,22 +1,25 @@
 import { createHash } from "node:crypto";
 import { and, eq } from "drizzle-orm";
-import { canAccessProject } from "@vibe/auth/permissions";
+import { canAccessScope } from "@vibe/auth/permissions";
 import { getSql, type TenantTransaction, webhookDeliveries } from "@vibe/db";
+import { eventTypePattern } from "@vibe/events";
 import { parseJobEnvelope, sendJob, type JobEnvelope } from "@vibe/jobs";
 import type { PgBoss } from "pg-boss";
 import { deliverWebhook, verifySignature } from "./index";
 import { checkedWorkerSql } from "./worker-connection";
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const outboundEvents = new Set(["project.created"]);
+const isEventName = (event: unknown): event is string => typeof event === "string" && event.length <= 100 && eventTypePattern.test(event);
 type Context = { actorUserId: string; organizationId: string | null };
 
+/**
+ * Verifies signature/envelope and records an idempotent receipt; returns 200 (new or identical replay) or 409.
+ * Processing is project-specific: consume `webhook_receipts` from your own code (hook point), never here.
+ */
 export async function acceptInbound(raw: Uint8Array, headers: Headers): Promise<{ status: number; body: string }> {
   const endpointId = process.env.WEBHOOK_INBOUND_ENDPOINT_ID;
   const secret = process.env.WEBHOOK_INBOUND_SECRET;
-  const ownerUserId = process.env.WEBHOOK_INBOUND_OWNER_USER_ID;
-  const organizationId = process.env.WEBHOOK_INBOUND_OWNER_ORGANIZATION_ID || null;
-  if (!endpointId || !secret || !ownerUserId || !uuid.test(endpointId) || !uuid.test(ownerUserId) || (organizationId !== null && !uuid.test(organizationId))) return { status: 404, body: "NOT_FOUND" };
+  if (!endpointId || !secret || !uuid.test(endpointId)) return { status: 404, body: "NOT_FOUND" };
   if (raw.byteLength > 256 * 1024) return { status: 413, body: "PAYLOAD_TOO_LARGE" };
   const timestamp = Number(headers.get("x-webhook-timestamp"));
   const signature = headers.get("x-webhook-signature")?.replace(/^sha256=/, "") ?? "";
@@ -25,43 +28,29 @@ export async function acceptInbound(raw: Uint8Array, headers: Headers): Promise<
   try { parsed = JSON.parse(Buffer.from(raw).toString("utf8")); } catch { return { status: 400, body: "INVALID_PAYLOAD" }; }
   if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return { status: 400, body: "INVALID_PAYLOAD" };
   const envelope = parsed as Record<string, unknown>;
-  const data = envelope.data;
-  if (typeof envelope.id !== "string" || !uuid.test(envelope.id) || envelope.event !== "project.create.requested" || typeof envelope.createdAt !== "string" || !Number.isFinite(Date.parse(envelope.createdAt)) || Object.keys(envelope).some((key) => !["id", "event", "createdAt", "data"].includes(key)) || !data || typeof data !== "object" || Array.isArray(data)) return { status: 400, body: "INVALID_PAYLOAD" };
-  const projectInput = data as Record<string, unknown>;
-  if (Object.keys(projectInput).some((key) => !["name", "description"].includes(key)) || typeof projectInput.name !== "string" || !projectInput.name.trim() || projectInput.name.trim().length > 200 || projectInput.description !== undefined && projectInput.description !== null && (typeof projectInput.description !== "string" || projectInput.description.trim().length > 5000)) return { status: 400, body: "INVALID_PAYLOAD" };
+  if (typeof envelope.id !== "string" || !uuid.test(envelope.id) || !isEventName(envelope.event) || typeof envelope.createdAt !== "string" || !Number.isFinite(Date.parse(envelope.createdAt)) || !("data" in envelope) || Object.keys(envelope).some((key) => !["id", "event", "createdAt", "data"].includes(key))) return { status: 400, body: "INVALID_PAYLOAD" };
   const eventId = envelope.id;
-  const projectName = projectInput.name.trim();
-  const description = typeof projectInput.description === "string" ? projectInput.description.trim() || null : null;
   const bodyHash = createHash("sha256").update(raw).digest("hex");
   try {
     const status = await getSql().begin(async (tx) => {
       const inserted = await tx`insert into webhook_receipts (endpoint_id, event_id, body_hash, payload) values (${endpointId}::uuid, ${eventId}::uuid, ${bodyHash}, ${JSON.stringify(envelope)}::jsonb) on conflict (endpoint_id, event_id) do nothing returning id`;
-      if (!inserted.length) {
-        const [prior] = await tx`select body_hash from webhook_receipts where endpoint_id = ${endpointId}::uuid and event_id = ${eventId}::uuid`;
-        return prior?.body_hash === bodyHash ? 200 : 409;
-      }
-      await tx`select set_config('app.current_user_id', ${ownerUserId}, true), set_config('app.current_tenant_id', ${organizationId ?? ""}, true)`;
-      const [actor] = await tx`select id, banned, ban_expires from "user" where id = ${ownerUserId} for share`;
-      if (!actor || (actor.banned && (!actor.ban_expires || new Date(actor.ban_expires) > new Date()))) throw new Error("FORBIDDEN");
-      if (organizationId) {
-        const [membership] = await tx`select role from member where user_id = ${ownerUserId} and organization_id = ${organizationId} for share`;
-        if (!membership || !canAccessProject(membership.role, "create")) throw new Error("FORBIDDEN");
-      }
-      const [project] = await tx`insert into projects (owner_user_id, organization_id, name, description) values (${ownerUserId}::uuid, ${organizationId}::uuid, ${projectName}, ${description}) returning id`;
-      await tx`insert into event_outbox (actor_user_id, organization_id, entity_id, type) values (${ownerUserId}::uuid, ${organizationId}::uuid, ${project.id}::uuid, 'project.created')`;
-      return 200;
+      if (inserted.length) return 200;
+      const [prior] = await tx`select body_hash from webhook_receipts where endpoint_id = ${endpointId}::uuid and event_id = ${eventId}::uuid`;
+      return prior?.body_hash === bodyHash ? 200 : 409;
     });
     return { status, body: status === 200 ? "OK" : "EVENT_ID_CONFLICT" };
   } catch { return { status: 500, body: "DELIVERY_FAILED" }; }
 }
 
-export async function createDelivery(tx: TenantTransaction, context: Context, eventId: string, payload: unknown) {
+/** Call inside the same tenant transaction as `enqueueEvent`; `event` must match the event name pattern. */
+export async function createDelivery(tx: TenantTransaction, context: Context, eventId: string, event: string, payload: unknown) {
   if (!uuid.test(context.actorUserId) || (context.organizationId !== null && !uuid.test(context.organizationId)) || !uuid.test(eventId)) throw new Error("INVALID_IDENTITY_CONTEXT");
+  if (!isEventName(event)) throw new Error("INVALID_WEBHOOK_EVENT");
   const enabled = process.env.WEBHOOKS_OUTBOUND_ENABLED ?? "false";
   if (enabled !== "true" && enabled !== "false") throw new Error("WEBHOOKS_OUTBOUND_ENABLED must be true or false");
   if (enabled === "false") throw new Error("WEBHOOK_OUTBOUND_DISABLED");
   if (!process.env.WEBHOOK_OUTBOUND_URL || !process.env.WEBHOOK_OUTBOUND_SECRET || !process.env.WEBHOOK_OUTBOUND_ALLOWED_HOSTS) throw new Error("WEBHOOK_OUTBOUND_NOT_CONFIGURED");
-  const [row] = await tx.insert(webhookDeliveries).values({ actorUserId: context.actorUserId, organizationId: context.organizationId, eventId, event: "project.created", payload }).returning({ id: webhookDeliveries.id });
+  const [row] = await tx.insert(webhookDeliveries).values({ actorUserId: context.actorUserId, organizationId: context.organizationId, eventId, event, payload }).returning({ id: webhookDeliveries.id });
   return row!;
 }
 
@@ -94,7 +83,7 @@ export async function webhookHandler(input: JobEnvelope): Promise<void> {
     let authorized = !!actor && (!actor.banned || (actor.ban_expires !== null && new Date(actor.ban_expires) <= new Date()));
     if (row.organization_id !== null) {
       const [membership] = await tx`select role from member where user_id = ${row.actor_user_id} and organization_id = ${row.organization_id}`;
-      authorized = authorized && !!membership && canAccessProject(membership.role, "create");
+      authorized = authorized && !!membership && canAccessScope(membership.role, "create");
     }
     if (!authorized) { await tx`update webhook_deliveries set status = 'failed' where id = ${row.id}`; return; }
     if (Date.now() - new Date(row.created_at).getTime() > 86_400_000) { await tx`update webhook_deliveries set status = 'failed' where id = ${row.id}`; return; }
@@ -102,7 +91,8 @@ export async function webhookHandler(input: JobEnvelope): Promise<void> {
     const url = process.env.WEBHOOK_OUTBOUND_URL;
     const secret = process.env.WEBHOOK_OUTBOUND_SECRET;
     if (!url || !secret || !allowedHosts.size) throw new Error("WEBHOOK_OUTBOUND_NOT_CONFIGURED");
-    const result = await deliverWebhook({ url, allowedHosts, secret, deliveryId: row.id, createdAt: new Date(row.created_at).toISOString(), event: row.event, data: row.payload, allowedEvents: outboundEvents }).catch((error: unknown) => ({ status: error instanceof Error && error.message === "WEBHOOK_DNS_FAILED" ? "retryable" as const : "terminal" as const, statusCode: null }));
+    // Stored event was validated at insert; a tampered name fails createEnvelope and becomes terminal.
+    const result = await deliverWebhook({ url, allowedHosts, secret, deliveryId: row.id, createdAt: new Date(row.created_at).toISOString(), event: row.event, data: row.payload, allowedEvents: new Set([row.event].filter(isEventName)) }).catch((error: unknown) => ({ status: error instanceof Error && error.message === "WEBHOOK_DNS_FAILED" ? "retryable" as const : "terminal" as const, statusCode: null }));
     const attempt = Number(row.attempts) + 1;
     const failure = result.status !== "delivered";
     const terminal = result.status === "terminal" || attempt >= 5;

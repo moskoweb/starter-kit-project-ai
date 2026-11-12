@@ -1,5 +1,5 @@
 import { headers } from "next/headers";
-import { requireSession, resolveTenant, withAuthorizedProjects } from "@vibe/auth";
+import { requireSession, resolveTenant, withTenantScope } from "@vibe/auth";
 import { getIdentityEnv } from "@vibe/config/env";
 import { listDeliveries, retryDelivery } from "@vibe/webhooks/delivery";
 import { readJsonLimited } from "@/lib/security/rate-limit";
@@ -27,7 +27,7 @@ export async function GET(request: Request) {
     const currentHeaders = await headers();
     await requireSession(currentHeaders);
     if (identifier.data !== null) await resolveTenant(identifier.data, currentHeaders);
-    const rows = await withAuthorizedProjects(currentHeaders, identifier.data, "read", tx => listDeliveries(tx));
+    const rows = await withTenantScope(currentHeaders, identifier.data, "read", tx => listDeliveries(tx));
     return Response.json({ items: rows.map(({ id, event, status, attempts, nextAt, createdAt, lastStatusCode }) => ({ id, event, status, attempts, nextAt, createdAt, lastStatusCode })) }, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) { return errorResponse(error); }
 }
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
       const tenant = await resolveTenant(parsed.data.tenantIdentifier, currentHeaders);
       if (!tenant.role.split(",").some(role => role.trim() === "owner" || role.trim() === "admin")) throw new Error("FORBIDDEN");
     }
-    const rows = await withAuthorizedProjects(currentHeaders, parsed.data.tenantIdentifier, "create", tx => retryDelivery(tx, parsed.data.id));
+    const rows = await withTenantScope(currentHeaders, parsed.data.tenantIdentifier, "create", tx => retryDelivery(tx, parsed.data.id));
     return Response.json({ updated: rows.length }, { status: rows.length ? 200 : 404 });
   } catch (error) { return errorResponse(error); }
 }

@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
-import { requireSession, withAuthorizedProjects } from "@vibe/auth";
+import { requireSession, withTenantScope } from "@vibe/auth";
 import { getIdentityEnv } from "@vibe/config/env";
-import { projects, storageObjects } from "@vibe/db/schema";
+import { storageObjects } from "@vibe/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { headObject } from "@/lib/storage";
@@ -21,12 +21,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const currentHeaders = await headers();
   try {
     const session = await requireSession(currentHeaders);
-    const result = await withAuthorizedProjects(currentHeaders, parsed.data.tenantIdentifier, "update", async tx => {
+    const result = await withTenantScope(currentHeaders, parsed.data.tenantIdentifier, "update", async tx => {
       const [record] = await tx.select().from(storageObjects).where(eq(storageObjects.id, id)).for("update");
       if (!record || record.ownerUserId !== session.user.id || record.status !== "pending" || record.expiresAt <= new Date()) throw new Error("NOT_FOUND");
-      const [project] = await tx.select({ id: projects.id, organizationId: projects.organizationId }).from(projects).where(eq(projects.id, record.projectId)).limit(1);
-      if (!project || project.organizationId !== record.organizationId) throw new Error("NOT_FOUND");
-      const context = project.organizationId ? { namespace: "org" as const, id: project.organizationId } : { namespace: "user" as const, id: record.ownerUserId };
+      const context = record.organizationId ? { namespace: "org" as const, id: record.organizationId } : { namespace: "user" as const, id: record.ownerUserId };
       const actual = await headObject(context, { key: record.key });
       if (actual.size !== record.size || actual.contentType !== record.contentType) throw new Error("UPLOAD_MISMATCH");
       const [updated] = await tx.update(storageObjects).set({ status: "ready" }).where(sql`${storageObjects.id} = ${id}::uuid and ${storageObjects.status} = 'pending' and ${storageObjects.expiresAt} > clock_timestamp()`).returning({ id: storageObjects.id, status: storageObjects.status });

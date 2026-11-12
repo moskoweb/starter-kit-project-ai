@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { getIdentityEnv } from "../../packages/config/src/identity";
-import { canAccessProject } from "../../packages/auth/src/permissions";
+import { canAccessScope } from "../../packages/auth/src/permissions";
 
 test("identity requires real secret and accepts all three explicit profiles", () => {
   assert.throws(() => getIdentityEnv({}), /configuration invalid/);
@@ -26,13 +26,14 @@ test("organization mode defaults to multi and single requires a valid organizati
   assert.equal(getIdentityEnv({ ...env, ORGANIZATION_MODE: "single", SINGLE_ORGANIZATION_ID: id.toUpperCase() }).SINGLE_ORGANIZATION_ID, id);
   assert.equal(single.IDENTITY_PROFILE, "hybrid");
 });
-test("declared project permissions deny unknown roles and preserve multiple memberships", () => {
-  assert.equal(canAccessProject("viewer", "read"), true);
-  assert.equal(canAccessProject("viewer", "create"), false);
-  assert.equal(canAccessProject("member", "delete"), false);
-  assert.equal(canAccessProject("unknown", "read"), false);
+test("declared scope permissions deny unknown roles and preserve multiple memberships", () => {
+  assert.equal(canAccessScope("viewer", "read"), true);
+  assert.equal(canAccessScope("viewer", "create"), false);
+  assert.equal(canAccessScope("member", "update"), true);
+  assert.equal(canAccessScope("member", "delete"), false);
+  assert.equal(canAccessScope("unknown", "read"), false);
   for (const role of ["constructor", "toString", "__proto__", "hasOwnProperty"]) {
-    assert.equal(canAccessProject(role, "read"), false);
+    assert.equal(canAccessScope(role, "read"), false);
   }
-  assert.equal(canAccessProject("viewer, admin", "delete"), true);
+  assert.equal(canAccessScope("viewer, admin", "delete"), true);
 });

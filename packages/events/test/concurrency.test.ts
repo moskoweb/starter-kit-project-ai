@@ -20,8 +20,7 @@ test("concurrent duplicate events commit one notification", {
     await fixture.begin(async (tx) => {
       await tx`insert into "user" (id, name, email) values (${actorUserId}, 'Events concurrency fixture', ${`events-${actorUserId}@example.invalid`})`;
       await tx`select set_config('app.current_user_id', ${actorUserId}, true), set_config('app.current_tenant_id', '', true)`;
-      await tx`insert into projects (id, owner_user_id, name) values (${entityId}, ${actorUserId}, 'Events concurrency fixture')`;
-      await tx`insert into event_outbox (id, actor_user_id, entity_id, type) values (${eventId}, ${actorUserId}, ${entityId}, 'project.created')`;
+      await tx`insert into event_outbox (id, actor_user_id, entity_id, type) values (${eventId}, ${actorUserId}, ${entityId}, 'fixture.created')`;
     });
     const worker = await checkedWorkerSql();
     const envelope = { version: 1 as const, type: "notification" as const, eventId,
@@ -45,7 +44,7 @@ test("concurrent duplicate events commit one notification", {
     });
   } finally {
     try {
-      // FK cascades clean fixture event, project and notification even after failed assertion.
+      // FK cascades clean fixture event and notification even after failed assertion.
       await fixture`delete from "user" where id = ${actorUserId}`;
     } finally {
       await fixture.end({ timeout: 5 });

@@ -9,7 +9,7 @@ import { Field, FieldLabel } from "@vibe/ui/components/field";
 import { Input } from "@vibe/ui/components/input";
 import type { UploadUrlResult, DownloadUrlResult } from "@vibe/storage";
 
-const listResponse = z.object({ items: z.array(z.object({ id: z.string().uuid(), projectId: z.string().uuid(), contentType: z.string(), size: z.number().int(), status: z.enum(["pending", "ready"]), createdAt: z.string().datetime() })) });
+const listResponse = z.object({ items: z.array(z.object({ id: z.string().uuid(), entityType: z.string(), entityId: z.string().uuid(), contentType: z.string(), size: z.number().int(), status: z.enum(["pending", "ready"]), createdAt: z.string().datetime() })) });
 const initiateResponse = z.object({ id: z.string().uuid(), url: z.string().url(), method: z.literal("POST"), fields: z.record(z.string(), z.string()), object: z.object({ key: z.string(), bucket: z.string(), namespace: z.enum(["org", "user"]), namespaceId: z.string(), contentType: z.string(), size: z.number().int() }), expiresAt: z.string().datetime() }) satisfies z.ZodType<UploadUrlResult & { id: string }>;
 const completeResponse = z.object({ id: z.string().uuid(), status: z.literal("ready") });
 const downloadResponse = z.object({ url: z.string().url(), expiresAt: z.string().datetime() }) satisfies z.ZodType<DownloadUrlResult>;
@@ -18,12 +18,13 @@ const text = {
   "pt-BR": { title: "Anexos", add: "Adicionar arquivo", uploading: "Upload em andamento…", download: "Baixar arquivo", pending: "Upload pendente", loadError: "Não foi possível carregar anexos.", initiateError: "Falha ao iniciar upload.", sendError: "Upload S3 falhou.", completeError: "Não foi possível confirmar upload.", confirmationError: "Resposta de confirmação inválida.", uploadError: "Falha no upload.", downloadError: "Falha ao baixar." },
   en: { title: "Attachments", add: "Add file", uploading: "Uploading…", download: "Download file", pending: "Upload pending", loadError: "Could not load attachments.", initiateError: "Could not start upload.", sendError: "S3 upload failed.", completeError: "Could not confirm upload.", confirmationError: "Invalid confirmation response.", uploadError: "Upload failed.", downloadError: "Download failed." },
 } as const;
-export function Attachments({ projectId, tenantIdentifier, locale = "pt-BR" }: { projectId: string; tenantIdentifier: string | null; locale?: "pt-BR" | "en" }) {
+/** Attach files to any record: `entityType` is a stable slug (`^[a-z][a-z0-9_-]{0,63}$`), `entityId` its UUID. */
+export function Attachments({ entityType, entityId, tenantIdentifier, locale = "pt-BR" }: { entityType: string; entityId: string; tenantIdentifier: string | null; locale?: "pt-BR" | "en" }) {
   const [items, setItems] = useState<Attachment[]>([]); const [error, setError] = useState(""); const [busy, setBusy] = useState(false);
   const t = text[locale];
   const fileId = useId();
   const scopeQuery = tenantIdentifier === null ? "" : `&tenantIdentifier=${encodeURIComponent(tenantIdentifier)}`;
-  const query = `projectId=${encodeURIComponent(projectId)}${scopeQuery}`;
+  const query = `entityType=${encodeURIComponent(entityType)}&entityId=${encodeURIComponent(entityId)}${scopeQuery}`;
   const refresh = useCallback(async (signal?: AbortSignal) => { const response = await fetch(`/api/storage?${query}`, { signal, cache: "no-store" }); if (!response.ok) throw new Error("LOAD_FAILED"); const data = listResponse.parse(await response.json()); if (!signal?.aborted) setItems(data.items); }, [query]);
   const loadError = t.loadError;
   // eslint-disable-next-line react-hooks/set-state-in-effect -- state is set after an awaited fetch (external sync), not synchronously
@@ -31,7 +32,7 @@ export function Attachments({ projectId, tenantIdentifier, locale = "pt-BR" }: {
   async function upload(file?: File) {
     if (!file) return; setBusy(true); setError("");
     try {
-      const response = await fetch("/api/storage", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tenantIdentifier, projectId, contentType: file.type, size: file.size }) });
+      const response = await fetch("/api/storage", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tenantIdentifier, entityType, entityId, contentType: file.type, size: file.size }) });
       const raw: unknown = await response.json(); if (!response.ok) throw new Error(t.initiateError); const data = initiateResponse.parse(raw);
       const form = new FormData(); for (const [key, value] of Object.entries(data.fields)) form.append(key, value); form.append("file", file);
       const sent = await fetch(data.url, { method: data.method, body: form }); if (!sent.ok) throw new Error(t.sendError);

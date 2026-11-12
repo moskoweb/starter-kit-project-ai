@@ -4,7 +4,7 @@ import { getDb, withTenantTransaction, type TenantTransaction } from "@vibe/db";
 import { member, organization } from "@vibe/db/schema";
 import { getIdentityEnv } from "@vibe/config/env";
 import { getAuth } from "./auth";
-import { canAccessProject, type ProjectAction } from "./permissions";
+import { canAccessScope, type ScopeAction } from "./permissions";
 
 export async function requireSession(headers: Headers) {
   const session = await getAuth().api.getSession({ headers, query: { disableCookieCache: true } });
@@ -26,13 +26,13 @@ export async function resolveTenant(identifier: string, headers: Headers, kind: 
   if (!result) throw new Error("NOT_FOUND");
   return result;
 }
-export async function withAuthorizedProjects<T>(headers: Headers, identifier: string | null, action: ProjectAction, operation: (tx: TenantTransaction) => Promise<T>): Promise<T> {
+export async function withTenantScope<T>(headers: Headers, identifier: string | null, action: ScopeAction, operation: (tx: TenantTransaction) => Promise<T>): Promise<T> {
   const session = await requireSession(headers);
   const profile = getIdentityEnv().IDENTITY_PROFILE;
   if (identifier === null && profile === "organizations") throw new Error("ORGANIZATION_REQUIRED");
   const tenant = identifier === null ? null : await resolveTenant(identifier, headers);
   return withTenantTransaction({ userId: session.user.id, organizationId: tenant?.id ?? null }, async (tx, role) => {
-    if (role !== null && !canAccessProject(role, action)) throw new Error("FORBIDDEN");
+    if (role !== null && !canAccessScope(role, action)) throw new Error("FORBIDDEN");
     return operation(tx);
   });
 }

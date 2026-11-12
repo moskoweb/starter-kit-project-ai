@@ -1,6 +1,5 @@
 import { readAiConfig, streamAiText, type AiConfig } from "@vibe/ai";
-import { requireSession, resolveTenant, withAuthorizedProjects } from "@vibe/auth";
-import { projects } from "@vibe/db/schema";
+import { requireSession, resolveTenant, withTenantScope } from "@vibe/auth";
 import { getIdentityEnv } from "@vibe/config/env";
 import { reserveAiUsage } from "@/lib/ai/usage";
 import { headers } from "next/headers";
@@ -66,23 +65,15 @@ async function handlePost(request: Request, report: (event: string, status: numb
     if (!Number.isSafeInteger(maxTokens) || maxTokens < 1 || maxTokens > 4096 || !Number.isSafeInteger(maxRequests) || maxRequests < 1 || !Number.isSafeInteger(maxDailyTokens) || maxDailyTokens < maxTokens * 2) {
       throw new Error("AI_LIMIT_CONFIGURATION_INVALID");
     }
-    await withAuthorizedProjects(currentHeaders, tenantIdentifier, "read", async (tx) => {
+    await withTenantScope(currentHeaders, tenantIdentifier, "read", async (tx) => {
       await enforceRateLimit(tx, { key: `ai:${session.user.id}:${tenantId ?? "personal"}`, limit: 10, windowSeconds: 60 });
       await reserveAiUsage(tx, tenantId, maxRequests, maxTokens * 2, maxDailyTokens);
     });
-    const tools = {
-      listAuthorizedProjects: {
-        description: "List projects authorized for current user and tenant.",
-        inputSchema: z.object({}).strict(),
-        execute: async (_input: Record<string, never>) => withAuthorizedProjects(currentHeaders, tenantIdentifier, "read", async (tx) =>
-          tx.select({ id: projects.id, name: projects.name, description: projects.description }).from(projects).orderBy(projects.name).limit(50)),
-      },
-    };
+    // No tools ship by default; add app-specific tools that re-authorize via withTenantScope (see docs/AI.md).
     const result = streamAiText(config, {
       prompt: parsed.data.prompt,
       maxOutputTokens: maxTokens,
       abortSignal: request.signal,
-      tools,
       onError: () => report("ai_stream_error", 500),
       onEnd: () => report("ai_stream_end", 200),
       onAbort: () => report("ai_stream_abort", 499),

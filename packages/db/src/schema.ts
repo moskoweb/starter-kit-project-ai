@@ -12,7 +12,6 @@ export type AppSetting = typeof appSettings.$inferSelect;
 export type NewAppSetting = typeof appSettings.$inferInsert;
 
 export * from "./auth-schema";
-export * from "./domain-schema";
 export * from "./totp-schema";
 export * from "./ai-schema";
 export * from "./events-schema";

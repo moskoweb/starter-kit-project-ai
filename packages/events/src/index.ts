@@ -1,26 +1,29 @@
 import { and, eq, sql } from "drizzle-orm";
 import type { TenantTransaction } from "@vibe/db";
-import { projects } from "@vibe/db/schema";
 import { eventOutbox, notifications } from "@vibe/db/events-schema";
 
 export type EventContext = { userId: string; organizationId: string | null };
+export type DomainEvent = { type: string; entityId: string };
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+/** Dotted lowercase name, e.g. `invoice.paid`. Mirrors event_outbox_type check. */
+export const eventTypePattern = /^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$/;
 export function validateContext(context: EventContext): void {
   if (!uuid.test(context.userId) || (context.organizationId !== null && !uuid.test(context.organizationId))) throw new Error("INVALID_EVENT_CONTEXT");
 }
 
-/** Only call inside withTenantTransaction, after project creation, before commit. */
-export async function enqueueProjectCreated(tx: TenantTransaction, context: EventContext, projectId: string): Promise<string> {
+/**
+ * Only call inside withTenantTransaction/withTenantScope, after the entity write and before commit,
+ * so the event commits atomically with the change. Caller must have authorized the entity write.
+ */
+export async function enqueueEvent(tx: TenantTransaction, context: EventContext, event: DomainEvent): Promise<string> {
   validateContext(context);
-  if (!uuid.test(projectId)) throw new Error("INVALID_PROJECT_ID");
+  if (event.type.length > 100 || !eventTypePattern.test(event.type)) throw new Error("INVALID_EVENT_TYPE");
+  if (!uuid.test(event.entityId)) throw new Error("INVALID_ENTITY_ID");
   const [scope] = await tx.execute<{ user_id: string; tenant_id: string | null }>(sql`select nullif(current_setting('app.current_user_id', true),'') as user_id, nullif(current_setting('app.current_tenant_id',true),'') as tenant_id`);
   if (!scope || scope.user_id !== context.userId || scope.tenant_id !== context.organizationId) throw new Error("EVENT_CONTEXT_MISMATCH");
-  const [project] = await tx.select({ id: projects.id, ownerUserId: projects.ownerUserId, organizationId: projects.organizationId })
-    .from(projects).where(eq(projects.id, projectId));
-  if (!project || project.ownerUserId !== context.userId || project.organizationId !== context.organizationId) throw new Error("FORBIDDEN");
-  const [event] = await tx.insert(eventOutbox).values({ actorUserId: context.userId, organizationId: context.organizationId, entityId: projectId, type: "project.created" }).returning({ id: eventOutbox.id });
-  if (!event) throw new Error("EVENT_NOT_PERSISTED");
-  return event.id;
+  const [row] = await tx.insert(eventOutbox).values({ actorUserId: context.userId, organizationId: context.organizationId, entityId: event.entityId, type: event.type }).returning({ id: eventOutbox.id });
+  if (!row) throw new Error("EVENT_NOT_PERSISTED");
+  return row.id;
 }
 
 /** RLS checks recipient and active tenant; API never accepts mutable payload/recipient. */

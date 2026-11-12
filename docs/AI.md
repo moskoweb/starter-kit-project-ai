@@ -36,30 +36,30 @@ Import de produção: `@vibe/ai` contém `import "server-only"`. Import `@vibe/a
 
 ### Tool tipada com autorização fornecida pelo caller
 
-Exemplo de composição, não endpoint nem adapter de banco. Caller fornece função real que revalida autorização e consulta projeto no escopo; não há retorno falso nem armazenamento em memória.
+Exemplo de composição, não endpoint nem adapter de banco. Caller fornece função real que revalida autorização (`withTenantScope`) e consulta o registro no escopo; não há retorno falso nem armazenamento em memória. `invoice` é um modelo hipotético do seu app.
 
 ```ts
 import { tool } from "ai";
 import { z } from "zod";
 
-export function projectSummaryTool(
-  readAuthorizedProject: (
-    projectId: string,
+export function invoiceSummaryTool(
+  readAuthorizedInvoice: (
+    invoiceId: string,
     signal?: AbortSignal,
-  ) => Promise<{ name: string; status: string }>,
+  ) => Promise<{ number: string; status: string }>,
 ) {
   return tool({
-    description: "Consultar nome e status de projeto acessível nesta sessão.",
-    inputSchema: z.object({ projectId: z.uuid() }).strict(),
-    // readAuthorizedProject deve revalidar identidade, permissão e tenant,
-    // validar projectId no servidor e projetar apenas campos permitidos.
-    execute: ({ projectId }, { abortSignal }) =>
-      readAuthorizedProject(projectId, abortSignal),
+    description: "Consultar número e status de fatura acessível nesta sessão.",
+    inputSchema: z.object({ invoiceId: z.uuid() }).strict(),
+    // readAuthorizedInvoice deve revalidar identidade, permissão e tenant,
+    // validar invoiceId no servidor e projetar apenas campos permitidos.
+    execute: ({ invoiceId }, { abortSignal }) =>
+      readAuthorizedInvoice(invoiceId, abortSignal),
   });
 }
 ```
 
-Caller usa `tools: { projectSummary: projectSummaryTool(readAuthorizedProject) }` somente **após** passos 1–3. `readAuthorizedProject` deve lançar erro seguro em acesso negado; não retornar dados de outro escopo. Zod valida estrutura e UUID; callback de acesso continua responsável por validação de domínio e autorização. Não enviar session tokens, contexto interno ou colunas sensíveis ao modelo.
+Caller usa `tools: { invoiceSummary: invoiceSummaryTool(readAuthorizedInvoice) }` somente **após** passos 1–3. `readAuthorizedInvoice` deve lançar erro seguro em acesso negado; não retornar dados de outro escopo. Zod valida estrutura e UUID; callback de acesso continua responsável por validação de domínio e autorização. Não enviar session tokens, contexto interno ou colunas sensíveis ao modelo.
 
 ## Dados e observabilidade
 
@@ -67,7 +67,7 @@ Nenhum log é emitido pelo pacote; telemetria SDK explicitamente desabilitada, c
 
 ### Endpoint e interface da aplicação
 
-`POST /api/ai` entrega stream de texto real do provider, não resposta simulada. Mantém validação de origem/body, sessão, escopo, rate limit e reserva conservadora de quota antes de iniciar geração. `listAuthorizedProjects` consulta somente projetos autorizados. Reserva não é devolvida automaticamente em falha/cancelamento; conciliação durável continua prova pendente, não comportamento prometido.
+`POST /api/ai` entrega stream de texto real do provider, não resposta simulada. Mantém validação de origem/body, sessão, escopo, rate limit e reserva conservadora de quota antes de iniciar geração. Nenhuma tool vem registrada por padrão; tools do app seguem o padrão abaixo e reautorizam via `withTenantScope`. Reserva não é devolvida automaticamente em falha/cancelamento; conciliação durável continua prova pendente, não comportamento prometido.
 
 `AiAssistant` em `apps/app/src/components/ai-assistant.tsx` recebe `enabled`, `tenantIdentifier` e `locale` opcional (`pt-BR` padrão). Owner monta componente no painel com flag resolvida no servidor; `enabled=false` não renderiza UI nem faz request. Não importar configuração secreta no cliente. Fetch envia prompt e identificador de tenant para `/api/ai`, decodifica stream incrementalmente e exibe somente texto React, sem HTML do modelo. Botão cancelar usa `AbortController`; desmontagem e troca de tenant também abortam e descartam estado anterior. Erros HTTP, inclusive 429, ficam visíveis; erros de rede interrompem resposta com aviso, sem substituir texto parcial por resposta fictícia. Transporte de texto puro não sinaliza de forma confiável toda falha do provider após headers: conferir logs de stream no smoke final.
 
