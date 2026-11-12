@@ -1,8 +1,8 @@
 "use client";
 import { useId, type ComponentProps } from "react";
 import { Controller, FormProvider, useFormContext, type ControllerProps, type FieldPath, type FieldValues } from "react-hook-form";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
+import { Input } from "@vibe/ui/components/input";
+import { Label } from "@vibe/ui/components/label";
 export { zodResolver } from "@hookform/resolvers/zod";
 export { useForm } from "react-hook-form";
 export const Form = FormProvider;

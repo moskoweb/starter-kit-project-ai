@@ -1,6 +1,6 @@
 import { getDb, appSettings } from "@vibe/db";
 import { eq } from "drizzle-orm";
-import { Card, Badge, Heading, Text } from "@vibe/ui";
+import { Badge, Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@vibe/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -37,72 +37,26 @@ export default async function HomePage() {
     dbStatus = "unreachable";
   }
 
+  const title = dbStatus === "unreachable" ? "Banco de dados inacessível" : appName ?? "Configuração ausente";
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "2rem",
-      }}
-    >
+    <main className="flex min-h-svh items-center justify-center bg-muted p-6 md:p-10">
       {website && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: website }} />}
-      <div style={{ width: "100%", maxWidth: "640px" }}>
-        <Card>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-            <Badge variant={dbStatus === "connected" ? "success" : "danger"}>
-              DB: {dbStatus}
-            </Badge>
-            {lastUpdated && (
-              <Text muted mono style={{ fontSize: "0.75rem", margin: 0 }}>
-                Atualizado: {lastUpdated}
-              </Text>
-            )}
-          </div>
-
-          {dbStatus === "unreachable" && (
-            <>
-              <Heading level={1}>Banco de dados inacessível</Heading>
-              <Text muted>
-                Não foi possível conectar ao PostgreSQL. Verifique se o banco de dados está ativo em 127.0.0.1:5432 e se a variável DATABASE_URL está configurada corretamente com a role vibe_starter_app.
-              </Text>
-            </>
-          )}
-
-          {dbStatus === "connected" && !appName && (
-            <>
-              <Heading level={1}>Configuração ausente</Heading>
-              <Text muted>
-                Conexão com PostgreSQL estabelecida, mas a chave de configuração &apos;app_name&apos; não foi encontrada na tabela app_settings. Execute o comando de semente para inicializar:
-              </Text>
-              <Text mono style={{ fontSize: "0.875rem", padding: "0.5rem", backgroundColor: "var(--color-bg)", borderRadius: "var(--radius-sm)" }}>
-                pnpm --filter @vibe/db db:seed
-              </Text>
-            </>
-          )}
-
-          {dbStatus === "connected" && appName && (
-            <>
-              <Heading level={1}>{appName}</Heading>
-              <Text muted>
-                Monorepo Turborepo + Next.js 16 + Drizzle ORM + PostgreSQL 17.
-              </Text>
-              <div
-                style={{
-                  marginTop: "1.5rem",
-                  paddingTop: "1.5rem",
-                  borderTop: "1px solid var(--color-border)",
-                }}
-              >
-                <Text muted style={{ fontSize: "0.875rem", margin: 0 }}>
-                  Dado persistido carregado da tabela app_settings via Server Component (role vibe_starter_app).
-                </Text>
-              </div>
-            </>
-          )}
-        </Card>
-      </div>
+      <Card className="w-full max-w-xl">
+        <CardHeader>
+          <CardTitle className="text-2xl">{title}</CardTitle>
+          <CardDescription>
+            {dbStatus === "unreachable" && "Não foi possível conectar ao PostgreSQL. Verifique se o banco de dados está ativo em 127.0.0.1:5432 e se a variável DATABASE_URL está configurada corretamente com a role vibe_starter_app."}
+            {dbStatus === "connected" && !appName && "Conexão com PostgreSQL estabelecida, mas a chave de configuração 'app_name' não foi encontrada na tabela app_settings. Execute o comando de semente para inicializar:"}
+            {dbStatus === "connected" && appName && "Monorepo Turborepo + Next.js 16 + Drizzle ORM + PostgreSQL 17."}
+          </CardDescription>
+          <CardAction><Badge variant={dbStatus === "connected" ? "secondary" : "destructive"}>DB: {dbStatus}</Badge></CardAction>
+        </CardHeader>
+        <CardContent>
+          {dbStatus === "connected" && !appName && <pre className="rounded-md bg-muted p-2 font-mono text-sm">pnpm --filter @vibe/db db:seed</pre>}
+          {dbStatus === "connected" && appName && <p className="text-sm text-muted-foreground">Dado persistido carregado da tabela app_settings via Server Component (role vibe_starter_app).</p>}
+        </CardContent>
+        {lastUpdated && <CardFooter className="font-mono text-xs text-muted-foreground">Atualizado: {lastUpdated}</CardFooter>}
+      </Card>
     </main>
   );
 }

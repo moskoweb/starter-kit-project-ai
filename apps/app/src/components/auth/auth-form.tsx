@@ -2,7 +2,10 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@vibe/auth/client";
-import { Button, Card, Heading, Input, Label, Text } from "@vibe/ui";
+import { Button } from "@vibe/ui/components/button";
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@vibe/ui/components/field";
+import { Input } from "@vibe/ui/components/input";
+import { AuthLayout } from "./auth-layout";
 type Mode = "login" | "signup" | "forgot" | "reset" | "verify";
 export function AuthForm({ mode, token, locale = "pt-BR" }: { mode: Mode; token?: string; locale?: "pt-BR" | "en" }) {
   const en = locale === "en";
@@ -42,5 +45,23 @@ export function AuthForm({ mode, token, locale = "pt-BR" }: { mode: Mode; token?
     } catch { setError(en ? "Could not complete this request. Check your details and try again." : "Não foi possível concluir. Confira os dados e tente novamente."); }
     finally { setPending(false); }
   }
-  return <main className="grid min-h-screen place-items-center p-8"><Card className="w-full max-w-md"><Heading>{titles[mode]}</Heading>{mode === "verify" && <Text muted>{en ? "After verification, sign in. You can request another email below." : "Após confirmar email, entre. Você pode reenviar email abaixo."}</Text>}<form onSubmit={submit} className="grid gap-4">{mode === "signup" && <Label>{en ? "Name" : "Nome"}<Input required autoComplete="name" value={name} onChange={event => setName(event.target.value)} /></Label>}{mode !== "reset" && <Label>Email<Input required type="email" autoComplete="email" value={email} onChange={event => setEmail(event.target.value)} /></Label>}{["login", "signup", "reset"].includes(mode) && <Label>{en ? "Password" : "Senha"}<Input required type="password" minLength={8} autoComplete={mode === "login" ? "current-password" : "new-password"} value={password} onChange={event => setPassword(event.target.value)} /></Label>}<Button type="submit" disabled={pending}>{pending ? en ? "Please wait…" : "Aguarde…" : titles[mode]}</Button>{error && <p role="alert">{error}</p>}{notice && <p role="status">{notice}</p>}</form><nav className="mt-4 grid gap-2">{mode === "login" ? <><a href="/signup">{titles.signup}</a><a href="/forgot-password">{titles.forgot}</a><a href="/verify-email">{titles.verify}</a></> : <a href="/login">{titles.login}</a>}</nav></Card></main>;
+  const descriptions: Record<Mode, string> = en ? { login: "Enter your email and password.", signup: "Create your account with email and password.", forgot: "We will email you a reset link.", reset: "Choose a new password.", verify: "After verification, sign in. You can request another email below." } : { login: "Informe seu email e senha.", signup: "Crie sua conta com email e senha.", forgot: "Enviaremos um link de redefinição por email.", reset: "Escolha uma nova senha.", verify: "Após confirmar email, entre. Você pode reenviar email abaixo." };
+  return <AuthLayout title={titles[mode]} description={descriptions[mode]}>
+    <form onSubmit={submit}>
+      <FieldGroup>
+        {mode === "signup" && <Field><FieldLabel htmlFor="auth-name">{en ? "Name" : "Nome"}</FieldLabel><Input id="auth-name" required autoComplete="name" value={name} onChange={event => setName(event.target.value)} /></Field>}
+        {mode !== "reset" && <Field><FieldLabel htmlFor="auth-email">Email</FieldLabel><Input id="auth-email" required type="email" autoComplete="email" placeholder="m@example.com" value={email} onChange={event => setEmail(event.target.value)} /></Field>}
+        {["login", "signup", "reset"].includes(mode) && <Field>
+          <div className="flex items-center"><FieldLabel htmlFor="auth-password">{en ? "Password" : "Senha"}</FieldLabel>{mode === "login" && <a href="/forgot-password" className="ml-auto text-sm underline-offset-4 hover:underline">{titles.forgot}</a>}</div>
+          <Input id="auth-password" required type="password" minLength={8} autoComplete={mode === "login" ? "current-password" : "new-password"} value={password} onChange={event => setPassword(event.target.value)} />
+        </Field>}
+        {error && <FieldError>{error}</FieldError>}
+        {notice && <p role="status" className="text-sm text-muted-foreground">{notice}</p>}
+        <Field>
+          <Button type="submit" disabled={pending}>{pending ? en ? "Please wait…" : "Aguarde…" : titles[mode]}</Button>
+          <FieldDescription className="text-center">{mode === "login" ? <><a href="/signup">{titles.signup}</a> · <a href="/verify-email">{titles.verify}</a></> : <a href="/login">{titles.login}</a>}</FieldDescription>
+        </Field>
+      </FieldGroup>
+    </form>
+  </AuthLayout>;
 }

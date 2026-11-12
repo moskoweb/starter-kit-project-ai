@@ -1,9 +1,4 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 @import "@vibe/ui/theme.css";
 @source "../../../../packages/ui/src";
-
-@layer base {
-  body { margin: 0; background: var(--background); color: var(--foreground); font-family: var(--ui-font-sans); }
-  button, input, select, textarea { font: inherit; }
-  :focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
-}

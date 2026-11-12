@@ -5,6 +5,7 @@ import { notFound, redirect, forbidden } from "next/navigation";
 import { getIdentityEnv } from "@vibe/config/env";
 import { resolveTenant, canAccessProject } from "@vibe/auth";
 import { ChartWidget } from "@vibe/ui";
+import { Card, CardContent, CardHeader, CardTitle } from "@vibe/ui/components/card";
 import { PanelShell } from "../../components/panels/shell";
 import { ResourceDetail } from "../../components/resources/detail";
 import { ResourceForm } from "../../components/resources/form";
@@ -61,7 +62,7 @@ export default async function PanelPage({ params, searchParams }: { params: Prom
   } else if (panel.context === "global") {
     if (path.length) notFound();
     const metrics = await loadGlobalMetrics();
-    content = <section className="space-y-3"><h2 className="text-xl font-semibold">{messages[locale].globalMetrics}</h2><p>{messages[locale].users}: {metrics.users}</p><p>{messages[locale].organizations}: {metrics.organizations}</p></section>;
+    content = <Card role="region" aria-labelledby="global-metrics-title"><CardHeader><CardTitle><h2 id="global-metrics-title">{messages[locale].globalMetrics}</h2></CardTitle></CardHeader><CardContent className="flex flex-col gap-1"><p>{messages[locale].users}: {metrics.users}</p><p>{messages[locale].organizations}: {metrics.organizations}</p></CardContent></Card>;
   } else if (!kind && path.length === 0) {
     const data = await loadProjectMetrics(identifier);
     content = <ChartWidget title={messages[locale].createdProjects} description={messages[locale].projectsByMonth} data={data.some(point => point.total > 0) ? data.map(({ month, total }) => ({ label: month, value: total })) : []} seriesLabel={messages[locale].projectsSeries} emptyMessage={messages[locale].noProjects} />;
@@ -92,5 +93,5 @@ export default async function PanelPage({ params, searchParams }: { params: Prom
   if (panel.context !== "global" && path.length === 0 && process.env.WEBHOOKS_OUTBOUND_ENABLED === "true") content = <>{content}<WebhookDeliveries tenantIdentifier={identifier} locale={locale} /></>;
   if (panel.context !== "global" && path.length === 0 && process.env.PUSH_ENABLED === "true") content = <>{content}<PushSettings key={identifier ?? "personal"} enabled tenantIdentifier={identifier} locale={locale} /></>;
   const nav = [{ label: messages[locale].overview, href: basePath }, ...resourcesForPanel(panel.id).map(resource => ({ label: resource.id === "projects" ? messages[locale].projects : resource.id === "tasks" ? messages[locale].tasks : resource.label, href: `${basePath}/${resource.id}` }))];
-  return <PanelShell title={tenant?.name ?? panel.label} nav={nav} orgOptions={orgOptions} currentOrg={tenant ? { id: tenant.id, name: tenant.name } : undefined} user={{ name: session.user.name, email: session.user.email }} locale={locale} theme={cookieStore.get("theme")?.value === "dark" ? "dark" : "light"} initialCollapsed={cookieStore.get("sidebar:state")?.value === "collapsed"} tenantIdentifier={identifier} showNotifications={process.env.JOBS_ENABLED === "true"}>{content}{panel.context !== "global" && <AiAssistant key={identifier ?? "personal"} enabled={process.env.AI_ENABLED === "true"} tenantIdentifier={identifier} locale={locale} />}</PanelShell>;
+  return <PanelShell title={tenant?.name ?? panel.label} nav={nav} orgOptions={orgOptions} currentOrg={tenant ? { id: tenant.id, name: tenant.name } : undefined} user={{ name: session.user.name, email: session.user.email }} locale={locale} theme={cookieStore.get("theme")?.value === "dark" ? "dark" : "light"} initialCollapsed={cookieStore.get("sidebar_state")?.value === "false"} tenantIdentifier={identifier} showNotifications={process.env.JOBS_ENABLED === "true"}>{content}{panel.context !== "global" && <AiAssistant key={identifier ?? "personal"} enabled={process.env.AI_ENABLED === "true"} tenantIdentifier={identifier} locale={locale} />}</PanelShell>;
 }

@@ -1,7 +1,7 @@
 "use client";
 import { useState, type ReactElement } from "react";
-import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogTrigger, DialogClose } from "../ui/dialog";
-import { Button } from "../ui/button";
+import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogTrigger, DialogClose } from "@vibe/ui/components/dialog";
+import { Button } from "@vibe/ui/components/button";
 export interface ConfirmDialogProps { trigger: ReactElement; title: string; description: string; confirmLabel: string; cancelLabel: string; errorMessage: string; onConfirm: () => void | Promise<void>; destructive?: boolean; }
 export function ConfirmDialog({ trigger, title, description, confirmLabel, cancelLabel, errorMessage, onConfirm, destructive = false }: ConfirmDialogProps) {
   const [open, setOpen] = useState(false);

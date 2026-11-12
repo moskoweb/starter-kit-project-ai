@@ -1,7 +1,7 @@
 "use client";
 import type { ReactNode } from "react";
 import { useFormStatus } from "react-dom";
-import { Button } from "../ui/button";
+import { Button } from "@vibe/ui/components/button";
 
 export function ConfirmSubmit({ children, message, pendingLabel = "…" }: { children: ReactNode; message: string; pendingLabel?: string }) {
   const { pending } = useFormStatus();

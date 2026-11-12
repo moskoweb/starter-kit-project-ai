@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { z } from "zod";
+import { Button } from "@vibe/ui/components/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@vibe/ui/components/card";
 import type { Locale } from "@/lib/i18n";
 
 function applicationKey(value: string): Uint8Array<ArrayBuffer> {
@@ -70,9 +72,13 @@ export function PushSettings({ enabled, tenantIdentifier = null, locale }: { ena
   }
 
   if (!enabled) return null;
-  return <section aria-labelledby="push-settings-title" className="space-y-2">
-    <h2 id="push-settings-title" className="text-xl font-semibold">{locale === "en" ? "Push notifications" : "Notificações push"}</h2>
-    <button type="button" disabled={pending} onClick={() => void toggle()} className="rounded border px-3 py-2">{subscribed ? t.on : t.off}</button>
-    {error && <p role="alert">{error}</p>}
-  </section>;
+  return <Card role="region" aria-labelledby="push-settings-title">
+    <CardHeader>
+      <CardTitle><h2 id="push-settings-title">{locale === "en" ? "Push notifications" : "Notificações push"}</h2></CardTitle>
+    </CardHeader>
+    <CardContent className="flex flex-col gap-2">
+      <Button type="button" variant={subscribed ? "outline" : "default"} className="self-start" disabled={pending} onClick={() => void toggle()}>{subscribed ? t.on : t.off}</Button>
+      {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+    </CardContent>
+  </Card>;
 }

@@ -1,6 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { Badge } from "@vibe/ui/components/badge";
+import { Button } from "@vibe/ui/components/button";
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@vibe/ui/components/card";
 import type { Locale } from "@/lib/i18n";
 
 type Delivery = { id: string; event: string; status: string; attempts: number; nextAt: string; createdAt: string; lastStatusCode: string | null };
@@ -33,14 +36,19 @@ export function WebhookDeliveries({ tenantIdentifier, locale }: { tenantIdentifi
       await refresh();
     } catch { setError(t.retryError); } finally { setBusy(null); }
   }
-  return <section aria-labelledby="webhook-deliveries-title" className="space-y-3">
-    <header className="flex items-center justify-between"><h2 id="webhook-deliveries-title" className="text-xl font-semibold">{t.title}</h2><button type="button" disabled={busy !== null} onClick={() => void refresh()} className="underline">{t.refresh}</button></header>
-    {error && <p role="alert">{error}</p>}
-    {!items && !error && <p aria-live="polite">{t.loading}</p>}
-    {items?.length === 0 && <p>{t.empty}</p>}
-    {items && items.length > 0 && <ul className="space-y-2">{items.map(item => <li key={item.id} className="flex flex-wrap items-center justify-between gap-4 rounded border p-3">
-      <dl className="grid grid-cols-2 gap-x-4 gap-y-1"><dt>{t.event}</dt><dd>{item.event}</dd><dt>{t.status}</dt><dd>{item.status}</dd><dt>{t.attempts}</dt><dd>{item.attempts}</dd><dt>{t.next}</dt><dd><time dateTime={item.nextAt}>{new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(item.nextAt))}</time></dd><dt>{t.created}</dt><dd><time dateTime={item.createdAt}>{new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(item.createdAt))}</time></dd>{item.lastStatusCode !== null && <><dt>{t.code}</dt><dd>{item.lastStatusCode}</dd></>}</dl>
-      {item.status === "failed" && <button type="button" disabled={busy !== null} onClick={() => void retry(item.id)} className="underline">{t.retry}</button>}
-    </li>)}</ul>}
-  </section>;
+  return <Card role="region" aria-labelledby="webhook-deliveries-title">
+    <CardHeader>
+      <CardTitle><h2 id="webhook-deliveries-title">{t.title}</h2></CardTitle>
+      <CardAction><Button type="button" variant="outline" size="sm" disabled={busy !== null} onClick={() => void refresh()}>{t.refresh}</Button></CardAction>
+    </CardHeader>
+    <CardContent className="flex flex-col gap-3">
+      {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+      {!items && !error && <p aria-live="polite" className="text-muted-foreground">{t.loading}</p>}
+      {items?.length === 0 && <p className="text-muted-foreground">{t.empty}</p>}
+      {items && items.length > 0 && <ul className="flex flex-col gap-2">{items.map(item => <li key={item.id} className="flex flex-wrap items-center justify-between gap-4 rounded-md border p-3">
+        <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm"><dt className="text-muted-foreground">{t.event}</dt><dd>{item.event}</dd><dt className="text-muted-foreground">{t.status}</dt><dd><Badge variant={item.status === "failed" ? "destructive" : "secondary"}>{item.status}</Badge></dd><dt className="text-muted-foreground">{t.attempts}</dt><dd>{item.attempts}</dd><dt className="text-muted-foreground">{t.next}</dt><dd><time dateTime={item.nextAt}>{new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(item.nextAt))}</time></dd><dt className="text-muted-foreground">{t.created}</dt><dd><time dateTime={item.createdAt}>{new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(item.createdAt))}</time></dd>{item.lastStatusCode !== null && <><dt className="text-muted-foreground">{t.code}</dt><dd>{item.lastStatusCode}</dd></>}</dl>
+        {item.status === "failed" && <Button type="button" variant="outline" size="sm" disabled={busy !== null} onClick={() => void retry(item.id)}>{t.retry}</Button>}
+      </li>)}</ul>}
+    </CardContent>
+  </Card>;
 }

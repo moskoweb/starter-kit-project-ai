@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Button } from "@vibe/ui/components/button";
+import { Card, CardContent } from "@vibe/ui/components/card";
 
 const CONSENT_KEY = "analytics-consent";
 const DISTINCT_ID_KEY = "analytics-distinct-id";
@@ -37,9 +39,19 @@ export function AnalyticsConsent() {
     }).catch(() => {});
   }, [consent]);
   if (process.env.NEXT_PUBLIC_ANALYTICS_ENABLED !== "true") return null;
-  if (consent === "accepted") return <button type="button" onClick={() => setAnalyticsConsent(false, setConsent)}>Revoke analytics consent</button>;
-  if (consent === "denied") return <button type="button" onClick={() => setAnalyticsConsent(true, setConsent)}>Allow analytics</button>;
-  return <div aria-label="Analytics consent"><span>Allow anonymous analytics?</span><button type="button" onClick={() => setAnalyticsConsent(true, setConsent)}>Allow</button><button type="button" onClick={() => setAnalyticsConsent(false, setConsent)}>Decline</button></div>;
+  if (consent === "accepted") return <Button type="button" variant="link" size="sm" onClick={() => setAnalyticsConsent(false, setConsent)}>Revoke analytics consent</Button>;
+  if (consent === "denied") return <Button type="button" variant="link" size="sm" onClick={() => setAnalyticsConsent(true, setConsent)}>Allow analytics</Button>;
+  return <div role="region" aria-label="Analytics consent" className="fixed bottom-3 left-3 z-40 max-w-sm">
+    <Card className="py-4">
+      <CardContent className="flex flex-wrap items-center justify-between gap-3 px-4 text-sm">
+        <span>Allow anonymous analytics?</span>
+        <div className="flex gap-2">
+          <Button type="button" size="sm" onClick={() => setAnalyticsConsent(true, setConsent)}>Allow</Button>
+          <Button type="button" variant="outline" size="sm" onClick={() => setAnalyticsConsent(false, setConsent)}>Decline</Button>
+        </div>
+      </CardContent>
+    </Card>
+  </div>;
 }
 
 export function setAnalyticsConsent(accepted: boolean, update?: (value: string) => void): void {

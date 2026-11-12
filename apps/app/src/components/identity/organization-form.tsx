@@ -2,7 +2,10 @@
 import { useState, type ReactNode, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@vibe/auth/client";
+import { Button } from "@vibe/ui/components/button";
+import { FieldGroup, FieldSet } from "@vibe/ui/components/field";
 type Action = "create" | "invite" | "cancel" | "resend" | "role" | "remove" | "select" | "accept" | "reject";
+const variants: Partial<Record<Action, "destructive" | "outline">> = { remove: "destructive", cancel: "outline", reject: "outline", resend: "outline", select: "outline", role: "outline" };
 export function OrganizationForm({ action, organizationId, targetId, email, role, children, label }: { action: Action; organizationId?: string; targetId?: string; email?: string; role?: string; children?: ReactNode; label: string }) {
   const router = useRouter(); const [busy, setBusy] = useState(false); const [message, setMessage] = useState(""); const [failed, setFailed] = useState(false);
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -27,5 +30,13 @@ export function OrganizationForm({ action, organizationId, targetId, email, role
     } catch { setFailed(true); setMessage("Não foi possível concluir. Confira os dados e suas permissões, atualize a página e tente novamente."); }
     finally { setBusy(false); }
   }
-  return <form onSubmit={submit} aria-busy={busy} className="space-y-3"><fieldset disabled={busy} className="space-y-3">{children}<button className="rounded-md border px-4 py-2 disabled:opacity-50" type="submit">{busy ? "Aguarde…" : label}</button></fieldset>{message && <p role={failed ? "alert" : "status"}>{message}</p>}</form>;
+  return <form onSubmit={submit} aria-busy={busy} className="flex flex-col gap-3">
+    <FieldSet disabled={busy}>
+      <FieldGroup>
+        {children}
+        <div><Button type="submit" variant={variants[action] ?? "default"}>{busy ? "Aguarde…" : label}</Button></div>
+      </FieldGroup>
+    </FieldSet>
+    {message && (failed ? <p role="alert" className="text-sm text-destructive">{message}</p> : <p role="status" className="text-sm text-muted-foreground">{message}</p>)}
+  </form>;
 }

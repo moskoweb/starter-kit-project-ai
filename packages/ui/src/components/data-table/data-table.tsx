@@ -1,7 +1,7 @@
 "use client";
 import { flexRender, getCoreRowModel, useReactTable, type ColumnDef, type SortingState, type PaginationState, type OnChangeFn } from "@tanstack/react-table";
-import { Button } from "../ui/button";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../ui/table";
+import { Button } from "@vibe/ui/components/button";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@vibe/ui/components/table";
 export interface DataTableProps<T> {
   data: T[];
   columns: ColumnDef<T, unknown>[];

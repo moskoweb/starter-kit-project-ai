@@ -1,6 +1,10 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
+import { Button } from "@vibe/ui/components/button";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@vibe/ui/components/card";
+import { Field, FieldGroup, FieldLabel } from "@vibe/ui/components/field";
+import { Textarea } from "@vibe/ui/components/textarea";
 import type { Locale } from "@/lib/i18n";
 
 const text = {
@@ -83,18 +87,26 @@ function ActiveAssistant({ tenantIdentifier, locale }: { tenantIdentifier: strin
     }
   }
 
-  return <section aria-labelledby={`${id}-title`} className="space-y-3">
-    <h2 id={`${id}-title`} className="text-xl font-semibold">{t.title}</h2>
-    <form onSubmit={event => void submit(event)} className="space-y-3">
-      <label htmlFor={`${id}-prompt`} className="block font-medium">{t.prompt}</label>
-      <textarea id={`${id}-prompt`} value={prompt} onChange={event => setPrompt(event.target.value)} required maxLength={32_000} rows={4} disabled={pending} className="block w-full rounded border bg-transparent p-3 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-60" />
-      <div className="flex flex-wrap gap-3">
-        <button type="submit" disabled={pending || !prompt.trim()} className="rounded border px-4 py-2 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-60">{t.send}</button>
-        {pending && <button type="button" onClick={() => controller.current?.abort()} className="rounded border px-4 py-2 focus-visible:outline-2 focus-visible:outline-offset-2">{t.cancel}</button>}
-      </div>
-    </form>
-    <p role="status">{status}</p>
-    {error && <p role="alert">{error}</p>}
-    {answer && <div aria-label={t.answer} aria-busy={pending} className="whitespace-pre-wrap break-words border-t pt-3">{answer}</div>}
-  </section>;
+  return <Card role="region" aria-labelledby={`${id}-title`}>
+    <CardHeader>
+      <CardTitle><h2 id={`${id}-title`}>{t.title}</h2></CardTitle>
+    </CardHeader>
+    <CardContent className="flex flex-col gap-3">
+      <form onSubmit={event => void submit(event)}>
+        <FieldGroup>
+          <Field>
+            <FieldLabel htmlFor={`${id}-prompt`}>{t.prompt}</FieldLabel>
+            <Textarea id={`${id}-prompt`} value={prompt} onChange={event => setPrompt(event.target.value)} required maxLength={32_000} rows={4} disabled={pending} />
+          </Field>
+          <Field orientation="horizontal">
+            <Button type="submit" disabled={pending || !prompt.trim()}>{t.send}</Button>
+            {pending && <Button type="button" variant="outline" onClick={() => controller.current?.abort()}>{t.cancel}</Button>}
+          </Field>
+        </FieldGroup>
+      </form>
+      <p role="status" className="text-sm text-muted-foreground">{status}</p>
+      {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+    </CardContent>
+    {answer && <CardFooter className="border-t"><div aria-label={t.answer} aria-busy={pending} className="whitespace-pre-wrap break-words">{answer}</div></CardFooter>}
+  </Card>;
 }

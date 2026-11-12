@@ -8,11 +8,12 @@ No CSS global Tailwind v4 do app:
 
 ```css
 @import "tailwindcss";
+@import "tw-animate-css";
 @import "@vibe/ui/theme.css";
 @source "../../../../packages/ui/src";
 ```
 
-Ajustar caminho `@source` à localização real do CSS consumidor. `@vibe/ui/theme.css` é único entrypoint CSS; `tokens.css` e aliases legados foram removidos no cutover coordenado com app. Não importar Tailwind uma segunda vez no pacote. App instala `tailwindcss`, `@tailwindcss/postcss` e `postcss`, configurando plugin PostCSS. Aplicar `bg-background text-foreground font-sans` ao shell. `.dark` ou `data-theme="dark"` troca tokens; ausência usa luz. Sem persistência ou detecção de tema no pacote. `data-density="compact"` reduz espaçamento, `data-radius="square" | "round"` muda raio. Sobrescrever `--ui-font-sans`, `--ui-font-mono`, `--radius` e `--spacing` por CSS. Fontes não são baixadas pelo pacote. Cores destrutivas foram ajustadas em relação ao vermelho claro da especificação; contraste ainda requer inspeção de integração.
+Ajustar caminho `@source` à localização real do CSS consumidor. `@vibe/ui/theme.css` é único entrypoint CSS; `tokens.css` e aliases legados foram removidos no cutover coordenado com app. Não importar Tailwind uma segunda vez no pacote. App instala `tailwindcss`, `tw-animate-css` (animações dos primitivos shadcn), `@tailwindcss/postcss` e `postcss`, configurando plugin PostCSS. `theme.css` aplica `bg-background text-foreground font-sans` no `body`. `.dark` ou `data-theme="dark"` troca tokens; ausência usa luz. Sem persistência ou detecção de tema no pacote. `data-density="compact"` reduz espaçamento, `data-radius="square" | "round"` muda raio. Sobrescrever `--ui-font-sans`, `--ui-font-mono`, `--radius` e `--spacing` por CSS. Fontes não são baixadas pelo pacote. Cores destrutivas foram ajustadas em relação ao vermelho claro da especificação; contraste ainda requer inspeção de integração.
 
 ### PostCSS no desenvolvimento
 
@@ -22,13 +23,14 @@ Se `Cannot find module '@tailwindcss/postcss'` persistir após instalar dependê
 
 ## API
 
-Todos exports pelo entrypoint `@vibe/ui`.
+Primitivos são componentes oficiais shadcn/ui (style `new-york`, base Radix, ícones `lucide-react`, tokens `neutral`) instalados pela CLI em `packages/ui/src/components/`. Importar por arquivo, `@vibe/ui/components/<nome>`, ou pelo entrypoint `@vibe/ui`. API e exemplos: [ui.shadcn.com/docs/components](https://ui.shadcn.com/docs/components). Utilitário de classes: pacote [`cn`](https://github.com/shadcn-ui/cn).
 
-- `Card`, `Badge`, `Heading`, `Text`: contratos antigos preservados, agora sobre tokens semânticos únicos. `Card` também aceita atributos de div. `Badge` mantém variantes `success | danger | neutral`. Nenhum alias legado necessário.
-- `Button`: atributos nativos, `variant="default | outline | ghost | destructive"`, `size="default | sm | icon"`; type padrão `button`. Botões só com ícone precisam de `aria-label`. Não suporta `asChild`.
-- `Input`, `Label`, `Select`: atributos HTML nativos. `Select` usa `<option>` filhos, não componentes Radix; comportamento de teclado e mobile nativo. Sempre fornecer label associado.
-- `Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell`: tabela semântica com overflow horizontal; fornecer caption.
-- `Dialog`, `DialogTrigger`, `DialogClose`, `DialogContent`, `DialogTitle`, `DialogDescription`: Radix Dialog, foco modal e retorno ao trigger. Fornecer título, descrição e controle explícito de fechar. Trigger/Close suportam `asChild` Radix.
+Instalados: avatar, badge, breadcrumb, button, card, collapsible, dialog, dropdown-menu, field, input, label, native-select, select (Radix), separator, sheet, sidebar, skeleton, table, tooltip. Adicionar outro: `cd apps/app && pnpm dlx shadcn@4.23.0 add <item>`; exportar no `src/index.tsx` se usado pelo entrypoint. `NativeSelect` substitui o antigo `Select` nativo (mobile/teclado nativos); `Select` agora é o Radix.
+
+Blocos: painel adapta [sidebar-07](https://ui.shadcn.com/blocks#sidebar-07) (`apps/app/src/components/panels/`: `shell`, `nav-main`, `nav-user`, `team-switcher`); auth adapta [login-03](https://ui.shadcn.com/blocks#login-03) (`components/auth/auth-layout.tsx`). Estado da sidebar persiste no cookie `sidebar_state` do componente shadcn.
+
+Composições locais:
+
 - `DataTable<T>`: `data`, `columns: ColumnDef<T, unknown>[]`, `getRowId`, `rowCount`, `pagination`, `sorting`, `onPaginationChange`, `onSortingChange`. Paginação/ordenação exclusivamente manuais: app consulta servidor ao mudar estado. Nunca ordena só página atual. `getRowId` deve usar ID estável de domínio, não índice. Não mantém seleção interna entre páginas/tenants; bulk selection pertence ao caller e deve ser limpa em mudança de escopo. Labels obrigatórios: `caption`, `emptyMessage`, `previousLabel`, `nextLabel`, `pageLabel(page, count)`. App trata filtros, loading e falhas do loader.
 - `Form`, `FormField`, `FormInput`, `useForm`, `zodResolver`: padrão React Hook Form + Zod. `Form` é FormProvider; envolver `<form onSubmit={methods.handleSubmit(save)}>` e usar `FormInput<T> name label description`. Mensagens de schema aparecem com `role="alert"` e referência no input. Para controls não textuais, `FormField` é Controller tipado.
 - `Infolist`, `InfolistEntry label`: `<dl>` com `<dt>/<dd>`, children aceitam conteúdo de apresentação.
@@ -55,19 +57,12 @@ Exemplo exige imports de `z` de `zod` e exports citados de `@vibe/ui`. App forne
 
 ## Origem por arquivo
 
-Fontes upstream consultadas em 2026-11-11, branch `main`, diretório [new-york-v4/ui](https://github.com/shadcn-ui/ui/tree/main/apps/v4/registry/new-york-v4/ui). São adaptações locais, não registry gerado nem sync automático.
-
-| Arquivo em packages/ui/src | Origem e mudanças |
+| Arquivo | Origem |
 | --- | --- |
-| `components/ui/button.tsx` | [shadcn button.tsx](https://github.com/shadcn-ui/ui/blob/main/apps/v4/registry/new-york-v4/ui/button.tsx), MIT. Reduzido a variantes usadas, HTML nativo, sem Slot/CVA. |
-| `components/ui/input.tsx` | [shadcn input.tsx](https://github.com/shadcn-ui/ui/blob/main/apps/v4/registry/new-york-v4/ui/input.tsx), MIT. Classes reduzidas, atributos nativos. |
-| `components/ui/dialog.tsx` | [shadcn dialog.tsx](https://github.com/shadcn-ui/ui/blob/main/apps/v4/registry/new-york-v4/ui/dialog.tsx), MIT. Radix direto, sem ícone/close com tradução fixa, sem animações. |
-| `components/widgets/chart-widget.tsx` | `ChartContainer` adaptado de [shadcn chart.tsx](https://github.com/shadcn-ui/ui/blob/main/apps/v4/registry/new-york-v4/ui/chart.tsx), MIT. Sem contexto/config/style injection; token CSS direto. Widget de barras local. |
-| `components/ui/card.tsx`, `components/ui/badge.tsx` | Código local anterior movido de `src/index.tsx`; Card recebe classes/tokens novos preservando props. |
-| `components/ui/label.tsx`, `components/ui/select.tsx`, `components/ui/table.tsx` | Código local sobre HTML nativo; sem cópia upstream. |
-| `components/data-table/data-table.tsx` | Composição local usando API TanStack Table v8. |
-| `components/form/form.tsx` | Composição local usando RHF/Controller e resolver Zod; não cópia de shadcn form. |
-| `components/infolist/infolist.tsx`, `components/actions/confirm-dialog.tsx`, `components/widgets/stat-widget.tsx`, `styles/theme.css` | Código local, baseado nos contratos da fase. |
+| `packages/ui/src/components/*.tsx`, `src/hooks/use-mobile.ts` | Gerados por `shadcn@4.23.0 add` (registry `new-york-v4`), MIT, sem edição. |
+| `styles/theme.css` | Tokens do tema `neutral` new-york-v4, MIT; aliases locais `data-density`/`data-radius`. |
+| `apps/app/src/components/panels/*`, `components/auth/auth-layout.tsx` | Blocos sidebar-07/login-03, MIT, adaptados a dados reais, i18n e Next `Link`. |
+| `components/data-table`, `form`, `infolist`, `actions`, `widgets` | Composições locais sobre primitivos acima. `ChartContainer` adaptado de shadcn chart.tsx. |
 
 ### Licença das adaptações shadcn/ui
 

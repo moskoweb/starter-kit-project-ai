@@ -1,0 +1,23 @@
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "new-york",
+  "rsc": true,
+  "tsx": true,
+  "tailwind": {
+    "config": "",
+    "css": "src/styles/theme.css",
+    "baseColor": "neutral",
+    "cssVariables": true
+  },
+  "iconLibrary": "lucide",
+  "aliases": {
+    "components": "@vibe/ui/components",
+    "utils": "@vibe/ui/lib/utils",
+    "hooks": "@vibe/ui/hooks",
+    "lib": "@vibe/ui/lib",
+    "ui": "@vibe/ui/components"
+  },
+  "registries": {
+    "@cult-ui": "https://www.cult-ui.com/r/{name}.json"
+  }
+}

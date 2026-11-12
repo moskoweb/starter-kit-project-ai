@@ -1,8 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm, zodResolver, Form, FormInput, Button, Select } from "@vibe/ui";
+import Link from "next/link";
+import { useForm, zodResolver, Form, FormInput } from "@vibe/ui";
+import { Button } from "@vibe/ui/components/button";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@vibe/ui/components/field";
+import { Input } from "@vibe/ui/components/input";
+import { NativeSelect, NativeSelectOption } from "@vibe/ui/components/native-select";
 import { projectInputSchema, taskInputSchema } from "../../lib/resources/validation";
 import type { z } from "zod";
 import type { ResourceResult } from "./list";
@@ -18,7 +23,7 @@ export function ResourceForm(props: ProjectProps | TaskProps) {
 }
 
 function SaveActions({ pending, error, cancelHref, en }: { pending: boolean; error: string; cancelHref: string; en: boolean }) {
-  return <><div className="flex gap-3"><Button type="submit" disabled={pending}>{pending ? en ? "Saving…" : "Salvando…" : en ? "Save" : "Salvar"}</Button><a href={cancelHref}>{en ? "Cancel" : "Cancelar"}</a></div>{error && <p role="alert">{error}</p>}</>;
+  return <><Field orientation="horizontal"><Button type="submit" disabled={pending}>{pending ? en ? "Saving…" : "Salvando…" : en ? "Save" : "Salvar"}</Button><Button asChild variant="outline"><Link href={cancelHref}>{en ? "Cancel" : "Cancelar"}</Link></Button></Field>{error && <p role="alert" className="text-sm text-destructive">{error}</p>}</>;
 }
 
 function useSave(basePath: string, en: boolean) {
@@ -39,14 +44,15 @@ function ProjectForm({ basePath, cancelHref, initialValues = {}, onSave, locale 
   const en = locale === "en";
   const form = useForm<ProjectValues>({ resolver: zodResolver(projectInputSchema), defaultValues: initialValues });
   const { error, save } = useSave(basePath, en);
-  return <Form {...form}><form noValidate onSubmit={form.handleSubmit(values => save(values, onSave))} className="grid max-w-xl gap-4"><FormInput<ProjectValues> name="name" label={en ? "Name" : "Nome"} required maxLength={200} /><FormInput<ProjectValues> name="description" label={en ? "Description" : "Descrição"} /><SaveActions en={en} pending={form.formState.isSubmitting} error={error} cancelHref={cancelHref} /></form></Form>;
+  return <Form {...form}><form noValidate onSubmit={form.handleSubmit(values => save(values, onSave))} className="max-w-xl"><FieldGroup><FormInput<ProjectValues> name="name" label={en ? "Name" : "Nome"} required maxLength={200} /><FormInput<ProjectValues> name="description" label={en ? "Description" : "Descrição"} /><SaveActions en={en} pending={form.formState.isSubmitting} error={error} cancelHref={cancelHref} /></FieldGroup></form></Form>;
 }
 
 function TaskForm({ basePath, cancelHref, initialValues = {}, onSave, projects = [], locale = "pt-BR" }: TaskProps) {
   const en = locale === "en";
   const form = useForm<TaskValues>({ resolver: zodResolver(taskInputSchema), defaultValues: initialValues });
   const { error, save } = useSave(basePath, en);
+  const projectFieldId = useId();
   const existingProject = initialValues.projectId != null;
   const selectedProject = projects.find(project => project.id === initialValues.projectId);
-  return <Form {...form}><form noValidate onSubmit={form.handleSubmit(values => save(existingProject ? { title: values.title } : values, onSave))} className="grid max-w-xl gap-4"><FormInput<TaskValues> name="title" label={en ? "Title" : "Título"} required maxLength={500} />{existingProject ? <><input type="hidden" {...form.register("projectId")} /><p>{en ? "Project" : "Projeto"}: {selectedProject?.name ?? initialValues.projectId}</p></> : <label className="grid gap-2">{en ? "Project" : "Projeto"}<Select {...form.register("projectId")} aria-label={en ? "Project" : "Projeto"} aria-invalid={!!form.formState.errors.projectId} required><option value="">{en ? "Select a project" : "Selecione um projeto"}</option>{projects.map(project => <option key={project.id} value={project.id}>{project.name}</option>)}</Select>{form.formState.errors.projectId?.message && <span role="alert">{form.formState.errors.projectId.message}</span>}</label>}<SaveActions en={en} pending={form.formState.isSubmitting} error={error} cancelHref={cancelHref} /></form></Form>;
+  return <Form {...form}><form noValidate onSubmit={form.handleSubmit(values => save(existingProject ? { title: values.title } : values, onSave))} className="max-w-xl"><FieldGroup><FormInput<TaskValues> name="title" label={en ? "Title" : "Título"} required maxLength={500} />{existingProject ? <><Input type="hidden" {...form.register("projectId")} /><p className="text-sm">{en ? "Project" : "Projeto"}: {selectedProject?.name ?? initialValues.projectId}</p></> : <Field data-invalid={!!form.formState.errors.projectId || undefined}><FieldLabel htmlFor={projectFieldId}>{en ? "Project" : "Projeto"}</FieldLabel><NativeSelect id={projectFieldId} className="w-full" {...form.register("projectId")} aria-invalid={!!form.formState.errors.projectId} required><NativeSelectOption value="">{en ? "Select a project" : "Selecione um projeto"}</NativeSelectOption>{projects.map(project => <NativeSelectOption key={project.id} value={project.id}>{project.name}</NativeSelectOption>)}</NativeSelect>{form.formState.errors.projectId?.message && <FieldError>{form.formState.errors.projectId.message}</FieldError>}</Field>}<SaveActions en={en} pending={form.formState.isSubmitting} error={error} cancelHref={cancelHref} /></FieldGroup></form></Form>;
 }
