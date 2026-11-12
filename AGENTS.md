@@ -12,9 +12,11 @@ Template independente para projetos desenvolvidos com IA e com integrações opc
 
 Perfis pessoal, organizações e híbrido; single-tenant e multi-tenant. Tenancy configurada por painel. Superadmin global, admin de organização e roles personalizados têm escopos separados. Model é schema Drizzle com tipos; resource compõe interface e operações. Não criar ORM próprio ou módulo CMS.
 
+Kit entrega ferramentas, sem domínio de exemplo. Template registra só painel `admin` (`/admin`). Painéis de trabalho vêm da CLI: `create --profile` gera `app` (`/app`, pessoal) e/ou `org` (`/org/<slug>`); outros via `panel`. CRUD via `resource` (com `--with-model` para tabela nova). Código localiza painéis por `context`, nunca por id fixo, e trata ausência. Detalhes em `docs/PANELS.md` e `docs/CLI-RESOURCES.md`.
+
 ## Implementação
 
-- UI: ler `.agents/skills/shadcn/SKILL.md` e `docs/UI.md`. Primitivos shadcn estilo `base-nova` sobre Base UI: compor com `render`, nunca `asChild`. CRUD novo = `defineResource` em `apps/app/src/lib/resources/definitions/` (padrão Filament), nunca página manual. Faltando primitivo: `pnpm dlx shadcn@4.23.0 add <item>` em `apps/app` (registries `@shadcn`, `@cult-ui`). Ícones: somente `lucide-react` (`iconLibrary: lucide`); SVG próprio só para logos de marca que o Lucide não tem.
+- UI: ler `.agents/skills/shadcn/SKILL.md` e `docs/UI.md`. Primitivos shadcn estilo `base-nova` sobre Base UI: compor com `render`, nunca `asChild`. CRUD novo = `defineResource` em `apps/app/src/lib/resources/definitions/` (padrão Filament), gerado por `pnpm exec tsx packages/cli/src/index.ts resource`, nunca página manual. Faltando primitivo: `pnpm dlx shadcn@4.23.0 add <item>` em `apps/app` (registries `@shadcn`, `@cult-ui`). Ícones: somente `lucide-react` (`iconLibrary: lucide`); SVG próprio só para logos de marca que o Lucide não tem.
 - Themes por tokens e CSS variables. Acessibilidade, responsividade e estados de erro são requisitos.
 - Bibliotecas existentes antes de abstrações próprias. Não instalar pacotes/skills em massa.
 - Autorização no servidor em cada operação; URL, campos enviados pelo cliente e argumentos de tools são entradas não confiáveis.

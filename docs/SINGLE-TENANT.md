@@ -39,7 +39,7 @@ O middleware não concede associação, não replica permissões e não troca au
 
 `IDENTITY_PROFILE` continua independente da topologia:
 
-- `organizations`: exige contexto organizacional para projetos; escolha este perfil quando todo trabalho deve pertencer à organização única.
+- `organizations`: exige contexto organizacional para dados de domínio; escolha este perfil quando todo trabalho deve pertencer à organização única.
 - `hybrid`: mantém contexto pessoal real e a organização configurada, sem criar uma organização para representar o contexto pessoal.
 - `personal`: mantém organizações desabilitadas, mesmo com `ORGANIZATION_MODE=single`; nesse modo o UUID continua obrigatório pela validação de configuração.
 

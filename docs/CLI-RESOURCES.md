@@ -4,8 +4,8 @@ Execute CLI compilada a partir da raiz do projeto. Todos comandos são não inte
 
 ```sh
 vibe panel sales --context organization --prefix /sales --preview --json
-vibe panel sales --context organization --prefix /sales --noninteractive
-vibe resource Note --model note --panel personal --with-model --spec '{"scope":"personal","fields":{"title":{"type":"string","required":true},"done":{"type":"boolean","default":false}},"permissions":{"read":["personal"],"create":["personal"],"update":["personal"],"delete":["personal"]}}' --preview --json
+vibe panel sales --context organization --prefix /sales --label Sales --noninteractive
+vibe resource Note --model note --panel app --with-model --spec '{"scope":"personal","fields":{"title":{"type":"string","required":true},"done":{"type":"boolean","default":false}},"permissions":{"read":["personal"],"create":["personal"],"update":["personal"],"delete":["personal"]}}' --preview --json
 ```
 
 `--spec` aceita JSON inline ou caminho UTF-8 JSON. Mesmo comando sem `--preview` grava plano. `--with-model` usa `renderModel`, registra export no schema e exige nome de export camelCase de Name. Sem flag, nenhum arquivo de banco é criado/alterado.
@@ -18,7 +18,7 @@ Tipos de recurso suportados: `string` (varchar), `text`, `integer`, `boolean`, `
 
 Model existente suportado: export direto `pgTable(...).enableRLS()` do agregador `packages/db/src/schema.ts`, UUID `id`, `ownerUserId`, `organizationId`, políticas explícitas `pgPolicy` ou helper `policies(table)` do domínio existente; builders devem coincidir com spec. Campos obrigatórios sem default fora da allowlist são rejeitados. Tabelas sem RLS, exports indiretos, sintaxe customizada, modelos com relações obrigatórias omitidas são rejeitados; CLI não tenta interpretar JavaScript arbitrário. Revisar políticas de modelo existente antes de gerar: parser não prova semântica SQL.
 
-Relação existente: adicionar UUID em `fields` e `relations: { "projectId": { "model": "projects", "label": "name" } }`. FK deve existir explicitamente no modelo e apontar para `id` de tabela RLS com owner/organização. Opções vêm de consulta autorizada no mesmo tenant, limitadas a 500; formulário usa campo `select` (shadcn `Select`, nunca `NativeSelect`; troque para `combobox` quando houver muitas opções), filtro usa UUID validado, actions verificam pai visível antes da escrita. Assim `--model tasks` funciona com `title: text` e `projectId: uuid`, sem duplicar tabelas. `--with-model` com relações exige primeiro modelo com FK existente; renderModel não fabrica relações.
+Relação existente: adicionar UUID em `fields` e `relations: { "noteId": { "model": "note", "label": "title" } }`. FK deve existir explicitamente no modelo e apontar para `id` de tabela RLS com owner/organização. Opções vêm de consulta autorizada no mesmo tenant, limitadas a 500; formulário usa campo `select` (shadcn `Select`, nunca `NativeSelect`; troque para `combobox` quando houver muitas opções), filtro usa UUID validado, actions verificam pai visível antes da escrita. Assim um resource `Comment` sobre `--model comment` pode ter `body: text` e `noteId: uuid`, sem duplicar tabelas. `--with-model` com relações exige primeiro modelo com FK existente; renderModel não fabrica relações.
 
 ## Arquivos e execução
 
@@ -28,13 +28,15 @@ Cada resource gera um arquivo `apps/app/src/lib/resources/definitions/<kebab-nam
 - Consulta com allowlist de campos, busca escapada no primeiro campo textual, ordenação só por colunas conhecidas e paginação `10/25/50/100`.
 - Mutações validam schema estrito no servidor e devolvem `fieldErrors`. Autorizam papel e escopo dentro da transação RLS e verificam se o registro pai está visível antes de escrever.
 - `can(role, operation, scope)` gerado checa só papéis declarados em `permissions`; `scope` (`identifier`, `role`, `userId`, `isAdmin`) fica disponível para regras de dono ou superadmin. Painéis `global` continuam recusados pela CLI.
+- Slug/rota = nome em kebab-case, sem pluralizar (`Note` → `/app/note`, `SalesOrder` → `/app/sales-order`); slug `new` é recusado.
+- Criação, com `JOBS_ENABLED=true`, chama `enqueueEvent(tx, { userId, organizationId }, { type: "<slug_snake>.created", entityId })` de `@vibe/events` na mesma transação (`note.created`); falha no enqueue desfaz a escrita. Worker notifica o autor após revalidar acesso ([EVENTS.md](EVENTS.md)).
 - Sem `actions` por padrão. Para ações de registro (ex.: arquivar), adicionar `actions: [{ name, label, icon?, destructive?, confirm?, bulk?, visible?, run }]` conforme `docs/UI.md`; `run` deve autorizar e validar como as mutações. Remover `create`/`update`/`delete` torna o resource somente leitura.
 
 O painel monta lista, criar, visualizar e editar a partir da definição; não há views geradas.
 
 Registro canônico: `apps/app/src/lib/panels/resources.ts`. A CLI adiciona import explícito e a entrada `{ kind: "resource", definition, panelIds }`; não existe descoberta dinâmica. `kind: "custom"` continua disponível para páginas com `render(ResourceContext)` próprio. Ícone padrão gerado: `settings`; troque por uma chave de `components/panels/nav-icons.ts`.
 
-`panel` gera `<id>.config.ts`, importa no registry e registra config. Contexto organização usa identificador slug. Prefixos reservados, duplicados e sobrepostos são rejeitados; formato estrutural inesperado do registry falha fechado.
+`panel` gera `<id>.config.ts`, importa no registry e registra config. `--label` define rótulo (padrão: id); contexto organização usa `--identifier slug|uuid` (padrão slug). `create --profile` reutiliza o mesmo gerador para `app`/`org`. Código da aplicação localiza painéis por contexto, não por id ([PANELS.md](PANELS.md)). Prefixos reservados, duplicados e sobrepostos são rejeitados; formato estrutural inesperado do registry falha fechado.
 
 Escrita usa preflight completo, arquivos novos com no-overwrite, lock `.vibe-cli.lock`, comparação do conteúdo anterior e rollback em erro. Não executar editores concorrentes sobre registry/schema/migrations durante geração. Processo morto abruptamente pode deixar lock; investigar antes de removê-lo. `--with-model` grava também `packages/db/scope-protections/<table>.sql`, trigger que impede alteração de `owner_user_id` e `organization_id`. `--migration` é opcional: executa geração canônica agora; sem flag, executar `pnpm db:generate` depois. Esse comando de desenvolvimento usa tsx/CLI e Drizzle para gerar schema seguido de custom migrations registradas para proteções pendentes; mantém hashes SHA-256 em `migrations/scope-protections.json`. Proteção incorporada não pode ser alterada/removida silenciosamente; `db:migrate` recusa proteção pendente. Geração exige config padrão `out: "./migrations"`, funciona offline e nunca aplica SQL. Preview não executa Drizzle nem escreve lock/manifest/arquivos. Falha reverte recurso/modelo/registries, diretórios novos e snapshot dos artefatos de migração. Aplicar pelo workflow normal do projeto; histórico aplicado do kit permanece intacto.
 

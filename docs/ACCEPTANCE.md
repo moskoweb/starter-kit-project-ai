@@ -8,13 +8,13 @@ Criar projeto derivado pela CLI, instalar com pnpm frozen-lockfile e configurar 
 
 1. Cadastro, email de verificação, login/logout e recuperação de senha.
 2. Ativar TOTP, guardar códigos de recuperação, testar desafio por TOTP/email e recuperação. Código usado não deve conceder novo acesso.
-3. Perfil pessoal sem organização obrigatória; criar/editar/listar/excluir projetos e tarefas.
+3. Perfil pessoal sem organização obrigatória; gerar resource pessoal (`vibe resource Note ... --panel app`), criar/editar/listar/excluir e confirmar isolamento entre usuários.
 4. Criar organização, convidar membro e atribuir viewer/member/admin; verificar permissões por ação e acesso direto negado a outro tenant.
 5. Modo single com organização explicitamente provisionada; criação adicional bloqueada, membership real obrigatória.
-6. Painéis global/pessoal/organização, prefixos configuráveis e identificador slug/UUID. Superadmin não recebe bypass implícito dos dados de tenants.
+6. Template só com `admin`; `create --profile` registra `app`/`org` conforme perfil; prefixos configuráveis e identificador slug/UUID; app funciona sem painéis de trabalho (landing `/account`). Superadmin não recebe bypass implícito dos dados de tenants.
 7. Tema light/dark, locale pt-BR/en, navegação mobile/teclado e estados vazio/erro/pending.
 8. CLI create/model/resource/panel; preview sem writes, conflito sem sobrescrita, migration gerada sem aplicação automática.
-9. Jobs opcionais: provisionar fila, iniciar worker e relay, criar projeto e verificar notificação persistida. Reprocessamento não duplica efeito.
+9. Jobs opcionais: provisionar fila, iniciar worker e relay, criar registro de resource gerado (`note.created`) e verificar notificação persistida. Reprocessamento não duplica efeito.
 10. Integrações externas somente quando habilitadas e autorizadas: S3, IA, Resend, PostHog/OTLP e webhooks. Sem configuração, módulos desabilitados não fazem chamadas externas.
 
 ## Evidência já obtida

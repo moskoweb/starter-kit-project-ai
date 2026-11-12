@@ -4,7 +4,7 @@
 
 Um monorepo TypeScript com aplicação autenticada, PostgreSQL, painéis e ferramentas de geração. O objetivo tem duas frentes:
 
-1. **Desenvolvimento assistido por IA:** código local legível, contratos de autorização, CLI para projetos/models/resources/painéis, `AGENTS.md` e skills revisáveis. O agente trabalha no seu projeto, não em uma plataforma proprietária.
+1. **Desenvolvimento assistido por IA:** código local legível, contratos de autorização, CLI para criar projetos e gerar models/resources/painéis, `AGENTS.md` e skills revisáveis. O agente trabalha no seu projeto, não em uma plataforma proprietária.
 2. **IA dentro do produto:** integração opcional com provedor OpenAI-compatible, streaming e ferramentas com autorização no servidor. Não é necessária para usar autenticação, painéis ou CRUD.
 
 O projeto criado recebe seu próprio código. Não depende de um serviço central do kit e não recebe atualizações automáticas. Não é um CMS, ORM próprio nem garantia universal de produção.
@@ -15,8 +15,8 @@ O projeto criado recebe seu próprio código. Não depende de um serviço centra
 
 - **Aplicação Next.js 16 / React 19:** App Router, Server Components, formulários, estados vazios/erro, navegação responsiva e `/api/health` com verificação do banco.
 - **Identidade Better Auth:** cadastro, verificação de email, login/logout, recuperação, TOTP, email OTP, códigos de recuperação, organizações, convites e membros. Administrador global é provisionado explicitamente; não há conta ou senha padrão.
-- **Domínio de exemplo real:** projetos e tarefas com CRUD, paginação, filtros, relações e autorização no servidor. PostgreSQL RLS e triggers protegem escopo pessoal/organizacional; UUID e prefixo de URL não concedem acesso.
-- **Painéis configuráveis:** administração global, contexto pessoal e organização, sem transformar contexto pessoal em organização fictícia. Admin global mostra contagens administrativas, não acesso irrestrito aos projetos de todos.
+- **Ferramentas, sem domínio de exemplo:** nenhum CRUD de amostra para remover. Seu domínio nasce de `vibe resource` (model Drizzle + RLS + resource declarativo) com paginação, filtros, relações e autorização no servidor. PostgreSQL RLS e triggers protegem escopo pessoal/organizacional; UUID e prefixo de URL não concedem acesso.
+- **Painéis configuráveis:** template registra só `admin` (`/admin`: usuários, organizações, métricas globais). `vibe create --profile` gera painel pessoal (`/app`), de organização (`/org/<slug>`) ou ambos, sem transformar contexto pessoal em organização fictícia. Admin global não tem acesso irrestrito aos dados dos tenants.
 - **UI e painel:** shadcn/ui (`base-nova` sobre Base UI), Tailwind v4, Lucide, Sonner, Recharts. Painel inspirado no Filament: resources declarativos (tabela com busca, filtros, colunas, ação em massa; formulário; visualização), dashboard com widgets, busca global `⌘K`, seletor de workspace, notificações. Temas claro/escuro/sistema e locale `pt-BR`/`en`.
 - **Geração revisável:** CLI cria cópia independente, models Drizzle com RLS, recursos CRUD e registro de painéis; preview e recusa de sobrescrita.
 - **Integrações opt-in:** SMTP/Resend, armazenamento S3-compatible privado, IA, jobs pg-boss, notificações internas, webhooks, analytics com consentimento e exportação sanitizada de logs.
@@ -59,7 +59,7 @@ cd ../meu-produto
 pnpm install
 ```
 
-O destino deve não existir, ficar fora do template e ter diretório pai existente. A cópia exclui credenciais `.env*` (exceto `.env.example`), dependências, caches, `.git`, `.planning` e índice CodeGraph; gera `AGENTS.md` portátil e grava perfil no exemplo de ambiente. Não copia o ambiente de preparação. Inicie histórico Git próprio se desejar.
+O destino deve não existir, ficar fora do template e ter diretório pai existente. A cópia exclui credenciais `.env*` (exceto `.env.example`), dependências, caches, `.git`, `.planning` e índice CodeGraph; gera `AGENTS.md` portátil, grava perfil no exemplo de ambiente e registra os painéis do perfil (`personal` → `app` em `/app`; `organizations` → `org` em `/org/<slug>`; `hybrid` → ambos; `admin` sempre). Não copia o ambiente de preparação. Inicie histórico Git próprio se desejar.
 
 Em seguida, siga [GETTING-STARTED](docs/GETTING-STARTED.md): provisionar roles, configurar ambiente, aplicar migrations, conceder grants, executar seed, provisionar admin e entrar. Resumo **após** esses preparativos:
 
@@ -95,18 +95,18 @@ Não existe `db:create`. As migrations não concedem automaticamente privilégio
 | `ORGANIZATION_MODE=single` | Somente organização existente em `SINGLE_ORGANIZATION_ID`; não cria organização/membership no startup |
 
 Perfil e topologia são independentes. Em `single`, provisione primeiro organização e proprietário numa etapa controlada em `multi`, configure UUID e reinicie. Não é “uma organização por usuário”. [Contrato completo e fronteira das APIs](docs/SINGLE-TENANT.md).
-Papéis organizacionais entregues são `owner`, `admin`, `member` e `viewer`, definidos em `packages/auth/src/permissions.ts`. No domínio de exemplo, owner/admin têm CRUD, member não exclui e viewer só lê. Papéis são extensíveis no código; não há editor genérico de permissões dinâmicas habilitado por padrão. Papel global de usuário é separado de papel de membership.
+Papéis organizacionais entregues são `owner`, `admin`, `member` e `viewer`, definidos em `packages/auth/src/permissions.ts`. Statement `data` de `canAccessScope(role, action)`: owner/admin têm CRUD, member não exclui e viewer só lê; resources gerados declaram permissões próprias por operação. Papéis são extensíveis no código; não há editor genérico de permissões dinâmicas habilitado por padrão. Papel global de usuário é separado de papel de membership.
 
 
 ## Painéis, resources e temas
 
 Registro canônico: [`apps/app/src/lib/panels/registry.ts`](apps/app/src/lib/panels/registry.ts).
 
-| Painel | Prefixo padrão | Contexto |
-| --- | --- | --- |
-| `admin` | `/admin` | Admin global |
-| `personal` | `/app` | Usuário autenticado; exemplos `/app/projects`, `/app/tasks` |
-| `organization` | `/org` | Membership; exemplo `/org/minha-equipe/projects` |
+| Painel | Origem | Prefixo | Contexto |
+| --- | --- | --- | --- |
+| `admin` | Template (sempre) | `/admin` | Admin global |
+| `app` | `create --profile personal\|hybrid` | `/app` | Usuário autenticado; ex. `/app/note` após `vibe resource Note` |
+| `org` | `create --profile organizations\|hybrid` | `/org` | Membership; ex. `/org/minha-equipe/note` |
 
 Painel organizacional declara `tenantIdentifier: "slug" | "uuid"`; padrão é slug. Trocar para UUID muda identificador da URL, não autorização. IDs/prefixos precisam ser únicos, não sobrepostos e não podem colidir com rotas reservadas. Use `buildPanelPath` em vez de concatenar caminhos. [Painéis](docs/PANELS.md).
 
@@ -116,7 +116,7 @@ Painel organizacional declara `tenantIdentifier: "slug" | "uuid"`; padrão é sl
 pnpm exec tsx packages/cli/src/index.ts doctor
 pnpm exec tsx packages/cli/src/index.ts panel sales --context organization --prefix /sales --preview --json
 pnpm exec tsx packages/cli/src/index.ts model Note --spec '{"scope":"personal","fields":{"title":{"type":"string","required":true}}}' --preview --json
-pnpm exec tsx packages/cli/src/index.ts resource Note --model note --panel personal --with-model --spec '{"scope":"personal","fields":{"title":{"type":"string","required":true}},"permissions":{"read":["personal"],"create":["personal"],"update":["personal"],"delete":["personal"]}}' --preview --json
+pnpm exec tsx packages/cli/src/index.ts resource Note --model note --panel app --with-model --spec '{"scope":"personal","fields":{"title":{"type":"string","required":true}},"permissions":{"read":["personal"],"create":["personal"],"update":["personal"],"delete":["personal"]}}' --preview --json
 ```
 
 Exemplos acima são previews independentes. Para gerar Note com modelo e CRUD, execute **somente** comando `resource --with-model` sem `--preview`; não gere previamente o mesmo model. Revise arquivos e execute `pnpm db:generate`, revise SQL e aplique migrations separadamente. CLI recusa conflitos; não sobrescreve customizações. Resources gerados usam allowlists, autorização e contexto RLS, não inferem qualquer schema arbitrário. [Tipos, relações, limites e rollback](docs/CLI-RESOURCES.md).
@@ -164,9 +164,9 @@ Não existe script root `lint`; não use `next lint` no Next.js 16.
 | Integração | Ativação / contrato | Guia |
 | --- | --- | --- |
 | Email | `EMAIL_PROVIDER=smtp|resend`, `EMAIL_FROM` e configuração do provedor; necessário para fluxos de verificação/recuperação/convite; sem fallback automático | [Email](docs/EMAIL.md) |
-| S3-compatible | `STORAGE_ENABLED=true`, bucket privado e credenciais próprias; URLs assinadas e vínculo autorizado ao projeto | [Storage](docs/STORAGE.md), [Endpoints](docs/STORAGE-ENDPOINTS.md) |
+| S3-compatible | `STORAGE_ENABLED=true`, bucket privado e credenciais próprias; URLs assinadas e vínculo autorizado a uma entidade (`entityType` + `entityId`) | [Storage](docs/STORAGE.md), [Endpoints](docs/STORAGE-ENDPOINTS.md) |
 | IA | `AI_ENABLED=true`, provedor/modelo/chave próprios; limites e ferramentas server-side, sem chave pública | [IA](docs/AI.md), [Endpoint](docs/AI-ENDPOINT.md) |
-| Jobs / notificações | `JOBS_ENABLED=true`, schema pg-boss provisionado, worker e relay separados; `project.created` notifica criador | [Eventos](docs/EVENTS.md), [Notificações](docs/NOTIFICATIONS.md) |
+| Jobs / notificações | `JOBS_ENABLED=true`, schema pg-boss provisionado, worker e relay separados; eventos `<entidade>.created` (ex. `note.created` dos resources gerados) notificam criador | [Eventos](docs/EVENTS.md), [Notificações](docs/NOTIFICATIONS.md) |
 | Webhooks | Flags inbound/outbound independentes; assinatura, deduplicação e política de destino; outbound exige jobs | [Webhooks](docs/WEBHOOKS.md), [Integração](docs/WEBHOOK-INTEGRATION.md) |
 | Analytics / logs | Analytics exige flag, configuração pública e consentimento; OTLP é exportador mínimo opcional, não SDK completo | [Operação](docs/OPERATIONS.md) |
 

@@ -21,7 +21,7 @@ cd ../meu-produto
 pnpm install
 ```
 
-Troque `hybrid` por `personal` ou `organizations` conforme produto. Destino deve não existir, não pode ser symlink nem ficar dentro do kit. CLI copia fonte, não `.git`, `.planning`, dependências, caches ou credenciais reais. O novo `AGENTS.md` é portátil; histórico e configuração de agentes do kit não são transferidos. Não há sincronização automática com upstream.
+Troque `hybrid` por `personal` ou `organizations` conforme produto. O kit não traz domínio de exemplo: o template só tem o painel `admin` (`/admin`). `create` registra os painéis de trabalho do perfil, como `vibe panel` faria (`apps/app/src/lib/panels/<id>.config.ts` + import em `registry.ts`): `personal` → painel `app` em `/app`; `organizations` → painel `org` em `/org/<slug>`; `hybrid` → ambos. Destino deve não existir, não pode ser symlink nem ficar dentro do kit. CLI copia fonte, não `.git`, `.planning`, dependências, caches ou credenciais reais. O novo `AGENTS.md` é portátil; histórico e configuração de agentes do kit não são transferidos. Não há sincronização automática com upstream.
 
 Não há `pnpm create` publicado nem necessidade de instalar `vibe` globalmente. Todos comandos CLI deste guia rodam pela fonte local.
 
@@ -143,17 +143,28 @@ GRANT SELECT, INSERT, UPDATE, DELETE
   TO produto_app;
 GRANT SELECT, INSERT ON public.app_settings TO produto_app;
 GRANT SELECT, INSERT, UPDATE ON public.totp_replay TO produto_app;
-GRANT SELECT, INSERT, DELETE ON public.projects, public.tasks TO produto_app;
-GRANT UPDATE (name, description, updated_at) ON public.projects TO produto_app;
-GRANT UPDATE (project_id, title, updated_at) ON public.tasks TO produto_app;
-GRANT EXECUTE ON FUNCTION public.identity_scope_immutable(), public.task_project_scope()
-  TO produto_app;
+GRANT SELECT, INSERT, UPDATE ON public.rate_limit_windows TO produto_app;
 GRANT SELECT, INSERT ON public.event_outbox TO produto_app;
 GRANT SELECT, DELETE ON public.notifications TO produto_app;
 GRANT UPDATE (read_at) ON public.notifications TO produto_app;
 ```
 
-Notificações podem ser consultadas mesmo sem fila habilitada, mas só serão produzidas pelo fluxo de eventos quando configurado. Não conceda `INSERT` nem `UPDATE` geral de notificações ao runtime app. Dados de identidade não usam RLS; acesso fica restrito ao servidor de autenticação. Projetos/tarefas usam FORCE RLS e escopo transacional derivado da sessão.
+Integrações opcionais, somente quando habilitadas (tabelas já existem pelas migrations; RLS continua aplicando escopo):
+
+```sql
+-- STORAGE_ENABLED=true (upload, confirmação, download e limpeza de anexos)
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.storage_objects TO produto_app;
+-- PUSH_ENABLED=true (inscrições do navegador)
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.push_subscriptions TO produto_app;
+-- AI_ENABLED=true (cota diária)
+GRANT SELECT, INSERT, UPDATE ON public.ai_usage_daily TO produto_app;
+-- WEBHOOKS_OUTBOUND_ENABLED=true (fila e status de entregas; worker provisionado à parte)
+GRANT SELECT, INSERT, UPDATE ON public.webhook_deliveries TO produto_app;
+-- WEBHOOKS_INBOUND_ENABLED=true (recibo idempotente)
+GRANT SELECT, INSERT ON public.webhook_receipts TO produto_app;
+```
+
+Notificações podem ser consultadas mesmo sem fila habilitada, mas só serão produzidas pelo fluxo de eventos quando configurado. Não conceda `INSERT` nem `UPDATE` geral de notificações ao runtime app. Dados de identidade não usam RLS; acesso fica restrito ao servidor de autenticação. Tabelas de dados (geradas por `vibe resource --with-model` e integrações) usam FORCE RLS e escopo transacional derivado da sessão.
 
 Novas tabelas geradas exigem grants próprios revisados. Não use `GRANT ALL ON ALL TABLES`, ownership ou `BYPASSRLS` para resolver erro de permissão. Integrações opcionais requerem grants/provisionamento adicionais nos guias específicos. Nenhum comando deste guia dá credencial SQL a browser ou usuário final.
 
@@ -193,8 +204,8 @@ env -u MIGRATION_DATABASE_URL pnpm --filter app dev
 
 1. Abra `http://127.0.0.1:3000/login` e entre com admin provisionado. `/admin` mostra contagens administrativas.
 2. Para conta comum, abra `/signup`, cadastre e siga link de verificação recebido no SMTP. Login exige email verificado. Não há conta demo nem senha padrão.
-3. Em perfil `personal` ou `hybrid`, abra `/app/projects`, crie projeto e tarefa. Recursos de outro usuário não devem ser visíveis.
-4. Em perfil `organizations` ou `hybrid`, use `/organizations` para criar organização; `/organizations/<slug>` administra dados, membros, convites, propriedade e exclusão conforme papel. No perfil `organizations`, usuário sem organização cai em `/onboarding` ao abrir `/`. Abra `/org/<slug>/projects` com membership real.
+3. Em perfil `personal` ou `hybrid`, `/` leva a `/app`: painel vazio com boas-vindas e cartão da conta até você gerar resources (seção 9).
+4. Em perfil `organizations` ou `hybrid`, use `/organizations` para criar organização; `/organizations/<slug>` administra dados, membros, convites, propriedade e exclusão conforme papel. No perfil `organizations`, usuário sem organização cai em `/onboarding` ao abrir `/`; com organização, em `/org/<slug>`.
 5. Confira `/account`, `/security` e fluxos de recuperação/2FA conforme produto; não confunda email capturado localmente com entrega externa validada.
 
 Para observar health:
@@ -213,17 +224,17 @@ Espera-se 200 com `status: ok` e `db: connected`; banco indisponível retorna 50
 
 `ORGANIZATION_MODE=multi` é padrão. Para organização única, primeiro provisione organização e proprietário em etapa controlada em `multi`; obtenha UUID da organização existente, configure `ORGANIZATION_MODE=single` e `SINGLE_ORGANIZATION_ID`, reinicie. Single não cria organização/associação nem permite criação de outras organizações. Perfil continua independente. [Contrato e limites](SINGLE-TENANT.md).
 
-Prefixos de painel ficam em `apps/app/src/lib/panels/registry.ts`: `/admin`, `/app` e `/org`. Organização usa slug por padrão; `tenantIdentifier: "uuid"` troca formato de URL. Use builders de rota; identificador nunca é autorização. [Painéis](PANELS.md).
+Painéis ficam em `apps/app/src/lib/panels/registry.ts`: `/admin` sempre; `/app` e/ou `/org` conforme perfil escolhido no `create`. Para adicionar outro painel use `vibe panel`. Organização usa slug por padrão; `tenantIdentifier: "uuid"` troca formato de URL. Use builders de rota; identificador nunca é autorização. [Painéis](PANELS.md).
 
 ## 9. Criar primeiro resource
 
-No projeto derivado, exemplo pessoal independente de projetos/tarefas:
+No projeto derivado (perfil `personal` ou `hybrid`, painel `app`):
 
 ```bash
-pnpm exec tsx packages/cli/src/index.ts resource Note --model note --panel personal --with-model --spec '{"scope":"personal","fields":{"title":{"type":"string","required":true}},"permissions":{"read":["personal"],"create":["personal"],"update":["personal"],"delete":["personal"]}}' --preview --json
+pnpm exec tsx packages/cli/src/index.ts resource Note --model note --panel app --with-model --spec '{"scope":"personal","fields":{"title":{"type":"string","required":true}},"permissions":{"read":["personal"],"create":["personal"],"update":["personal"],"delete":["personal"]}}' --preview --json
 ```
 
-Revise preview, execute mesmo comando sem `--preview`, gere/revise/aplique migrations. Como owner, conceda `SELECT, INSERT, DELETE` na tabela gerada e `UPDATE` só nos campos editáveis; preserve identidade/escopo imutáveis. Consulte nome SQL efetivamente gerado, não adivinhe pluralização. Entre e abra `/app/note` (perfil com contexto pessoal habilitado).
+Revise preview, execute mesmo comando sem `--preview`, gere/revise/aplique migrations. Como owner, conceda `SELECT, INSERT, DELETE` na tabela gerada e `UPDATE` só nos campos editáveis; preserve identidade/escopo imutáveis. Consulte nome SQL efetivamente gerado, não adivinhe pluralização. Entre e abra `/app/note` (slug = nome em kebab-case, sem pluralizar). Com `JOBS_ENABLED=true`, criar registro enfileira evento `note.created` na mesma transação.
 
 Não execute `model Note` antes de `resource Note --with-model`: seriam duas tentativas de criar mesmo model. Para model existente, omita `--with-model` e forneça spec compatível. CLI recusa sobrescrita e schema não suportado. [Contrato completo, relações e proteções](CLI-RESOURCES.md).
 
@@ -248,7 +259,7 @@ Para email, `pnpm dev:email` é atalho para `pnpm --filter @vibe/email preview`;
 
 ## 10. Habilitar integrações somente quando necessárias
 
-- **Storage:** bucket privado, configuração S3 e grants do domínio. [Storage](STORAGE.md), [endpoints](STORAGE-ENDPOINTS.md).
+- **Storage:** bucket privado, configuração S3 e grants de `storage_objects`. [Storage](STORAGE.md), [endpoints](STORAGE-ENDPOINTS.md).
 - **IA:** provedor/modelo reais e limites configurados; segredos server-only. [IA](AI.md), [endpoint](AI-ENDPOINT.md).
 - **Jobs:** roles separadas, mesmo banco físico para domínio/fila, schema pg-boss provisionado, worker e relay supervisionados. [Eventos](EVENTS.md).
 - **Webhooks:** segredos próprios, allowlist de destino e provisionamento de worker; outbound depende de jobs. [Integração](WEBHOOK-INTEGRATION.md).
@@ -271,7 +282,7 @@ pnpm --filter @vibe/worker dev "$PWD/apps/worker/src/handlers.ts"
 pnpm --filter @vibe/worker relay
 ```
 
-Use caminho absoluto do módulo; `--filter` muda cwd. `DATABASE_URL` no processo precisa dos direitos runtime de fila; `WORKER_DATABASE_URL` é login worker dedicado para efeitos/outbox. App/worker/relay são processos distintos. Notificação é interna para criador do projeto; não é broadcast a todos membros nem email automático. Duplicação de transporte é esperada, efeito usa idempotência.
+Use caminho absoluto do módulo; `--filter` muda cwd. `DATABASE_URL` no processo precisa dos direitos runtime de fila; `WORKER_DATABASE_URL` é login worker dedicado para efeitos/outbox. App/worker/relay são processos distintos. Notificação é interna para quem criou o registro; não é broadcast a todos membros nem email automático. Duplicação de transporte é esperada, efeito usa idempotência.
 
 ## 11. Verificar antes de publicar
 
@@ -310,7 +321,7 @@ Para produção, [DEPLOYMENT](DEPLOYMENT.md) descreve Docker/Compose/CI e gates.
 | `permission denied` SQL | Grants explícitos após migration; não promover runtime a owner |
 | Migration recusa scope protection | Gerar/revisar migrations pelo comando canônico antes de aplicar |
 | Login não conclui | Email verificado, SMTP acessível, origem/porta corretas e segredo válido |
-| Admin não vê organização/projetos | Papel global não cria membership nem bypass de domínio |
+| Admin não vê organização/dados | Papel global não cria membership nem bypass de domínio |
 | Worker não inicia | `dev:worker` exige jobs habilitados, schema provisionado e ambiente runtime próprio |
 | Single sem acesso | Organização preexistente, UUID correto e membership real; configuração não associa usuário |
 | Integração sem credenciais | Manter desabilitada; não trocar por resposta simulada |
