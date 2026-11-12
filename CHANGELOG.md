@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.1.1 — 2026-11-12
+
+Segurança (achados da auditoria `security-audit`):
+
+- `seed:admin` sempre grava a senha do operador e remove credenciais e sessões anteriores; conta pré-cadastrada com o mesmo email não é mais promovida mantendo a senha de terceiros.
+- `/organization/update` valida `data.slug`; um `slug` válido no topo do corpo não esconde mais um slug inválido ou reservado.
+- Sessão de impersonação cai quando o admin que a iniciou é banido, rebaixado ou tem sessões revogadas.
+- Resources gerados: opções e checagem de FK de relações exigem permissão de leitura no resource pai; relação exige que o pai tenha resource próprio.
+- Models gerados: `owner_user_id` usa `ON DELETE SET NULL`; excluir conta remove só registros pessoais e preserva registros da organização. Projetos que já geraram models devem criar migration equivalente.
+
+CLI: novo script `pnpm vibe <comando>` (ou `npm run vibe -- <comando>`) no lugar de `pnpm exec tsx packages/cli/src/index.ts`.
+
 ## 0.1.0 — 2026-11-12
 
 - Monorepo Next.js 16, TypeScript, Turborepo, PostgreSQL 17, Drizzle ORM com RLS (`FORCE ROW LEVEL SECURITY`) e Better Auth (email/senha, verificação, TOTP, Google opcional, organizações e convites).
