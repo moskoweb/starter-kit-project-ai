@@ -17,6 +17,7 @@ Kit entrega ferramentas, sem domínio de exemplo. Template registra só painel `
 ## Implementação
 
 - UI: ler `.agents/skills/shadcn/SKILL.md` e `docs/UI.md`. Primitivos shadcn estilo `base-nova` sobre Base UI: compor com `render`, nunca `asChild`. CRUD novo = `defineResource` em `apps/app/src/lib/resources/definitions/` (padrão Filament), gerado por `pnpm exec tsx packages/cli/src/index.ts resource`, nunca página manual. Faltando primitivo: `pnpm dlx shadcn@4.23.0 add <item>` em `apps/app` (registries `@shadcn`, `@cult-ui`). Ícones: somente `lucide-react` (`iconLibrary: lucide`); SVG próprio só para logos de marca que o Lucide não tem.
+- Segurança: para revisão, auditoria ou dúvida de vulnerabilidade, ler `.agents/skills/security-audit/SKILL.md` (modo guia por padrão; auditoria completa só sob pedido explícito, artefatos fora do repositório).
 - Themes por tokens e CSS variables. Acessibilidade, responsividade e estados de erro são requisitos.
 - Bibliotecas existentes antes de abstrações próprias. Não instalar pacotes/skills em massa.
 - Autorização no servidor em cada operação; URL, campos enviados pelo cliente e argumentos de tools são entradas não confiáveis.

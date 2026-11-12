@@ -11,6 +11,7 @@ Este guia distingue conteúdo já incluído no repositório de ferramentas opcio
 | `frontend-design` | Vendored em `.agents/skills/frontend-design/` | Mínimo quando criar ou reformular UI | Skill local modificada, licença Apache-2.0 em `LICENSE.txt`; sem scripts. Tokens e padrões do kit prevalecem |
 | `shadcn` (skill oficial) | Vendored em `.agents/skills/shadcn/`; lock em `skills-lock.json` | Mínimo para qualquer UI do app: componentes, blocos, forms e tema via `components.json` | Skill MIT do repositório `shadcn-ui/ui`; executa `shadcn info --json`. Atualizar com `pnpm dlx skills update shadcn` e revisar diff |
 | MCP `shadcn` | Configurado em `.mcp.json` (`pnpm dlx shadcn@4.23.0 mcp`) | Recomendado: busca e instala itens dos registries `@shadcn` e `@cult-ui` declarados em `components.json` | Executa CLI shadcn localmente; instalações seguem aliases monorepo |
+| `security-audit` (Cloudflare) | Vendored em `.agents/skills/security-audit/`; lock em `skills-lock.json` | Recomendado para revisão de segurança: modo guia por padrão; auditoria completa só sob pedido explícito | Skill MIT; validadores Node locais sem rede; exige sandbox para executar código do alvo |
 | GSD Core | Não vendored; disponível no runtime atual não implica disponibilidade em outro runtime | Recomendado para projetos médios/grandes que precisam de planejamento e continuidade; menor escopo pode usar `.planning/` existente | Instalador pergunta runtime e escopo; selecione local/project quando oferecido |
 | `find-skills` (Vercel) | Externo | Opcional para descobrir skills pertinentes; auditar cada skill antes da instalação | `npx skills` pode instalar no projeto ou ambiente do agente; escolher escopo explicitamente |
 | React Best Practices (Vercel) | Externo; não incluído | Opcional para revisão de performance React/Next.js | Skill do repositório Vercel; instalar somente quando trabalho React justificar |
@@ -46,6 +47,12 @@ Origem: [anthropics/skills](https://github.com/anthropics/skills), plugin exampl
 Origem: [shadcn-ui/ui `skills/shadcn`](https://github.com/shadcn-ui/ui/tree/main/skills/shadcn), instalada por `pnpm dlx skills add shadcn/ui` em 2026-11-12 (upstream `main` `dd41d19e2f80ff6891951f7ced74c2c9a650b065`; hash em `skills-lock.json`). Licença MIT em [`../.agents/skills/shadcn/LICENSE.md`](../.agents/skills/shadcn/LICENSE.md). Movida de `.claude/skills/` para `.agents/skills/` para seguir convenção do kit; skill `migrate-radix-to-base` instalada junto foi removida (kit usa base Radix). `scripts/showcase-coverage.mjs` só lê arquivos locais.
 
 Registries e MCP: `apps/app/components.json` e `packages/ui/components.json` declaram `@cult-ui` ([Cult UI MCP](https://www.cult-ui.com/docs/mcp-server)). Rode `shadcn add` sempre em `apps/app`: primitivos vão para `packages/ui/src/components` (`@vibe/ui/components/<nome>`), blocos para `apps/app/src/components`. Revise código de registries de terceiros antes de commitar.
+
+### `security-audit`
+
+Origem: [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill), instalada por `pnpm dlx skills add https://github.com/cloudflare/security-audit-skill --skill security-audit` em 2026-11-12 (upstream `main` `c1c8a8c1471069fb0e188eeaff69b8e8db6564a8`; hash em `skills-lock.json`). Licença MIT em [`../.agents/skills/security-audit/LICENSE`](../.agents/skills/security-audit/LICENSE). Movida de `.claude/skills/` para `.agents/skills/`. Os scripts `validate-*.cjs` só leem JSON local, sem rede nem processos filhos; os testes deles passam com `node`.
+
+Uso: "security audit this codebase" roda as 6 fases (reconhecimento, caça por cobertura, validação adversarial, registros estruturados, verificação independente e relatório). Os artefatos saem fora do repositório (`~/security-audit-skill/<repo>/run-<N>`). Perguntas pontuais de segurança usam modo guia, sem gerar arquivos. Achados confirmados exigem trace na fonte e resultado observado. Lacunas de defesa em profundidade são notas, não vulnerabilidades.
 
 ## Ferramentas externas opcionais
 
