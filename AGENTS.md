@@ -14,7 +14,7 @@ Perfis pessoal, organizações e híbrido; single-tenant e multi-tenant. Tenancy
 
 ## Implementação
 
-- UI: ler `.agents/skills/shadcn/SKILL.md`. Reutilizar `@vibe/ui`; faltando, `pnpm dlx shadcn@4.23.0 add <item>` em `apps/app` (registries `@shadcn`, `@cult-ui`); criar somente o necessário. Preservar `data-table/`, `form/`, `infolist/`, `widgets/`, `actions/`, sem pasta `filament/`.
+- UI: ler `.agents/skills/shadcn/SKILL.md` e `docs/UI.md`. Primitivos shadcn estilo `base-nova` sobre Base UI: compor com `render`, nunca `asChild`. CRUD novo = `defineResource` em `apps/app/src/lib/resources/definitions/` (padrão Filament), nunca página manual. Faltando primitivo: `pnpm dlx shadcn@4.23.0 add <item>` em `apps/app` (registries `@shadcn`, `@cult-ui`).
 - Themes por tokens e CSS variables. Acessibilidade, responsividade e estados de erro são requisitos.
 - Bibliotecas existentes antes de abstrações próprias. Não instalar pacotes/skills em massa.
 - Autorização no servidor em cada operação; URL, campos enviados pelo cliente e argumentos de tools são entradas não confiáveis.

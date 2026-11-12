@@ -17,7 +17,7 @@ O projeto criado recebe seu próprio código. Não depende de um serviço centra
 - **Identidade Better Auth:** cadastro, verificação de email, login/logout, recuperação, TOTP, email OTP, códigos de recuperação, organizações, convites e membros. Administrador global é provisionado explicitamente; não há conta ou senha padrão.
 - **Domínio de exemplo real:** projetos e tarefas com CRUD, paginação, filtros, relações e autorização no servidor. PostgreSQL RLS e triggers protegem escopo pessoal/organizacional; UUID e prefixo de URL não concedem acesso.
 - **Painéis configuráveis:** administração global, contexto pessoal e organização, sem transformar contexto pessoal em organização fictícia. Admin global mostra contagens administrativas, não acesso irrestrito aos projetos de todos.
-- **UI local:** Tailwind v4, tokens, componentes adaptados de shadcn/ui, Radix, TanStack Table, React Hook Form, Zod e Recharts. Temas claro/escuro e locale `pt-BR`/`en`.
+- **UI e painel:** shadcn/ui (`base-nova` sobre Base UI), Tailwind v4, Lucide, Sonner, Recharts. Painel inspirado no Filament: resources declarativos (tabela com busca, filtros, colunas, ação em massa; formulário; visualização), dashboard com widgets, busca global `⌘K`, seletor de workspace, notificações. Temas claro/escuro/sistema e locale `pt-BR`/`en`.
 - **Geração revisável:** CLI cria cópia independente, models Drizzle com RLS, recursos CRUD e registro de painéis; preview e recusa de sobrescrita.
 - **Integrações opt-in:** SMTP/Resend, armazenamento S3-compatible privado, IA, jobs pg-boss, notificações internas, webhooks, analytics com consentimento e exportação sanitizada de logs.
 

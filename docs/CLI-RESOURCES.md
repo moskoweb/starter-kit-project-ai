@@ -22,9 +22,15 @@ Relação existente: adicionar UUID em `fields` e `relations: { "projectId": { "
 
 ## Arquivos e execução
 
-Cada domínio recebe `apps/app/src/lib/resources/<kebab-name>/{config.ts,queries.ts,actions.ts,views.tsx}`. Queries selecionam apenas allowlist; paginação 20, busca escapada no primeiro campo textual, sort allowlist por campo/id, direção e filtros por relação. Paginação conserva filtros. Actions validam schema estrito, autorização por papel e escopo em transação RLS; criação obtém owner e organização de sessão/contexto DB, nunca cliente. Views usam primitives locais de `@vibe/ui`, labels de controles em português/inglês conforme `ResourceContext.locale`, list/detail/new/edit/delete, filtros, sort e bulk delete de até 100 UUIDs com checagem atômica de existência/visibilidade. Nomes de domínio/campos permanecem os identificadores explícitos da spec. Controles sem permissões são ocultos; servidor revalida permissões independentemente.
+Cada resource gera um arquivo `apps/app/src/lib/resources/definitions/<kebab-name>.ts` que exporta `defineResource(...)` (ver `docs/UI.md`, seção Resources declarativos). Conteúdo:
 
-Registro canônico: `apps/app/src/lib/panels/resources.ts`, entradas `PanelResource`. Recursos existentes `projects` e `tasks` conservam handlers reais e kind `builtin`; gerados usam kind `custom`, callback `render(ResourceContext)`. CLI adiciona import explícito e entrada com `panelIds`; não existe descoberta dinâmica ou engine genérica. Catchall usa `getPanelResource(panel.id, route[0])` e chama `render` para custom; navegação usa `resourcesForPanel`. `ResourceContext.basePath` é raiz do painel (sem recurso), `route` inclui slug do recurso, `identifier` é slug da organização ou null, `role` é membership resolvido. Gate de painel/sessão permanece no catchall; handlers gerados reautorizam tenant e operação.
+- Colunas, filtros por relação, formulário e infolist derivados da spec, com rótulos `{ "pt-BR", en }` para traduzir depois.
+- Consulta com allowlist de campos, busca escapada no primeiro campo textual, ordenação só por colunas conhecidas e paginação `10/25/50/100`.
+- Mutações validam schema estrito no servidor e devolvem `fieldErrors`. Autorizam papel e escopo dentro da transação RLS e verificam se o registro pai está visível antes de escrever.
+
+O painel monta lista, criar, visualizar e editar a partir da definição; não há views geradas.
+
+Registro canônico: `apps/app/src/lib/panels/resources.ts`. A CLI adiciona import explícito e a entrada `{ kind: "resource", definition, panelIds }`; não existe descoberta dinâmica. `kind: "custom"` continua disponível para páginas com `render(ResourceContext)` próprio. Ícone padrão gerado: `settings`; troque por uma chave de `components/panels/nav-icons.ts`.
 
 `panel` gera `<id>.config.ts`, importa no registry e registra config. Contexto organização usa identificador slug. Prefixos reservados, duplicados e sobrepostos são rejeitados; formato estrutural inesperado do registry falha fechado.
 
