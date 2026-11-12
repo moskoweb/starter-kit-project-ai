@@ -1,6 +1,9 @@
 import type { ReactNode } from "react";
 import type { PanelConfig } from "./registry";
 import type { Locale } from "../i18n";
+import type { ResourceDefinition } from "../resources/define";
+import { projectResource } from "../resources/definitions/projects";
+import { taskResource } from "../resources/definitions/tasks";
 
 export type ResourceContext = {
   panel: PanelConfig;
@@ -11,18 +14,21 @@ export type ResourceContext = {
   role: string;
   locale: Locale;
 };
-export type PanelResource = {
-  id: string;
-  label: string;
-  panelIds: readonly string[];
-} & ({ kind: "builtin" } | { kind: "custom"; render: (context: ResourceContext) => Promise<ReactNode> });
+
+/** Declarative resources (preferred) or custom-rendered pages registered by the CLI. */
+export type PanelResource = { panelIds: readonly string[] } & (
+  | { kind: "resource"; definition: ResourceDefinition }
+  | { kind: "custom"; id: string; label: string; render: (context: ResourceContext) => Promise<ReactNode> }
+);
 
 // CLI inserts explicit domain imports and registrations; no runtime directory discovery.
 // CLI_RESOURCE_IMPORTS
 export const resourceRegistry: readonly PanelResource[] = [
-  { id: "projects", label: "Projects", panelIds: ["personal", "organization"], kind: "builtin" },
-  { id: "tasks", label: "Tasks", panelIds: ["personal", "organization"], kind: "builtin" },
+  { kind: "resource", definition: projectResource, panelIds: ["personal", "organization"] },
+  { kind: "resource", definition: taskResource, panelIds: ["personal", "organization"] },
   // CLI_RESOURCE_ENTRIES
 ];
+
+export const resourceId = (resource: PanelResource) => resource.kind === "resource" ? resource.definition.slug : resource.id;
 export function resourcesForPanel(panelId: string) { return resourceRegistry.filter(resource => resource.panelIds.includes(panelId)); }
-export function getPanelResource(panelId: string, id: string | undefined) { return resourcesForPanel(panelId).find(resource => resource.id === id); }
+export function getPanelResource(panelId: string, id: string | undefined) { return resourcesForPanel(panelId).find(resource => resourceId(resource) === id); }

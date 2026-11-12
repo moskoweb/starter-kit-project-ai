@@ -2,13 +2,22 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { LucideIcon } from "lucide-react";
 import { SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@vibe/ui/components/sidebar";
+import { navIcons, type NavIcon } from "./nav-icons";
 
-/** Adapted from shadcn/ui block sidebar-07 (MIT). */
-export function NavMain({ label, items }: { label: string; items: readonly { title: string; url: string; icon: LucideIcon }[] }) {
+export type NavItem = { title: string; href: string; icon: NavIcon; exact?: boolean };
+export type NavGroup = { label: string; items: NavItem[] };
+
+/** Grouped navigation (Filament navigation groups). Adapted from shadcn/ui sidebar-07 (MIT). */
+export function NavMain({ groups }: { groups: NavGroup[] }) {
   const pathname = usePathname();
-  return <SidebarGroup><SidebarGroupLabel>{label}</SidebarGroupLabel><SidebarMenu>
-    {items.map(item => <SidebarMenuItem key={item.url}><SidebarMenuButton asChild tooltip={item.title} isActive={pathname === item.url}><Link href={item.url} aria-current={pathname === item.url ? "page" : undefined}><item.icon /><span>{item.title}</span></Link></SidebarMenuButton></SidebarMenuItem>)}
-  </SidebarMenu></SidebarGroup>;
+  const active = (item: NavItem) => item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(`${item.href}/`);
+  return <>{groups.map(group => <SidebarGroup key={group.label}>
+    <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+    <SidebarMenu>
+      {group.items.map(item => { const Icon = navIcons[item.icon]; return <SidebarMenuItem key={item.href}>
+        <SidebarMenuButton tooltip={item.title} isActive={active(item)} render={<Link href={item.href} aria-current={active(item) ? "page" : undefined} />}><Icon /><span>{item.title}</span></SidebarMenuButton>
+      </SidebarMenuItem>; })}
+    </SidebarMenu>
+  </SidebarGroup>)}</>;
 }

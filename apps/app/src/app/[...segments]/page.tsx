@@ -1,25 +1,27 @@
+import type { Metadata } from "next";
+import { headers } from "next/headers";
+import { notFound, redirect, forbidden } from "next/navigation";
+import { Building2, FolderKanban, ListTodo, TrendingUp, Users } from "lucide-react";
+import { getIdentityEnv } from "@vibe/config/env";
+import { resolveTenant } from "@vibe/auth";
+import { PageHeader } from "@vibe/ui/components/resource/page-header";
+import { ChartWidget } from "@vibe/ui/components/widgets/chart-widget";
+import { StatsOverview } from "@vibe/ui/components/widgets/stats-overview";
+import { PanelShell } from "../../components/panels/shell";
 import { PushSettings } from "../../components/push-settings";
 import { WebhookDeliveries } from "../../components/webhook-deliveries";
-import { cookies, headers } from "next/headers";
-import { notFound, redirect, forbidden } from "next/navigation";
-import { getIdentityEnv } from "@vibe/config/env";
-import { resolveTenant, canAccessProject } from "@vibe/auth";
-import { ChartWidget } from "@vibe/ui";
-import { Card, CardContent, CardHeader, CardTitle } from "@vibe/ui/components/card";
-import { PanelShell } from "../../components/panels/shell";
-import { ResourceDetail } from "../../components/resources/detail";
-import { ResourceForm } from "../../components/resources/form";
-import { ResourceList } from "../../components/resources/list";
-import { buildPanelPath, resolvePanelPath } from "../../lib/panels/routing";
-import { loadGlobalMetrics, loadOrganizationOptions, loadProjectMetrics } from "../../lib/metrics/loaders";
-import { listProjects, listTasks, getProject, getTask, listAuthorizedProjects } from "../../lib/resources/queries";
-import { pageSession } from "../../lib/identity-session";
-import { messages, type Locale } from "../../lib/i18n";
-import { saveResource, removeResource, removeResources } from "../../lib/resources/panel-actions";
-import { getPanelResource, resourcesForPanel } from "../../lib/panels/resources";
-import { Attachments } from "../../components/resources/attachments";
 import { AiAssistant } from "../../components/ai-assistant";
+import { Attachments } from "../../components/resources/attachments";
+import { buildPanelPath, resolvePanelPath } from "../../lib/panels/routing";
+import { getPanelResource } from "../../lib/panels/resources";
+import { currentLocale, panelChrome } from "../../lib/panels/chrome";
+import { loadGlobalMetrics, loadProjectMetrics, loadWorkspaceStats } from "../../lib/metrics/loaders";
+import { pageSession } from "../../lib/identity-session";
+import { messages } from "../../lib/i18n";
+import { t } from "../../lib/resources/define";
+import { renderResource } from "../../lib/resources/render";
 
+type Props = { params: Promise<{ segments: string[] }>; searchParams: Promise<Record<string, string | string[] | undefined>> };
 
 function authError(error: unknown): never {
   if (error instanceof Error && error.message === "UNAUTHORIZED") redirect("/login");
@@ -28,12 +30,19 @@ function authError(error: unknown): never {
   throw error;
 }
 
-export default async function PanelPage({ params, searchParams }: { params: Promise<{ segments: string[] }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { segments } = await params;
+  const resolved = resolvePanelPath(`/${segments.map(encodeURIComponent).join("/")}`);
+  const entry = resolved && getPanelResource(resolved.panel.id, resolved.segments[0]);
+  const locale = await currentLocale();
+  return { title: entry?.kind === "resource" ? t(entry.definition.pluralLabel, locale) : entry?.kind === "custom" ? entry.label : messages[locale].dashboard };
+}
+
+export default async function PanelPage({ params, searchParams }: Props) {
   const { segments } = await params;
   const resolved = resolvePanelPath(`/${segments.map(encodeURIComponent).join("/")}`);
   if (!resolved) notFound();
-  let session;
-  try { ({ session } = await pageSession()); } catch (error) { if (error instanceof Error && error.message === "UNAUTHORIZED") redirect("/login"); throw error; }
+  const { session } = await pageSession();
   const { panel, tenantParam, segments: route } = resolved;
   const organizationContext = panel.context === "organization";
   if (panel.context === "global" && session.user.role !== "admin") forbidden();
@@ -43,55 +52,51 @@ export default async function PanelPage({ params, searchParams }: { params: Prom
     try { tenant = await resolveTenant(tenantParam!, await headers(), panel.tenantIdentifier); } catch (error) { return authError(error); }
   }
   const identifier = tenant?.slug ?? null;
+  const scope = { identifier, role: tenant?.role ?? null };
   const basePath = organizationContext ? buildPanelPath(panel.id, { tenant: tenantParam! }) : panel.prefix;
-  const orgs = organizationContext || panel.context === "personal" ? await loadOrganizationOptions(panel.tenantIdentifier ?? "slug") : [];
-  const orgOptions = orgs.map((org) => ({ id: org.id, name: org.name, href: buildPanelPath("organization", { tenant: org.identifier }) }));
-  const cookieStore = await cookies();
-  const rawLocale = cookieStore.get("locale")?.value;
-  const locale: Locale = rawLocale === "en" ? "en" : "pt-BR";
-  const path = route;
+  const locale = await currentLocale();
+  const copy = messages[locale];
   const query = await searchParams;
-  const resource = getPanelResource(panel.id, path[0]);
-  if (path.length && !resource) notFound();
-  const kind = path[0] === "projects" || path[0] === "tasks" ? path[0] : undefined;
-  const action = path.length === 2 && path[1] === "new" ? "new" : path.length === 3 && path[2] === "edit" ? "edit" : path.length === 2 ? "detail" : path.length === 1 ? "list" : "invalid";
+  const panelTitle = tenant?.name ?? (panel.context === "personal" ? copy.personal : panel.label);
+
+  const entry = getPanelResource(panel.id, route[0]);
+  if (route.length && !entry) notFound();
   let content;
-  if (resource?.kind === "custom") {
-    try { content = await resource.render({ panel, identifier, basePath, route: path, query, role: tenant?.role ?? "owner", locale }); }
-    catch (error) { return authError(error); }
-  } else if (panel.context === "global") {
-    if (path.length) notFound();
-    const metrics = await loadGlobalMetrics();
-    content = <Card role="region" aria-labelledby="global-metrics-title"><CardHeader><CardTitle><h2 id="global-metrics-title">{messages[locale].globalMetrics}</h2></CardTitle></CardHeader><CardContent className="flex flex-col gap-1"><p>{messages[locale].users}: {metrics.users}</p><p>{messages[locale].organizations}: {metrics.organizations}</p></CardContent></Card>;
-  } else if (!kind && path.length === 0) {
-    const data = await loadProjectMetrics(identifier);
-    content = <ChartWidget title={messages[locale].createdProjects} description={messages[locale].projectsByMonth} data={data.some(point => point.total > 0) ? data.map(({ month, total }) => ({ label: month, value: total })) : []} seriesLabel={messages[locale].projectsSeries} emptyMessage={messages[locale].noProjects} />;
-  } else {
-    if (!kind || action === "invalid") notFound();
-    const base = `${basePath}/${kind}`;
-    const role = tenant?.role ?? "owner";
-    const can = (operation: "read" | "create" | "update" | "delete") => panel.context === "personal" || canAccessProject(role, operation);
-    const perms = { create: can("create"), update: can("update"), delete: can("delete"), bulkDelete: can("delete") };
-    if (action === "list") {
-      const input = { page: query.page, search: query.search, sort: query.sort, direction: query.direction };
-      const result = kind === "projects" ? await listProjects(identifier, input) : await listTasks(identifier, input);
-      content = <ResourceList locale={locale} kind={kind} rows={result.items.map(row => ({ ...row, createdAt: row.createdAt.toISOString() }))} rowCount={result.total} page={result.page} sort={typeof query.sort === "string" ? query.sort : "createdAt"} basePath={base} tenantIdentifier={identifier} permissions={perms} onDelete={removeResource.bind(null, panel.id, kind, identifier)} onBulkDelete={removeResources.bind(null, panel.id, kind, identifier)} />;
-    } else if (action === "new" || action === "edit") {
-      if (action === "new" && !perms.create || action === "edit" && !perms.update) forbidden();
-      let row;
-      if (action === "edit") { row = kind === "projects" ? await getProject(identifier, path[1]) : await getTask(identifier, path[1]); if (!row) notFound(); }
-      let options: { id: string; name: string }[] = [];
-      if (kind === "tasks") options = await listAuthorizedProjects(identifier, { search: typeof query.projectSearch === "string" ? query.projectSearch : "" });
-      const initialValues = !row ? {} : "name" in row ? { name: row.name, description: row.description } : { title: row.title, projectId: row.projectId };
-      content = <ResourceForm locale={locale} kind={kind} basePath={base} cancelHref={base} initialValues={initialValues} projects={options} onSave={saveResource.bind(null, panel.id, kind, identifier, action === "edit" ? path[1] : undefined)} />;
+  try {
+    if (entry?.kind === "resource") content = await renderResource(entry.definition, { panel, panelTitle, basePath, route, query, scope, locale });
+    else if (entry?.kind === "custom") content = await entry.render({ panel, identifier, basePath, route, query, role: tenant?.role ?? "owner", locale });
+    else if (panel.context === "global") {
+      const metrics = await loadGlobalMetrics();
+      const format = new Intl.NumberFormat(locale);
+      content = <>
+        <PageHeader title={copy.dashboard} description={copy.globalMetrics} />
+        <StatsOverview stats={[{ label: copy.users, value: format.format(metrics.users), icon: <Users className="size-4" /> }, { label: copy.organizations, value: format.format(metrics.organizations), icon: <Building2 className="size-4" /> }]} />
+      </>;
     } else {
-      const row = kind === "projects" ? await getProject(identifier, path[1]) : await getTask(identifier, path[1]);
-      if (!row) notFound();
-      content = <><ResourceDetail locale={locale} kind={kind} row={{ ...row, createdAt: row.createdAt.toISOString() }} basePath={base} permissions={perms} onDelete={removeResource.bind(null, panel.id, kind, identifier)} />{kind === "projects" && process.env.STORAGE_ENABLED === "true" && <Attachments key={`${identifier ?? "personal"}:${row.id}`} projectId={row.id} tenantIdentifier={identifier} locale={locale} />}</>;
+      const [stats, monthly] = await Promise.all([loadWorkspaceStats(identifier), loadProjectMetrics(identifier)]);
+      const format = new Intl.NumberFormat(locale);
+      content = <>
+        <PageHeader title={`${copy.welcome}, ${session.user.name.split(" ")[0]}`} description={copy.dashboardDescription} />
+        <StatsOverview stats={[
+          { label: copy.totalProjects, value: format.format(stats.projectCount), icon: <FolderKanban className="size-4" /> },
+          { label: copy.totalTasks, value: format.format(stats.taskCount), icon: <ListTodo className="size-4" /> },
+          { label: `${copy.projects} · ${copy.thisMonth}`, value: format.format(stats.projectsThisMonth), icon: <TrendingUp className="size-4" /> },
+        ]} />
+        <ChartWidget title={copy.createdProjects} description={copy.projectsByMonth} data={monthly.some(point => point.total > 0) ? monthly.map(({ month, total }) => ({ label: month, value: total })) : []} seriesLabel={copy.projectsSeries} emptyMessage={copy.noProjects} />
+        {process.env.WEBHOOKS_OUTBOUND_ENABLED === "true" && <WebhookDeliveries tenantIdentifier={identifier} locale={locale} />}
+        {process.env.PUSH_ENABLED === "true" && <PushSettings key={identifier ?? "personal"} enabled tenantIdentifier={identifier} locale={locale} />}
+      </>;
     }
+  } catch (error) { return authError(error); }
+
+  if (entry?.kind === "resource" && entry.definition.slug === "projects" && route.length === 2 && route[1] !== "new" && process.env.STORAGE_ENABLED === "true") {
+    content = <>{content}<Attachments key={`${identifier ?? "personal"}:${route[1]}`} projectId={route[1]!} tenantIdentifier={identifier} locale={locale} /></>;
   }
-  if (panel.context !== "global" && path.length === 0 && process.env.WEBHOOKS_OUTBOUND_ENABLED === "true") content = <>{content}<WebhookDeliveries tenantIdentifier={identifier} locale={locale} /></>;
-  if (panel.context !== "global" && path.length === 0 && process.env.PUSH_ENABLED === "true") content = <>{content}<PushSettings key={identifier ?? "personal"} enabled tenantIdentifier={identifier} locale={locale} /></>;
-  const nav = [{ label: messages[locale].overview, href: basePath }, ...resourcesForPanel(panel.id).map(resource => ({ label: resource.id === "projects" ? messages[locale].projects : resource.id === "tasks" ? messages[locale].tasks : resource.label, href: `${basePath}/${resource.id}` }))];
-  return <PanelShell title={tenant?.name ?? panel.label} nav={nav} orgOptions={orgOptions} currentOrg={tenant ? { id: tenant.id, name: tenant.name } : undefined} user={{ name: session.user.name, email: session.user.email }} locale={locale} theme={cookieStore.get("theme")?.value === "dark" ? "dark" : "light"} initialCollapsed={cookieStore.get("sidebar_state")?.value === "false"} tenantIdentifier={identifier} showNotifications={process.env.JOBS_ENABLED === "true"}>{content}{panel.context !== "global" && <AiAssistant key={identifier ?? "personal"} enabled={process.env.AI_ENABLED === "true"} tenantIdentifier={identifier} locale={locale} />}</PanelShell>;
+
+  const chrome = await panelChrome({ panel, basePath, tenant, user: { name: session.user.name, email: session.user.email }, locale });
+
+  return <PanelShell {...chrome} tenantIdentifier={identifier} showNotifications={process.env.JOBS_ENABLED === "true"}>
+    {content}
+    {panel.context !== "global" && route.length === 0 && <AiAssistant key={identifier ?? "personal"} enabled={process.env.AI_ENABLED === "true"} tenantIdentifier={identifier} locale={locale} />}
+  </PanelShell>;
 }

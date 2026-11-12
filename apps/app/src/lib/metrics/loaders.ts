@@ -1,7 +1,7 @@
 import "server-only";
 import { asc, count, gte, sql } from "drizzle-orm";
 import { headers } from "next/headers";
-import { getDb, organization, projects, user } from "@vibe/db";
+import { getDb, organization, projects, tasks, user } from "@vibe/db";
 import { getAuth, requireSession, resolveTenant, withAuthorizedProjects } from "@vibe/auth";
 import { getIdentityEnv } from "@vibe/config/env";
 
@@ -50,5 +50,21 @@ export async function loadProjectMetrics(identifier: string | null) {
       const month = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
       return { month, total: totals.get(month) ?? 0 };
     });
+  });
+}
+
+/** Workspace totals for dashboard stats; runs under tenant RLS. */
+export async function loadWorkspaceStats(identifier: string | null) {
+  const currentHeaders = await headers();
+  return withAuthorizedProjects(currentHeaders, identifier, "read", async (tx) => {
+    const start = new Date();
+    start.setUTCDate(1);
+    start.setUTCHours(0, 0, 0, 0);
+    const [[{ projectCount }], [{ taskCount }], [{ projectsThisMonth }]] = await Promise.all([
+      tx.select({ projectCount: count() }).from(projects),
+      tx.select({ taskCount: count() }).from(tasks),
+      tx.select({ projectsThisMonth: count() }).from(projects).where(gte(projects.createdAt, start)),
+    ]);
+    return { projectCount, taskCount, projectsThisMonth };
   });
 }

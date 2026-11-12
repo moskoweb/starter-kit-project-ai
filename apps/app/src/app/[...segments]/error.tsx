@@ -2,22 +2,21 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
-import { Button } from "@vibe/ui/components/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@vibe/ui/components/card";
+import { TriangleAlert } from "lucide-react";
+import { Button, buttonVariants } from "@vibe/ui/components/button";
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@vibe/ui/components/empty";
 
 export default function PanelError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => { console.error("Panel route failed", error); }, [error]);
   const forbidden = error.message === "FORBIDDEN";
-  return <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-6">
-    <Card>
-      <CardHeader>
-        <CardTitle><h1>{forbidden ? "Acesso negado" : "Não foi possível carregar o painel"}</h1></CardTitle>
-      </CardHeader>
-      <CardContent><p role="alert" className="text-sm text-destructive">{forbidden ? "Sua conta não tem permissão para acessar este conteúdo." : "Ocorreu um erro ao carregar esta página."}</p></CardContent>
-      <CardFooter className="flex flex-wrap gap-2">
-        {!forbidden && <Button type="button" onClick={reset}>Tentar novamente</Button>}
-        <Button asChild variant="outline"><Link href="/login">Ir para entrada</Link></Button>
-      </CardFooter>
-    </Card>
+  return <main className="flex min-h-svh items-center justify-center p-6">
+    <Empty>
+      <EmptyHeader>
+        <EmptyMedia variant="icon"><TriangleAlert /></EmptyMedia>
+        <EmptyTitle>{forbidden ? "Acesso negado" : "Não foi possível carregar o painel"}</EmptyTitle>
+        <EmptyDescription role="alert">{forbidden ? "Sua conta não tem permissão para acessar este conteúdo." : "Ocorreu um erro ao carregar esta página."}{error.digest && <span className="mt-2 block font-mono text-xs">ID: {error.digest}</span>}</EmptyDescription>
+      </EmptyHeader>
+      <EmptyContent><div className="flex gap-2">{!forbidden && <Button onClick={reset}>Tentar novamente</Button>}<Link href="/account" className={buttonVariants({ variant: "outline" })}>Minha conta</Link></div></EmptyContent>
+    </Empty>
   </main>;
 }

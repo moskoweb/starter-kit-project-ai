@@ -2,7 +2,10 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@vibe/ui/components/button";
-import { Card, CardAction, CardContent, CardFooter, CardHeader, CardTitle } from "@vibe/ui/components/card";
+import { Bell, BellOff, Check, CheckCheck } from "lucide-react";
+import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from "@vibe/ui/components/empty";
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from "@vibe/ui/components/sheet";
+import { Skeleton } from "@vibe/ui/components/skeleton";
 import type { Locale } from "@/lib/i18n";
 
 type Item = { id: string; payload: { type: "project.created"; projectId: string }; createdAt: string; readAt: string | null };
@@ -40,26 +43,32 @@ export function Notifications({ tenantIdentifier, locale }: { tenantIdentifier: 
       await refresh();
     } catch { setError(true); } finally { setPending(false); }
   }
-  return <Card role="region" aria-labelledby="notifications-title">
-    <CardHeader>
-      <CardTitle><h2 id="notifications-title">{t.title} <span aria-label={`${data?.unreadCount ?? 0} ${t.unread}`}>({data?.unreadCount ?? 0})</span></h2></CardTitle>
-      {Boolean(data?.unreadCount) && <CardAction><Button type="button" variant="link" disabled={pending} onClick={() => void mark()}>{t.all}</Button></CardAction>}
-    </CardHeader>
-    <CardContent className="flex flex-col gap-3">
-      {error && <p role="alert" className="text-destructive">{t.error}</p>}
-      {!data && !error && <p aria-live="polite" className="text-muted-foreground">{t.loading}</p>}
-      {data?.items.length === 0 && <p className="text-muted-foreground">{t.empty}</p>}
-      {data?.items.length ? <ul className="flex flex-col gap-2">{data.items.map(item => <li key={item.id} className="flex items-start justify-between gap-4 rounded-md border p-3">
-        <div><p className={item.readAt ? "" : "font-semibold"}>{t.project}</p><time dateTime={item.createdAt} className="text-sm text-muted-foreground">{new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(item.createdAt))}</time></div>
-        {!item.readAt && <Button type="button" variant="link" size="sm" disabled={pending} onClick={() => void mark(item.id)}>{t.read}</Button>}
-      </li>)}</ul> : null}
-    </CardContent>
-    <CardFooter>
-      <nav aria-label={t.title} className="flex items-center gap-3">
+  return <Sheet onOpenChange={value => { if (value) void refresh(); }}>
+    <SheetTrigger render={<Button variant="ghost" size="icon" className="relative" aria-label={`${t.title} (${data?.unreadCount ?? 0} ${t.unread})`} />}>
+      <Bell />
+      {Boolean(data?.unreadCount) && <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-medium text-primary-foreground tabular-nums">{data!.unreadCount > 99 ? "99+" : data!.unreadCount}</span>}
+    </SheetTrigger>
+    <SheetContent className="flex w-full flex-col gap-0 sm:max-w-md">
+      <SheetHeader className="border-b">
+        <SheetTitle>{t.title}</SheetTitle>
+        <SheetDescription>{data?.unreadCount ?? 0} {t.unread}</SheetDescription>
+        {Boolean(data?.unreadCount) && <Button type="button" variant="link" size="sm" className="self-start px-0" disabled={pending} onClick={() => void mark()}><CheckCheck data-icon="inline-start" />{t.all}</Button>}
+      </SheetHeader>
+      <div className="flex flex-1 flex-col gap-2 overflow-y-auto p-4">
+        {error && <p role="alert" className="text-sm text-destructive">{t.error}</p>}
+        {!data && !error && <div aria-live="polite" className="flex flex-col gap-2"><Skeleton className="h-14" /><Skeleton className="h-14" /><Skeleton className="h-14" /></div>}
+        {data?.items.length === 0 && <Empty className="py-10"><EmptyHeader><EmptyMedia variant="icon"><BellOff /></EmptyMedia><EmptyTitle>{t.empty}</EmptyTitle></EmptyHeader></Empty>}
+        {data?.items.map(item => <div key={item.id} className="flex items-start gap-3 rounded-lg border p-3">
+          <span aria-hidden className={item.readAt ? "mt-1.5 size-2 shrink-0 rounded-full bg-transparent" : "mt-1.5 size-2 shrink-0 rounded-full bg-primary"} />
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5"><p className={item.readAt ? "text-sm" : "text-sm font-medium"}>{t.project}</p><time dateTime={item.createdAt} className="text-xs text-muted-foreground">{new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(item.createdAt))}</time></div>
+          {!item.readAt && <Button type="button" variant="ghost" size="icon-sm" aria-label={t.read} disabled={pending} onClick={() => void mark(item.id)}><Check /></Button>}
+        </div>)}
+      </div>
+      <SheetFooter className="flex-row items-center justify-between border-t">
         <Button type="button" variant="outline" size="sm" disabled={pending || page === 1} onClick={() => changePage(page - 1)}>{t.previous}</Button>
-        <span aria-live="polite" className="text-sm">{t.page} {page}</span>
+        <span aria-live="polite" className="text-sm text-muted-foreground">{t.page} {page}</span>
         <Button type="button" variant="outline" size="sm" disabled={pending || !data || data.items.length !== data.pageSize} onClick={() => changePage(page + 1)}>{t.next}</Button>
-      </nav>
-    </CardFooter>
-  </Card>;
+      </SheetFooter>
+    </SheetContent>
+  </Sheet>;
 }
