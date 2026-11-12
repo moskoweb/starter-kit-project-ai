@@ -48,7 +48,7 @@ export function renderModel(name: string, spec: ModelSpec) {
   const table = ident(name), personalAllowed = spec.scope !== "organizations", tenantAllowed = spec.scope !== "personal", organizationRequired = spec.scope === "organizations";
   imports.add("pgPolicy");
   const header = `import { pgTable, ${[...imports].sort().join(", ")} } from "drizzle-orm/pg-core";\nimport { sql } from "drizzle-orm";\nimport { organization, user } from "./auth-schema";`;
-  const scopeFields = `  organizationId: uuid("organization_id")${organizationRequired ? ".notNull()" : ""}.references(() => organization.id, { onDelete: "cascade" }),\n  ownerUserId: uuid("owner_user_id").notNull().references(() => user.id, { onDelete: "cascade" }),\n`;
+  const scopeFields = `  organizationId: uuid("organization_id")${organizationRequired ? ".notNull()" : ""}.references(() => organization.id, { onDelete: "cascade" }),\n  ownerUserId: uuid("owner_user_id").references(() => user.id, { onDelete: "set null" }),\n`;
   const policy = `\n}, (table) => {\n  const currentUser = sql\`nullif(current_setting('app.current_user_id', true), '')::uuid\`;\n  const currentTenant = sql\`nullif(current_setting('app.current_tenant_id', true), '')::uuid\`;\n  const personal = sql\`\${currentTenant} is null and \${table.organizationId} is null and \${table.ownerUserId} = \${currentUser}\`;\n  const tenant = sql\`\${currentTenant} is not null and \${table.organizationId} = \${currentTenant} and exists (select 1 from member m where m.organization_id = \${currentTenant} and m.user_id = \${currentUser})\`;\n  const scope = sql\`\${currentUser} is not null and (${personalAllowed ? "\${personal}" : "false"} or ${tenantAllowed ? "\${tenant}" : "false"})\`;\n  return [pgPolicy("${table}_read", { for: "select", to: "public", using: scope }), pgPolicy("${table}_create", { for: "insert", to: "public", withCheck: sql\`(\${scope}) and \${table.ownerUserId} = \${currentUser}\` }), pgPolicy("${table}_update", { for: "update", to: "public", using: scope, withCheck: scope }), pgPolicy("${table}_delete", { for: "delete", to: "public", using: scope })];\n}).enableRLS();`;
   return `${header}\n\nexport const ${name[0].toLowerCase()}${name.slice(1)} = pgTable("${table}", {\n  id: uuid("id").defaultRandom().primaryKey(),\n${scopeFields}${lines.join("\n")}${policy}\n`;
 }
@@ -57,14 +57,29 @@ export function renderScopeProtection(name: string) {
   const table = ident(name);
   return `CREATE FUNCTION public."${table}_immutable_scope"() RETURNS trigger LANGUAGE plpgsql SET search_path = pg_catalog, public AS $$
 BEGIN
-  IF OLD.organization_id IS DISTINCT FROM NEW.organization_id OR OLD.owner_user_id IS DISTINCT FROM NEW.owner_user_id THEN
+  -- Owner may only be cleared (account deletion sets it NULL); never reassigned.
+  IF OLD.organization_id IS DISTINCT FROM NEW.organization_id OR (OLD.owner_user_id IS DISTINCT FROM NEW.owner_user_id AND NEW.owner_user_id IS NOT NULL) THEN
     RAISE EXCEPTION 'Scope identity is immutable' USING ERRCODE = '23514';
   END IF;
   RETURN NEW;
 END $$;
 --> statement-breakpoint
+REVOKE ALL ON FUNCTION public."${table}_immutable_scope"() FROM PUBLIC;
+--> statement-breakpoint
 CREATE TRIGGER immutable_scope BEFORE UPDATE ON public."${table}"
 FOR EACH ROW EXECUTE FUNCTION public."${table}_immutable_scope"();
+--> statement-breakpoint
+-- Deleting a user keeps organization rows (owner becomes NULL) and removes that user's personal rows.
+CREATE FUNCTION public."${table}_drop_orphan"() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public AS $$
+BEGIN
+  DELETE FROM public."${table}" WHERE id = NEW.id;
+  RETURN NULL;
+END $$;
+--> statement-breakpoint
+REVOKE ALL ON FUNCTION public."${table}_drop_orphan"() FROM PUBLIC;
+--> statement-breakpoint
+CREATE TRIGGER drop_orphan AFTER UPDATE OF owner_user_id ON public."${table}"
+FOR EACH ROW WHEN (NEW.owner_user_id IS NULL AND NEW.organization_id IS NULL) EXECUTE FUNCTION public."${table}_drop_orphan"();
 `;
 }
 export async function assertMigrationOutput() {

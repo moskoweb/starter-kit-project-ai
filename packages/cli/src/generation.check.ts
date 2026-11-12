@@ -79,6 +79,19 @@ try {
     assert.match(generated, /if \(process\.env\.JOBS_ENABLED === "true"\) await enqueueEvent\(tx, \{ userId: ownerUserId, organizationId: context\.organizationId \}, \{ type: "note\.created", entityId: row!\.id \}\)/, "generated create enqueues outbox event in the same transaction");
     assert.match(await readFile("apps/app/src/lib/panels/resources.ts", "utf8"), /\{ kind: "resource", definition: noteResource, panelIds: \["app"\] \}/);
     await assert.rejects(runResource(["Note", "--model", "note", "--panel", "app", "--spec", spec]), /already registered/);
+    // Relation to a model whose resource does not exist yet: its read permission would be unknown.
+    await writeFile("packages/db/src/schema.ts", 'export * from "./auth-schema";\nexport * from "./note-schema";\nexport * from "./task-schema";\n');
+    await writeFile("packages/db/src/task-schema.ts", 'export const task = pgTable("task", {\n  id: uuid("id").defaultRandom().primaryKey(),\n  organizationId: uuid("organization_id"),\n  ownerUserId: uuid("owner_user_id"),\n  noteId: uuid("note_id").references(() => note.id),\n  name: varchar("name", { length: 255 }).notNull(),\n}, (table) => [pgPolicy("task_read", {})]).enableRLS();\n');
+    const relationSpec = (model: string) => JSON.stringify({ scope: "personal", fields: { name: { type: "string", required: true }, noteId: { type: "uuid", optional: true } }, relations: { noteId: { model, label: "title" } }, permissions: { read: ["personal"], create: ["personal"], update: ["personal"], delete: ["personal"] } });
+    await rm("apps/app/src/lib/resources/definitions/note.ts");
+    await assert.rejects(runResource(["Task", "--model", "task", "--panel", "app", "--spec", relationSpec("note")]), /requires its own resource first/);
+    await writeFile("apps/app/src/lib/resources/definitions/note.ts", generated);
+    await runResource(["Task", "--model", "task", "--panel", "app", "--spec", relationSpec("note")]);
+    const task = await readFile("apps/app/src/lib/resources/definitions/task.ts", "utf8");
+    assert.match(task, /import \{ noteResource as noteResource \} from "\.\/note";/);
+    assert.match(task, /canReadParent\("note", role, scope\) \? tx\.select/, "relation options require parent read permission");
+    assert.equal(task.match(/if \(!canReadParent\("note", role, scope\)\) throw new Error\("FORBIDDEN"\)/g)?.length, 2, "create and update FK checks require parent read permission");
+    assert.match(await readFile("packages/db/src/note-schema.ts", "utf8"), /ownerUserId: uuid\("owner_user_id"\)\.references\(\(\) => user\.id, \{ onDelete: "set null" \}\)/, "deleting a member never cascades organization rows");
   } finally { process.chdir(cwd); }
 } finally {
   await rm(directory, { recursive: true, force: true });

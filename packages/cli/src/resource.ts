@@ -1,5 +1,5 @@
 import { parseArgs } from "node:util";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import { parseModelSpec, renderModel, renderScopeProtection, assertMigrationOutput, generateMigration, type ModelSpec } from "./model.js";
 import { commitChanges, reportChanges, type Change } from "./panel.js";
 
@@ -69,6 +69,17 @@ export async function runResource(argv: string[]) {
       if (!["id", "ownerUserId", "organizationId", ...Object.keys(spec.fields)].includes(match[1]) && match[0].includes(".notNull()") && !/\.default(?:Now|Random)?\(/.test(match[0])) throw new Error(`Required model field omitted from allowlist: ${match[1]}`);
     }
   }
+  // Each relation's parent must have its own generated resource: its read permission gates options and FK checks.
+  const parents: Record<string, { file: string; symbol: string }> = {};
+  const definitionsDir = "apps/app/src/lib/resources/definitions";
+  for (const parentModel of new Set(Object.values(spec.relations).map(relation => relation.model))) {
+    for (const entry of await readdir(definitionsDir).catch(() => [] as string[])) {
+      const source = entry.endsWith(".ts") ? await readFile(`${definitionsDir}/${entry}`, "utf8") : "";
+      const symbol = source.includes(`import { ${parentModel} as table`) ? source.match(/export const (\w+Resource) = defineResource\(/)?.[1] : undefined;
+      if (symbol) { parents[parentModel] = { file: entry.slice(0, -3), symbol }; break; }
+    }
+    if (!parents[parentModel]) throw new Error(`Relation ${parentModel} requires its own resource first: generate it with \`vibe resource\``);
+  }
   const fields = Object.entries(spec.fields);
   const validators = fields.map(([key, field]) => {
     let validator = field.type === "uuid" ? "z.string().uuid()" : field.type === "boolean" ? "z.boolean()" : field.type === "integer" ? "z.number().int()" : `z.string().trim().max(${field.type === "text" ? 5000 : 255})${field.required || !field.optional && field.default === undefined ? ".min(1)" : ""}`;
@@ -94,7 +105,7 @@ import { enqueueEvent } from "@vibe/events";
 import { getIdentityEnv } from "@vibe/config/env";
 import { defineResource, type Operation, type ResourceScope } from "../define";
 import { likePattern } from "../list-state";
-
+${Object.entries(parents).map(([value, parent]) => `import { ${parent.symbol} as ${value}Resource } from "./${parent.file}";\n`).join("")}
 const inputSchema = z.object({
   ${validators}
 }).strict();
@@ -107,22 +118,25 @@ const roles = (role: string | null) => role === null ? ["personal"] : role.split
 const can = (role: string | null, operation: Operation, _scope?: ResourceScope) => roles(role).some(value => (permissions[operation] as readonly string[]).includes(value));
 
 /** Re-resolves session and tenant, enforces declared roles, then runs under RLS. */
-async function authorized<T>({ identifier }: ResourceScope, operation: Operation, run: (tx: TenantTransaction, userId: string) => Promise<T>) {
+async function authorized<T>({ identifier }: ResourceScope, operation: Operation, run: (tx: TenantTransaction, userId: string, role: string | null) => Promise<T>) {
   const h = await headers(), session = await requireSession(h);
   if (identifier === null && (scope === "organizations" || getIdentityEnv().IDENTITY_PROFILE === "organizations") || identifier !== null && scope === "personal") throw new Error("FORBIDDEN");
   const tenant = identifier === null ? null : await resolveTenant(identifier, h);
   return withTenantTransaction({ userId: session.user.id, organizationId: tenant?.id ?? null }, async (tx, role) => {
     if (!can(role, operation)) throw new Error("FORBIDDEN");
-    return run(tx, session.user.id);
+    return run(tx, session.user.id, role);
   });
 }
-async function mutate(scope: ResourceScope, operation: Operation, run: (tx: TenantTransaction, userId: string) => Promise<string | undefined>) {
+/** RLS checks tenant membership only; related records also require the parent resource's own read permission. */
+${Object.keys(spec.relations).length ? `const parentResources = { ${[...new Set(Object.values(spec.relations).map(relation => relation.model))].map(value => `${value}: ${value}Resource`).join(", ")} };
+const canReadParent = (model: keyof typeof parentResources, role: string | null, scope: ResourceScope) => parentResources[model].can(role, "read", scope);` : ""}
+async function mutate(scope: ResourceScope, operation: Operation, run: (tx: TenantTransaction, userId: string, role: string | null) => Promise<string | undefined>) {
   try { const id = await authorized(scope, operation, run); revalidatePath("/[...segments]", "page"); return { ok: true as const, id }; }
   catch (error) { const message = error instanceof Error ? error.message : ""; return { ok: false as const, error: ["UNAUTHORIZED", "FORBIDDEN", "NOT_FOUND", "ORGANIZATION_REQUIRED"].includes(message) ? message : "RESOURCE_ERROR" }; }
 }
 const record = (row: Record<string, unknown> & { id: string }) => Object.fromEntries(Object.entries(row).map(([key, value]) => [key, value instanceof Date ? value.toISOString() : value as string | number | boolean | null])) as { id: string } & Record<string, string | number | boolean | null>;
 ${Object.entries(spec.relations).map(([key, relation]) => `async function options${key}(scope: ResourceScope) {
-  const rows = await authorized(scope, "read", tx => tx.select({ id: ${relation.model}.id, label: ${relation.model}.${relation.label} }).from(${relation.model}).orderBy(asc(${relation.model}.${relation.label})).limit(500));
+  const rows = await authorized(scope, "read", (tx, _userId, role) => canReadParent(${quote(relation.model)}, role, scope) ? tx.select({ id: ${relation.model}.id, label: ${relation.model}.${relation.label} }).from(${relation.model}).orderBy(asc(${relation.model}.${relation.label})).limit(500) : Promise.resolve([]));
   return rows.map(row => ({ value: row.id, label: { "pt-BR": String(row.label), en: String(row.label) } }));
 }
 `).join("")}
@@ -160,9 +174,9 @@ export const ${model}Resource = defineResource({
   create: async (scope, values) => {
     const parsed = inputSchema.safeParse(values);
     if (!parsed.success) return { ok: false, error: "INVALID_INPUT", fieldErrors: Object.fromEntries(parsed.error.issues.map(issue => [String(issue.path[0]), issue.message])) };
-    return mutate(scope, "create", async (tx, ownerUserId) => {
+    return mutate(scope, "create", async (tx, ownerUserId, role) => {
       const input = parsed.data;
-      ${Object.entries(spec.relations).map(([key, relation]) => `if (input.${key}) { const [parent] = await tx.select({ id: ${relation.model}.id }).from(${relation.model}).where(eq(${relation.model}.id, input.${key})).limit(1); if (!parent) throw new Error("NOT_FOUND"); }`).join("\n      ")}
+      ${Object.entries(spec.relations).map(([key, relation]) => `if (input.${key}) { if (!canReadParent(${quote(relation.model)}, role, scope)) throw new Error("FORBIDDEN"); const [parent] = await tx.select({ id: ${relation.model}.id }).from(${relation.model}).where(eq(${relation.model}.id, input.${key})).limit(1); if (!parent) throw new Error("NOT_FOUND"); }`).join("\n      ")}
       const [context] = await tx.execute<{ organizationId: string | null }>(sql\`select nullif(current_setting('app.current_tenant_id', true), '') as "organizationId"\`);
       ${spec.scope === "organizations" ? 'if (!context.organizationId) throw new Error("ORGANIZATION_REQUIRED");' : ""}
       const [row] = await tx.insert(table).values({ ...input, ownerUserId, organizationId: context.organizationId }).returning({ id: table.id });
@@ -174,9 +188,9 @@ export const ${model}Resource = defineResource({
   update: async (scope, id, values) => {
     const parsed = inputSchema.safeParse(values);
     if (!parsed.success || !z.string().uuid().safeParse(id).success) return { ok: false, error: "INVALID_INPUT", fieldErrors: parsed.success ? undefined : Object.fromEntries(parsed.error.issues.map(issue => [String(issue.path[0]), issue.message])) };
-    return mutate(scope, "update", async tx => {
+    return mutate(scope, "update", async (tx, _userId, role) => {
       const input = parsed.data;
-      ${Object.entries(spec.relations).map(([key, relation]) => `if (input.${key}) { const [parent] = await tx.select({ id: ${relation.model}.id }).from(${relation.model}).where(eq(${relation.model}.id, input.${key})).limit(1); if (!parent) throw new Error("NOT_FOUND"); }`).join("\n      ")}
+      ${Object.entries(spec.relations).map(([key, relation]) => `if (input.${key}) { if (!canReadParent(${quote(relation.model)}, role, scope)) throw new Error("FORBIDDEN"); const [parent] = await tx.select({ id: ${relation.model}.id }).from(${relation.model}).where(eq(${relation.model}.id, input.${key})).limit(1); if (!parent) throw new Error("NOT_FOUND"); }`).join("\n      ")}
       const [row] = await tx.update(table).set(input).where(eq(table.id, id)).returning({ id: table.id });
       if (!row) throw new Error("NOT_FOUND");
       return row.id;
