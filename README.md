@@ -108,7 +108,7 @@ Registro canônico: [`apps/app/src/lib/panels/registry.ts`](apps/app/src/lib/pan
 | `personal` | `/app` | Usuário autenticado; exemplos `/app/projects`, `/app/tasks` |
 | `organization` | `/org` | Membership; exemplo `/org/minha-equipe/projects` |
 
-Painel organizacional declara `tenantIdentifier: "slug" | "uuid"`; padrão é slug. Trocar para UUID muda identificador da URL, não autorização. IDs/prefixos precisam ser únicos, não sobrepostos e não podem colidir com rotas reservadas. Use `buildPanelPath` em vez de concatenar caminhos. [Integração real](docs/PANEL-INTEGRATION.md) · [Shell](docs/PANEL-SHELL.md).
+Painel organizacional declara `tenantIdentifier: "slug" | "uuid"`; padrão é slug. Trocar para UUID muda identificador da URL, não autorização. IDs/prefixos precisam ser únicos, não sobrepostos e não podem colidir com rotas reservadas. Use `buildPanelPath` em vez de concatenar caminhos. [Painéis](docs/PANELS.md).
 
 **Model é schema Drizzle; resource compõe interface e operações.** Não há segunda camada ORM. Para trabalhar na CLI sem compilar:
 
@@ -234,9 +234,9 @@ O kit entrega código e fluxos de exemplo, não certificação de segurança, op
 ## Documentação
 
 - **Primeira execução:** [GETTING-STARTED](docs/GETTING-STARTED.md)
-- **Extensão:** [CLI](docs/CLI.md), [resources/painéis](docs/CLI-RESOURCES.md), [dados](docs/RESOURCE-DATA.md), [integração de painéis](docs/PANEL-INTEGRATION.md)
+- **Extensão:** [CLI](docs/CLI.md), [resources/painéis](docs/CLI-RESOURCES.md), [painéis](docs/PANELS.md)
 - **Identidade:** [rotas](docs/AUTH-ROUTES.md), [single-tenant](docs/SINGLE-TENANT.md)
-- **Interface:** [UI e licença das adaptações](docs/UI.md), [shell](docs/PANEL-SHELL.md), [localização](docs/I18N.md)
+- **Interface:** [UI, resources e licença das adaptações](docs/UI.md), [localização](docs/I18N.md)
 - **Operação:** [deployment](docs/DEPLOYMENT.md), [logs/analytics/SEO](docs/OPERATIONS.md), [controles de segurança](docs/SECURITY.md)
 - **Aceite:** [roteiro integrado](docs/ACCEPTANCE.md), [testes de identidade](tests/identity)
 

@@ -194,7 +194,7 @@ env -u MIGRATION_DATABASE_URL pnpm --filter app dev
 1. Abra `http://127.0.0.1:3000/login` e entre com admin provisionado. `/admin` mostra contagens administrativas.
 2. Para conta comum, abra `/signup`, cadastre e siga link de verificação recebido no SMTP. Login exige email verificado. Não há conta demo nem senha padrão.
 3. Em perfil `personal` ou `hybrid`, abra `/app/projects`, crie projeto e tarefa. Recursos de outro usuário não devem ser visíveis.
-4. Em perfil `organizations` ou `hybrid`, use `/organizations` para criar organização e administrar convites/membros conforme papel. Abra `/org/<slug>/projects` com membership real.
+4. Em perfil `organizations` ou `hybrid`, use `/organizations` para criar organização; `/organizations/<slug>` administra dados, membros, convites, propriedade e exclusão conforme papel. No perfil `organizations`, usuário sem organização cai em `/onboarding` ao abrir `/`. Abra `/org/<slug>/projects` com membership real.
 5. Confira `/account`, `/security` e fluxos de recuperação/2FA conforme produto; não confunda email capturado localmente com entrega externa validada.
 
 Para observar health:
@@ -213,7 +213,7 @@ Espera-se 200 com `status: ok` e `db: connected`; banco indisponível retorna 50
 
 `ORGANIZATION_MODE=multi` é padrão. Para organização única, primeiro provisione organização e proprietário em etapa controlada em `multi`; obtenha UUID da organização existente, configure `ORGANIZATION_MODE=single` e `SINGLE_ORGANIZATION_ID`, reinicie. Single não cria organização/associação nem permite criação de outras organizações. Perfil continua independente. [Contrato e limites](SINGLE-TENANT.md).
 
-Prefixos de painel ficam em `apps/app/src/lib/panels/registry.ts`: `/admin`, `/app` e `/org`. Organização usa slug por padrão; `tenantIdentifier: "uuid"` troca formato de URL. Use builders de rota; identificador nunca é autorização. [Painéis reais](PANEL-INTEGRATION.md).
+Prefixos de painel ficam em `apps/app/src/lib/panels/registry.ts`: `/admin`, `/app` e `/org`. Organização usa slug por padrão; `tenantIdentifier: "uuid"` troca formato de URL. Use builders de rota; identificador nunca é autorização. [Painéis](PANELS.md).
 
 ## 9. Criar primeiro resource
 
