@@ -1,0 +1,40 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+import LegalNotice from "../components/LegalNotice.astro";
+import { productName, routes } from "../lib/site";
+---
+<SiteLayout title={`Política de cookies — ${productName}`} description={`Cookies e armazenamento local usados pelo site e pelo serviço ${productName}.`}>
+<article class="prose">
+<span class="eyebrow">Legal</span>
+<h1>Política de cookies</h1>
+<LegalNotice lang="pt-BR" updated="[DD/MM/AAAA]" />
+<p>Esta política descreve como <strong>[Nome da empresa]</strong> usa cookies e armazenamento local do navegador no site e no serviço {productName}. Cookies são pequenos arquivos que o navegador guarda; o armazenamento local (localStorage) funciona de forma parecida, mas não é enviado automaticamente ao servidor.</p>
+
+<h2>1. Site público</h2>
+<p>Este site não usa cookies de rastreamento nem publicidade. Ele guarda somente a sua preferência de tema (<code>theme</code>, claro ou escuro) no armazenamento local do navegador.</p>
+
+<h2>2. Cookies essenciais do serviço</h2>
+<p>Ao entrar no painel, usamos cookies necessários para o funcionamento. Eles não podem ser desativados sem impedir o uso do serviço:</p>
+<ul>
+  <li><strong>Sessão e autenticação:</strong> mantêm você conectado com segurança e protegem a verificação em dois fatores.</li>
+  <li><strong>Idioma</strong> (<code>locale</code>): lembra o idioma escolhido.</li>
+  <li><strong>Interface</strong> (<code>sidebar_state</code>): lembra se a barra lateral está recolhida.</li>
+</ul>
+
+<h2>3. Análise de uso (opcional)</h2>
+<p>A análise de uso vem desativada por padrão. Quando habilitada por nós, ela só funciona depois que você aceita explicitamente no aviso exibido no serviço:</p>
+<ul>
+  <li>Sua escolha fica no armazenamento local como <code>analytics-consent</code> (<code>accepted</code> ou <code>denied</code>).</li>
+  <li>Sem aceite, nenhuma requisição de análise é enviada.</li>
+  <li>Com aceite, geramos um identificador aleatório (<code>analytics-distinct-id</code>), sem email ou dados de identificação pessoal.</li>
+  <li>Ao recusar ou revogar, o identificador é apagado do navegador.</li>
+</ul>
+<p>Provedor de análise: <strong>[provedor, se habilitado]</strong>.</p>
+
+<h2>4. Como gerenciar</h2>
+<p>Você pode revogar o consentimento de análise a qualquer momento pelo controle exibido no serviço. Também pode apagar cookies e armazenamento local nas configurações do navegador; isso encerra sua sessão e restaura as preferências padrão.</p>
+
+<h2>5. Contato</h2>
+<p>Dúvidas: <strong>[email de privacidade]</strong>. Mais detalhes na <a href={routes.privacy["pt-BR"]}>Política de privacidade</a>.</p>
+</article>
+</SiteLayout>

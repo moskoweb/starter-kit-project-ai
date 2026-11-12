@@ -1,0 +1,65 @@
+---
+import SiteLayout from "../../layouts/SiteLayout.astro";
+import LegalNotice from "../../components/LegalNotice.astro";
+import { productName, routes } from "../../lib/site";
+---
+<SiteLayout lang="en" title={`Privacy policy — ${productName}`} description={`How ${productName} collects, uses, and protects personal data.`}>
+<article class="prose">
+<span class="eyebrow">Legal</span>
+<h1>Privacy policy</h1>
+<LegalNotice lang="en" updated="[YYYY-MM-DD]" />
+<p>This policy explains how <strong>[Company name]</strong>, registration number <strong>[registration number]</strong>, located at <strong>[full address]</strong> ("we"), processes personal data of people who use the {productName} website and service. It is drafted with the Brazilian General Data Protection Law (LGPD) in mind; adapt it to other applicable laws, such as the GDPR, where relevant.</p>
+
+<h2>1. Controller and data protection officer</h2>
+<p>The data controller is <strong>[Company name]</strong>. Our data protection officer (DPO) is <strong>[DPO name]</strong>, contact: <strong>[DPO email]</strong>.</p>
+
+<h2>2. Data we collect</h2>
+<ul>
+  <li><strong>Account data:</strong> name, email, password (stored only as a hash), and two-factor authentication settings.</li>
+  <li><strong>Organization data:</strong> organization name, members, invitations, and assigned roles.</li>
+  <li><strong>Content you submit:</strong> records, files, and other information you enter into the service.</li>
+  <li><strong>Technical data:</strong> IP address, browser, access date and time, and security logs needed to operate and protect the service.</li>
+  <li><strong>Usage data (optional):</strong> anonymous browsing metrics, collected only after your explicit consent. See the <a href={routes.cookies.en}>Cookie policy</a>.</li>
+</ul>
+
+<h2>3. Purposes and legal bases</h2>
+<ul>
+  <li>Create and maintain your account and provide the service — performance of a contract.</li>
+  <li>Protect accounts, prevent fraud, and keep access logs — legitimate interest and legal obligation.</li>
+  <li>Send transactional emails, such as account verification and password reset — performance of a contract.</li>
+  <li>Measure usage anonymously to improve the product — consent, which you can withdraw at any time.</li>
+  <li>[Other purposes specific to your business, with their legal basis.]</li>
+</ul>
+
+<h2>4. Sharing</h2>
+<p>We do not sell personal data. We share data only with processors that help us provide the service, under contract and only as needed:</p>
+<ul>
+  <li>Hosting and database: <strong>[provider and country]</strong>.</li>
+  <li>File storage: <strong>[provider and country]</strong>.</li>
+  <li>Email delivery: <strong>[provider and country]</strong>.</li>
+  <li>Usage analytics, if enabled and consented: <strong>[provider and country]</strong>.</li>
+  <li>AI assistant, if enabled: <strong>[provider and country]</strong>.</li>
+</ul>
+<p>We may also disclose data when required by law or by order of a competent authority.</p>
+
+<h2>5. International transfers</h2>
+<p>Some processors may handle data outside your country. In those cases we rely on appropriate safeguards, such as <strong>[standard contractual clauses or other applicable mechanism]</strong>.</p>
+
+<h2>6. Retention</h2>
+<p>We keep data while your account is active. After closure, we delete or anonymize data within <strong>[period]</strong>, unless the law requires longer retention (for example, access logs kept for 6 months under Brazilian law).</p>
+
+<h2>7. Security</h2>
+<p>We apply technical and organizational measures to protect data, including encrypted connections, hashed passwords, optional two-factor authentication, and data isolation between organizations. No system is fully immune to incidents; if a relevant incident occurs, we will notify affected people and authorities as required by law.</p>
+
+<h2>8. Your rights</h2>
+<p>You may request confirmation of processing, access, correction, anonymization, portability, deletion, information about sharing, and withdrawal of consent. Send your request to <strong>[privacy email]</strong>. You may also file a complaint with your data protection authority.</p>
+
+<h2>9. Children</h2>
+<p>The service is not intended for people under <strong>[minimum age]</strong>. [Adjust this section if the service processes children's data.]</p>
+
+<h2>10. Changes</h2>
+<p>We may update this policy. Material changes will be announced on the website or by email before they take effect.</p>
+
+<p>See also the <a href={routes.terms.en}>Terms of use</a> and the <a href={routes.cookies.en}>Cookie policy</a>.</p>
+</article>
+</SiteLayout>

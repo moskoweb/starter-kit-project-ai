@@ -42,6 +42,9 @@ pre { overflow-x: auto; padding: 1.25rem; background: var(--card); border: 1px s
 code { font-family: var(--ui-font-mono); font-size: .9em; }
 li { margin-block: .5rem; }
 footer { border-top: 1px solid var(--border); padding-block: 2rem; color: var(--muted-foreground); }
-footer .wrap { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: space-between; }
+footer .wrap { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: space-between; align-items: center; }
+footer .footer-links { padding: 0; gap: 1rem; }
+.notice { border: 1px solid var(--border); border-left: 4px solid var(--primary); border-radius: var(--radius); background: var(--card); padding: 0 1.25rem; margin-block: 1.5rem 2rem; }
+.cta { padding-block: 4rem; }
 @media (max-width: 720px) { .hero, .grid { grid-template-columns: 1fr; } nav { gap: .8rem; } .wrap { width: calc(100% - 2rem); } nav .brand { width: 100%; } .hero { gap: 2rem; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; } }

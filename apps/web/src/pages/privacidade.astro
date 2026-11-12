@@ -1,0 +1,65 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+import LegalNotice from "../components/LegalNotice.astro";
+import { productName, routes } from "../lib/site";
+---
+<SiteLayout title={`Política de privacidade — ${productName}`} description={`Como ${productName} coleta, usa e protege dados pessoais.`}>
+<article class="prose">
+<span class="eyebrow">Legal</span>
+<h1>Política de privacidade</h1>
+<LegalNotice lang="pt-BR" updated="[DD/MM/AAAA]" />
+<p>Esta política explica como <strong>[Nome da empresa]</strong>, inscrita no CNPJ <strong>[número do CNPJ]</strong>, com sede em <strong>[endereço completo]</strong> ("nós"), trata dados pessoais de quem usa o site e o serviço {productName}. Ela segue a Lei Geral de Proteção de Dados (Lei 13.709/2018 — LGPD) e, quando aplicável, outras leis de proteção de dados.</p>
+
+<h2>1. Controlador e encarregado</h2>
+<p>O controlador dos dados é <strong>[Nome da empresa]</strong>. O encarregado pelo tratamento de dados (DPO) é <strong>[nome do encarregado]</strong>, contato: <strong>[email do encarregado]</strong>.</p>
+
+<h2>2. Dados que coletamos</h2>
+<ul>
+  <li><strong>Dados de conta:</strong> nome, email, senha (armazenada somente como hash) e configurações de autenticação em dois fatores.</li>
+  <li><strong>Dados de organização:</strong> nome da organização, membros, convites e papéis atribuídos.</li>
+  <li><strong>Conteúdo enviado:</strong> registros, arquivos e demais informações que você insere no serviço.</li>
+  <li><strong>Dados técnicos:</strong> endereço IP, navegador, data e hora de acesso e registros de segurança, necessários para operar e proteger o serviço.</li>
+  <li><strong>Dados de uso (opcional):</strong> métricas anônimas de navegação, coletadas somente após seu consentimento explícito. Veja a <a href={routes.cookies["pt-BR"]}>Política de cookies</a>.</li>
+</ul>
+
+<h2>3. Finalidades e bases legais</h2>
+<ul>
+  <li>Criar e manter sua conta e prestar o serviço contratado — execução de contrato (art. 7º, V).</li>
+  <li>Proteger contas, prevenir fraudes e manter registros de acesso — legítimo interesse e obrigação legal (art. 7º, II e IX; Marco Civil da Internet).</li>
+  <li>Enviar emails transacionais, como verificação de conta e redefinição de senha — execução de contrato.</li>
+  <li>Medir uso de forma anônima para melhorar o produto — consentimento (art. 7º, I), que pode ser revogado a qualquer momento.</li>
+  <li>[Outras finalidades específicas do seu negócio, com respectiva base legal.]</li>
+</ul>
+
+<h2>4. Compartilhamento</h2>
+<p>Não vendemos dados pessoais. Compartilhamos dados apenas com operadores que nos ajudam a prestar o serviço, sob contrato e na medida necessária:</p>
+<ul>
+  <li>Hospedagem e banco de dados: <strong>[provedor e país]</strong>.</li>
+  <li>Armazenamento de arquivos: <strong>[provedor e país]</strong>.</li>
+  <li>Envio de emails: <strong>[provedor e país]</strong>.</li>
+  <li>Análise de uso, se habilitada e consentida: <strong>[provedor e país]</strong>.</li>
+  <li>Assistente de IA, se habilitado: <strong>[provedor e país]</strong>.</li>
+</ul>
+<p>Também podemos divulgar dados quando exigido por lei ou ordem de autoridade competente.</p>
+
+<h2>5. Transferência internacional</h2>
+<p>Alguns operadores podem processar dados fora do Brasil. Nesses casos, adotamos as salvaguardas previstas no art. 33 da LGPD, como <strong>[cláusulas contratuais padrão ou outro mecanismo aplicável]</strong>.</p>
+
+<h2>6. Retenção</h2>
+<p>Mantemos os dados enquanto sua conta estiver ativa. Após o encerramento, excluímos ou anonimizamos os dados em até <strong>[prazo]</strong>, salvo quando a lei exigir guarda por mais tempo (por exemplo, registros de acesso por 6 meses, conforme o Marco Civil da Internet).</p>
+
+<h2>7. Segurança</h2>
+<p>Adotamos medidas técnicas e administrativas para proteger os dados, incluindo conexões criptografadas, senhas armazenadas como hash, autenticação em dois fatores opcional e isolamento de dados entre organizações. Nenhum sistema é totalmente imune a incidentes; em caso de incidente relevante, comunicaremos os titulares e a ANPD conforme a lei.</p>
+
+<h2>8. Seus direitos</h2>
+<p>Você pode solicitar confirmação de tratamento, acesso, correção, anonimização, portabilidade, eliminação, informação sobre compartilhamento e revogação de consentimento (art. 18 da LGPD). Envie seu pedido para <strong>[email de privacidade]</strong>. Você também pode apresentar reclamação à Autoridade Nacional de Proteção de Dados (ANPD).</p>
+
+<h2>9. Crianças e adolescentes</h2>
+<p>O serviço não se destina a menores de <strong>[idade mínima]</strong> anos. [Ajuste esta seção caso o serviço trate dados de crianças ou adolescentes.]</p>
+
+<h2>10. Alterações</h2>
+<p>Podemos atualizar esta política. Mudanças relevantes serão comunicadas no site ou por email antes de entrarem em vigor.</p>
+
+<p>Veja também os <a href={routes.terms["pt-BR"]}>Termos de uso</a> e a <a href={routes.cookies["pt-BR"]}>Política de cookies</a>.</p>
+</article>
+</SiteLayout>

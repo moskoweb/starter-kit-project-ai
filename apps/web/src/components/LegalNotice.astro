@@ -1,0 +1,10 @@
+---
+import type { Lang } from "../lib/site";
+interface Props { lang: Lang; updated: string }
+const { lang, updated } = Astro.props as Props;
+---
+<aside class="notice" role="note">
+  {lang === "en"
+    ? <p><strong>Template notice:</strong> this is a generic template. Replace every bracketed placeholder (for example <code>[Company name]</code>) and review the full text with qualified legal counsel before publishing. Last updated: <time>{updated}</time>.</p>
+    : <p><strong>Aviso de modelo:</strong> este é um modelo genérico. Substitua todos os campos entre colchetes (por exemplo <code>[Nome da empresa]</code>) e revise o texto completo com assessoria jurídica antes de publicar. Última atualização: <time>{updated}</time>.</p>}
+</aside>

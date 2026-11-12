@@ -21,3 +21,11 @@ pnpm --filter @vibe/web preview
 Development and preview bind to loopback port 4321. `check` and `check-types` run `astro check`. The site uses Tailwind CSS 4's Vite plugin and shared `@vibe/ui/theme.css` tokens; it does not render the React dashboard.
 
 Home and setup pages share the same validated app origin. Sitemap excludes both localized and root 404 routes; generated Astro metadata is ignored and excluded from derived projects.
+
+## Pages and content
+
+Routes (pt-BR default, English under `/en/`): home `/` and `/en/`, setup guide `/getting-started/` and `/en/getting-started/`, privacy `/privacidade/` and `/en/privacy/`, terms `/termos/` and `/en/terms/`, cookies `/cookies/` and `/en/cookies/`. Route pairs live in `apps/web/src/lib/site.ts`; the layout uses them for the language switch, `hreflang` alternates, and footer legal links. Add new localized pages there.
+
+`PUBLIC_PRODUCT_NAME` (optional, public, non-secret) sets the product name in header, titles, Open Graph, and JSON-LD; default `Vibe Starter Kit`. Home sends sign-up and sign-in CTAs to `PUBLIC_APP_URL` `/signup` and `/login`. Each page emits title, description, canonical, and basic Open Graph/Twitter meta.
+
+Legal pages are generic templates. Replace every bracketed placeholder (`[Nome da empresa]`, `[Company name]`, CNPJ, address, DPO, providers, dates) and review with legal counsel before publishing; each page shows a visible template notice until you remove `LegalNotice`. The cookie policy reflects current behavior: the site stores only `theme` in localStorage; the app uses auth session cookies, `locale`, `sidebar_state`, and opt-in analytics consent (`analytics-consent`, `analytics-distinct-id`) described in [OPERATIONS.md](OPERATIONS.md#analytics). Update it when cookies or analytics providers change.

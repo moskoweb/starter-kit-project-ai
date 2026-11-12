@@ -1,11 +1,8 @@
 ---
 import SiteLayout from "../layouts/SiteLayout.astro";
-import { appUrl } from "../lib/app-url";
+import Home from "../components/Home.astro";
+import { productName } from "../lib/site";
 ---
-<SiteLayout title="Vibe Starter Kit — base real para seu próximo app" description="Starter TypeScript com painel Next.js, autenticação, organizações, recursos, arquivos e webhooks. Código real, sem promessa de demonstração.">
-  <section class="hero">
-    <div><span class="eyebrow">Starter full-stack · TypeScript</span><h1>Comece pelo produto. Não pelo boilerplate.</h1><p class="lead">Um ponto de partida funcional: painel Next.js, autenticação, organizações, recursos, uploads, webhooks e assistente de IA. Explore o código e adapte ao seu produto.</p><div class="actions"><a class="button primary" href="/getting-started/">Leia o guia inicial</a><a class="button" href={`${appUrl}/login`}>Entrar no painel</a></div></div>
-    <div class="map" aria-label="Partes reais do starter"><p><span>apps/app</span><small>Painel Next.js</small></p><p><span>packages/auth</span><small>Autenticação</small></p><p><span>packages/db</span><small>Banco e migrações</small></p><p><span>apps/worker</span><small>Entrega de webhooks</small></p></div>
-  </section>
-  <section class="section"><span class="eyebrow">O que já existe</span><h2>Uma base para inspecionar, não uma vitrine de promessas.</h2><div class="grid"><article><h3>Painel e identidade</h3><p>Rotas de login e cadastro, áreas de organização e componentes de interface reaproveitáveis.</p></article><article><h3>Dados e arquivos</h3><p>Camada de banco com migrações e fluxos de recursos e armazenamento no painel.</p></article><article><h3>Integrações</h3><p>Entregas de webhook, observabilidade e integração de IA presentes no código do starter.</p></article></div><p><a href="/getting-started/">Veja os comandos e siga o guia de configuração →</a></p></section>
+<SiteLayout title={`${productName} — organize o trabalho da sua equipe`} description={`${productName}: contas seguras, organizações, permissões e dados da sua equipe em um painel único.`}>
+  <Home lang="pt-BR" />
 </SiteLayout>

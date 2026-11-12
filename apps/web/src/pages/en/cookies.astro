@@ -1,0 +1,40 @@
+---
+import SiteLayout from "../../layouts/SiteLayout.astro";
+import LegalNotice from "../../components/LegalNotice.astro";
+import { productName, routes } from "../../lib/site";
+---
+<SiteLayout lang="en" title={`Cookie policy — ${productName}`} description={`Cookies and local storage used by the ${productName} website and service.`}>
+<article class="prose">
+<span class="eyebrow">Legal</span>
+<h1>Cookie policy</h1>
+<LegalNotice lang="en" updated="[YYYY-MM-DD]" />
+<p>This policy describes how <strong>[Company name]</strong> uses cookies and browser local storage on the {productName} website and service. Cookies are small files stored by your browser; local storage (localStorage) works similarly but is not sent to the server automatically.</p>
+
+<h2>1. Public website</h2>
+<p>This website uses no tracking or advertising cookies. It only stores your theme preference (<code>theme</code>, light or dark) in browser local storage.</p>
+
+<h2>2. Essential service cookies</h2>
+<p>When you sign in to the dashboard, we use cookies required for it to work. They cannot be disabled without preventing use of the service:</p>
+<ul>
+  <li><strong>Session and authentication:</strong> keep you securely signed in and protect two-factor verification.</li>
+  <li><strong>Language</strong> (<code>locale</code>): remembers your chosen language.</li>
+  <li><strong>Interface</strong> (<code>sidebar_state</code>): remembers whether the sidebar is collapsed.</li>
+</ul>
+
+<h2>3. Usage analytics (optional)</h2>
+<p>Usage analytics is disabled by default. When we enable it, it only runs after you explicitly accept in the notice shown in the service:</p>
+<ul>
+  <li>Your choice is kept in local storage as <code>analytics-consent</code> (<code>accepted</code> or <code>denied</code>).</li>
+  <li>Without acceptance, no analytics request is sent.</li>
+  <li>After acceptance, we generate a random identifier (<code>analytics-distinct-id</code>), with no email or personal identification.</li>
+  <li>When you decline or revoke, the identifier is removed from your browser.</li>
+</ul>
+<p>Analytics provider: <strong>[provider, if enabled]</strong>.</p>
+
+<h2>4. Managing your choices</h2>
+<p>You can revoke analytics consent at any time through the control shown in the service. You can also clear cookies and local storage in your browser settings; this signs you out and restores default preferences.</p>
+
+<h2>5. Contact</h2>
+<p>Questions: <strong>[privacy email]</strong>. More details in the <a href={routes.privacy.en}>Privacy policy</a>.</p>
+</article>
+</SiteLayout>

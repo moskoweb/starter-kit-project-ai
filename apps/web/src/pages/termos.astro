@@ -1,0 +1,53 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+import LegalNotice from "../components/LegalNotice.astro";
+import { productName, routes } from "../lib/site";
+---
+<SiteLayout title={`Termos de uso — ${productName}`} description={`Condições para uso do site e do serviço ${productName}.`}>
+<article class="prose">
+<span class="eyebrow">Legal</span>
+<h1>Termos de uso</h1>
+<LegalNotice lang="pt-BR" updated="[DD/MM/AAAA]" />
+<p>Estes termos regem o uso do site e do serviço {productName}, oferecidos por <strong>[Nome da empresa]</strong>, CNPJ <strong>[número do CNPJ]</strong>, com sede em <strong>[endereço completo]</strong>. Ao criar uma conta ou usar o serviço, você concorda com estes termos.</p>
+
+<h2>1. Conta</h2>
+<p>Você deve fornecer informações verdadeiras, manter sua senha em sigilo e nos avisar sobre qualquer uso não autorizado. Você responde pelas atividades realizadas na sua conta. Recomendamos ativar a autenticação em dois fatores.</p>
+
+<h2>2. Organizações</h2>
+<p>Quem cria uma organização é responsável por convidar membros, atribuir papéis e gerenciar o acesso aos dados dela. Membros removidos perdem acesso aos dados da organização.</p>
+
+<h2>3. Uso permitido</h2>
+<p>Você concorda em não:</p>
+<ul>
+  <li>violar leis ou direitos de terceiros;</li>
+  <li>enviar conteúdo ilícito, malicioso ou que infrinja propriedade intelectual;</li>
+  <li>tentar acessar dados de outras contas ou organizações sem autorização;</li>
+  <li>interferir na segurança, disponibilidade ou desempenho do serviço;</li>
+  <li>[outras restrições específicas do seu negócio].</li>
+</ul>
+
+<h2>4. Seu conteúdo</h2>
+<p>Você mantém os direitos sobre o conteúdo que envia. Você nos concede apenas a licença necessária para armazenar, processar e exibir esse conteúdo com o objetivo de prestar o serviço. O tratamento de dados pessoais segue a <a href={routes.privacy["pt-BR"]}>Política de privacidade</a>.</p>
+
+<h2>5. Planos e pagamentos</h2>
+<p>[Descreva aqui preços, cobrança, renovação, cancelamento e reembolso, se aplicável. Remova esta seção se o serviço for gratuito.]</p>
+
+<h2>6. Disponibilidade</h2>
+<p>Buscamos manter o serviço disponível, mas ele pode passar por manutenções ou interrupções. Podemos alterar ou descontinuar funcionalidades, avisando com antecedência razoável quando a mudança for relevante.</p>
+
+<h2>7. Suspensão e encerramento</h2>
+<p>Você pode encerrar sua conta a qualquer momento. Podemos suspender ou encerrar contas que violem estes termos, com aviso prévio quando possível.</p>
+
+<h2>8. Limitação de responsabilidade</h2>
+<p>Na máxima extensão permitida por lei, <strong>[Nome da empresa]</strong> não responde por danos indiretos ou lucros cessantes decorrentes do uso do serviço. [Ajuste limites conforme a legislação aplicável, incluindo o Código de Defesa do Consumidor quando cabível.]</p>
+
+<h2>9. Alterações nos termos</h2>
+<p>Podemos atualizar estes termos. Mudanças relevantes serão comunicadas no site ou por email antes de entrarem em vigor.</p>
+
+<h2>10. Lei aplicável e foro</h2>
+<p>Estes termos são regidos pelas leis do Brasil. Fica eleito o foro da comarca de <strong>[cidade/UF]</strong>, ressalvado o foro do domicílio do consumidor quando aplicável.</p>
+
+<h2>11. Contato</h2>
+<p>Dúvidas sobre estes termos: <strong>[email de contato]</strong>.</p>
+</article>
+</SiteLayout>

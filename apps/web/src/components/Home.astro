@@ -1,0 +1,76 @@
+---
+import { appUrl } from "../lib/app-url";
+import { productName, routes, type Lang } from "../lib/site";
+interface Props { lang: Lang }
+const { lang } = Astro.props as Props;
+const copy = {
+  "pt-BR": {
+    eyebrow: "Plataforma web para equipes",
+    title: "Organize o trabalho da sua equipe em um só lugar.",
+    lead: `${productName} reúne contas seguras, organizações, permissões e dados da sua operação em um painel único, acessível pelo navegador.`,
+    signup: "Criar conta",
+    login: "Entrar",
+    featuresEyebrow: "Recursos",
+    featuresTitle: "O essencial para começar com segurança.",
+    features: [
+      { title: "Contas protegidas", body: "Login com verificação de email e autenticação em dois fatores opcional." },
+      { title: "Organizações e papéis", body: "Convide pessoas, defina papéis e separe o trabalho de cada organização." },
+      { title: "Dados isolados", body: "Cada organização acessa somente os próprios registros, com regras aplicadas no banco de dados." },
+      { title: "Arquivos e notificações", body: "Envie arquivos e acompanhe eventos importantes sem sair do painel." },
+      { title: "Integrações", body: "Conecte outros sistemas por webhooks assinados e entregas com nova tentativa." },
+      { title: "Português e inglês", body: "Interface disponível nos dois idiomas, com tema claro e escuro." },
+    ],
+    ctaTitle: "Pronto para começar?",
+    ctaBody: "Crie sua conta ou entre com uma conta existente.",
+  },
+  en: {
+    eyebrow: "Web platform for teams",
+    title: "Organize your team's work in one place.",
+    lead: `${productName} brings secure accounts, organizations, permissions, and your operational data together in a single browser-based dashboard.`,
+    signup: "Create account",
+    login: "Sign in",
+    featuresEyebrow: "Features",
+    featuresTitle: "The essentials to start securely.",
+    features: [
+      { title: "Protected accounts", body: "Sign-in with email verification and optional two-factor authentication." },
+      { title: "Organizations and roles", body: "Invite people, assign roles, and keep each organization's work separate." },
+      { title: "Isolated data", body: "Each organization only accesses its own records, with rules enforced in the database." },
+      { title: "Files and notifications", body: "Upload files and follow important events without leaving the dashboard." },
+      { title: "Integrations", body: "Connect other systems through signed webhooks with retried delivery." },
+      { title: "Portuguese and English", body: "Interface available in both languages, with light and dark themes." },
+    ],
+    ctaTitle: "Ready to start?",
+    ctaBody: "Create your account or sign in with an existing one.",
+  },
+}[lang];
+---
+<section class="hero">
+  <div>
+    <span class="eyebrow">{copy.eyebrow}</span>
+    <h1>{copy.title}</h1>
+    <p class="lead">{copy.lead}</p>
+    <div class="actions">
+      <a class="button primary" href={`${appUrl}/signup`}>{copy.signup}</a>
+      <a class="button" href={`${appUrl}/login`}>{copy.login}</a>
+    </div>
+  </div>
+  <div class="map" aria-hidden="true">
+    {copy.features.slice(0, 4).map((f) => <p><span>{f.title}</span><small>✓</small></p>)}
+  </div>
+</section>
+<section class="section">
+  <span class="eyebrow">{copy.featuresEyebrow}</span>
+  <h2>{copy.featuresTitle}</h2>
+  <div class="grid">
+    {copy.features.map((f) => <article><h3>{f.title}</h3><p>{f.body}</p></article>)}
+  </div>
+</section>
+<section class="section cta">
+  <h2>{copy.ctaTitle}</h2>
+  <p class="lead">{copy.ctaBody}</p>
+  <div class="actions">
+    <a class="button primary" href={`${appUrl}/signup`}>{copy.signup}</a>
+    <a class="button" href={`${appUrl}/login`}>{copy.login}</a>
+    <a class="button" href={routes.gettingStarted[lang]}>{lang === "en" ? "Setup guide" : "Guia inicial"}</a>
+  </div>
+</section>

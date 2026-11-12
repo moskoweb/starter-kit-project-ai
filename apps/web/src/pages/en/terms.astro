@@ -1,0 +1,53 @@
+---
+import SiteLayout from "../../layouts/SiteLayout.astro";
+import LegalNotice from "../../components/LegalNotice.astro";
+import { productName, routes } from "../../lib/site";
+---
+<SiteLayout lang="en" title={`Terms of use — ${productName}`} description={`Conditions for using the ${productName} website and service.`}>
+<article class="prose">
+<span class="eyebrow">Legal</span>
+<h1>Terms of use</h1>
+<LegalNotice lang="en" updated="[YYYY-MM-DD]" />
+<p>These terms govern the use of the {productName} website and service, provided by <strong>[Company name]</strong>, registration number <strong>[registration number]</strong>, located at <strong>[full address]</strong>. By creating an account or using the service, you agree to these terms.</p>
+
+<h2>1. Account</h2>
+<p>You must provide accurate information, keep your password confidential, and notify us of any unauthorized use. You are responsible for activity in your account. We recommend enabling two-factor authentication.</p>
+
+<h2>2. Organizations</h2>
+<p>Whoever creates an organization is responsible for inviting members, assigning roles, and managing access to its data. Removed members lose access to the organization's data.</p>
+
+<h2>3. Acceptable use</h2>
+<p>You agree not to:</p>
+<ul>
+  <li>violate laws or third-party rights;</li>
+  <li>upload unlawful or malicious content, or content that infringes intellectual property;</li>
+  <li>attempt to access other accounts or organizations without authorization;</li>
+  <li>interfere with the security, availability, or performance of the service;</li>
+  <li>[other restrictions specific to your business].</li>
+</ul>
+
+<h2>4. Your content</h2>
+<p>You keep the rights to the content you submit. You grant us only the license needed to store, process, and display that content in order to provide the service. Personal data is handled under the <a href={routes.privacy.en}>Privacy policy</a>.</p>
+
+<h2>5. Plans and payments</h2>
+<p>[Describe pricing, billing, renewal, cancellation, and refunds here, if applicable. Remove this section if the service is free.]</p>
+
+<h2>6. Availability</h2>
+<p>We aim to keep the service available, but it may undergo maintenance or interruptions. We may change or discontinue features, giving reasonable notice for material changes.</p>
+
+<h2>7. Suspension and termination</h2>
+<p>You may close your account at any time. We may suspend or close accounts that violate these terms, with prior notice where possible.</p>
+
+<h2>8. Limitation of liability</h2>
+<p>To the maximum extent permitted by law, <strong>[Company name]</strong> is not liable for indirect damages or lost profits arising from use of the service. [Adjust limits to the applicable law, including consumer protection rules.]</p>
+
+<h2>9. Changes to these terms</h2>
+<p>We may update these terms. Material changes will be announced on the website or by email before they take effect.</p>
+
+<h2>10. Governing law and jurisdiction</h2>
+<p>These terms are governed by the laws of <strong>[country]</strong>. Disputes will be resolved in the courts of <strong>[city/state]</strong>, without prejudice to mandatory consumer jurisdiction rules.</p>
+
+<h2>11. Contact</h2>
+<p>Questions about these terms: <strong>[contact email]</strong>.</p>
+</article>
+</SiteLayout>

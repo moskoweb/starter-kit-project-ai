@@ -1,11 +1,19 @@
 ---
 import "../styles/global.css";
-interface Props { title: string; description: string; lang?: "pt-BR" | "en" }
+import { appUrl } from "../lib/app-url";
+import { productName, routes, type Lang } from "../lib/site";
+interface Props { title: string; description: string; lang?: Lang }
 const { title, description, lang = "pt-BR" } = Astro.props as Props;
 const english = lang === "en";
-const switchPath = english ? (Astro.url.pathname === "/en/" ? "/" : Astro.url.pathname.replace(/^\/en/, "") || "/") : `/en${Astro.url.pathname === "/" ? "/" : Astro.url.pathname}`;
+const other: Lang = english ? "pt-BR" : "en";
+const path = Astro.url.pathname.endsWith("/") ? Astro.url.pathname : `${Astro.url.pathname}/`;
+const route = Object.values(routes).find((r) => r[lang] === path);
+const switchPath = route ? route[other] : routes.home[other];
 const canonical = new URL(Astro.url.pathname, Astro.site);
-const jsonLd = JSON.stringify({ "@context": "https://schema.org", "@type": "WebSite", name: "Vibe Starter Kit", url: Astro.site?.href }).replace(/</g, "\\u003c");
+const jsonLd = JSON.stringify({ "@context": "https://schema.org", "@type": "WebSite", name: productName, url: Astro.site?.href }).replace(/</g, "\\u003c");
+const t = english
+  ? { skip: "Skip to content", nav: "Main navigation", guide: "Setup guide", login: "Sign in", signup: "Create account", lang: "Português", theme: "Toggle theme", themeLabel: "Theme", legal: "Legal", privacy: "Privacy policy", terms: "Terms of use", cookies: "Cookie policy" }
+  : { skip: "Pular para conteúdo", nav: "Navegação principal", guide: "Começar", login: "Entrar", signup: "Criar conta", lang: "English", theme: "Alternar tema", themeLabel: "Tema", legal: "Legal", privacy: "Política de privacidade", terms: "Termos de uso", cookies: "Política de cookies" };
 ---
 <html lang={lang}>
   <head>
@@ -13,21 +21,40 @@ const jsonLd = JSON.stringify({ "@context": "https://schema.org", "@type": "WebS
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
+    {route && <link rel="alternate" hreflang={lang} href={canonical} />}
+    {route && <link rel="alternate" hreflang={other} href={new URL(route[other], Astro.site)} />}
+    {route && <link rel="alternate" hreflang="x-default" href={new URL(route["pt-BR"], Astro.site)} />}
     <link rel="sitemap" href="/sitemap-index.xml" />
     <meta name="color-scheme" content="light dark" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={productName} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content={english ? "en_US" : "pt_BR"} />
+    <meta name="twitter:card" content="summary" />
     <title>{title}</title>
     <script type="application/ld+json" set:html={jsonLd} />
   </head>
   <body>
-    <a class="skip" href="#main">{english ? "Skip to content" : "Pular para conteúdo"}</a>
-    <header><nav class="wrap" aria-label={english ? "Main navigation" : "Navegação principal"}>
-      <a class="brand" href={english ? "/en/" : "/"}>vibe / starter</a>
-      <a href={english ? "/en/getting-started/" : "/getting-started/"}>{english ? "Setup guide" : "Começar"}</a>
-      <a href={switchPath}>{english ? "Português" : "English"}</a>
-      <button type="button" id="theme-toggle" aria-label={english ? "Toggle theme" : "Alternar tema"} aria-pressed="false">{english ? "Theme" : "Tema"}</button>
+    <a class="skip" href="#main">{t.skip}</a>
+    <header><nav class="wrap" aria-label={t.nav}>
+      <a class="brand" href={routes.home[lang]}>{productName}</a>
+      <a href={routes.gettingStarted[lang]}>{t.guide}</a>
+      <a href={`${appUrl}/login`}>{t.login}</a>
+      <a href={switchPath} hreflang={other} lang={other}>{t.lang}</a>
+      <button type="button" id="theme-toggle" aria-label={t.theme} aria-pressed="false">{t.themeLabel}</button>
     </nav></header>
     <main id="main" class="wrap"><slot /></main>
-    <footer><div class="wrap"><span>Vibe Starter Kit</span><a href={english ? "/en/getting-started/" : "/getting-started/"}>{english ? "Getting started" : "Documentação inicial"}</a></div></footer>
+    <footer><div class="wrap">
+      <span>© {new Date().getFullYear()} {productName}</span>
+      <nav aria-label={t.legal} class="footer-links">
+        <a href={routes.privacy[lang]}>{t.privacy}</a>
+        <a href={routes.terms[lang]}>{t.terms}</a>
+        <a href={routes.cookies[lang]}>{t.cookies}</a>
+        <a href={routes.gettingStarted[lang]}>{t.guide}</a>
+      </nav>
+    </div></footer>
     <script>
       const button = document.querySelector<HTMLButtonElement>("#theme-toggle");
       const root = document.documentElement;
