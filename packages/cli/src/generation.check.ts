@@ -7,6 +7,7 @@ import { snapshotFiles, restoreFiles, copyTemplate, withStaging, assertSafeDesti
 import { pendingScopeProtections } from "../../db/src/scope-protections.mjs";
 import { runPanel } from "./panel.js";
 import { runResource } from "./resource.js";
+import { registerProfilePanels } from "./create.js";
 
 // Run from repository root: pnpm exec tsx packages/cli/src/generation.check.ts
 const directory = await mkdtemp(path.join(os.tmpdir(), "vibe-generation-"));
@@ -44,25 +45,40 @@ try {
   const failed = path.join(directory, "failed");
   await assert.rejects(withStaging(failed, async () => { throw new Error("stop"); }), /stop/);
   const cwd = process.cwd();
+  const registryTemplate = 'import type { PanelConfig } from "./types";\nexport const reservedPanelRoutes = ["api", "account"] as const;\nexport const registry: readonly PanelConfig[] = validatePanels([\n  { id: "admin", label: "Admin", prefix: "/admin", context: "global" },\n]);\n';
+  const expected = { personal: ["app"], organizations: ["org"], hybrid: ["app", "org"] } as const;
+  for (const [profile, ids] of Object.entries(expected) as [keyof typeof expected, readonly string[]][]) {
+    const project = path.join(directory, `profile-${profile}`), panels = path.join(project, "apps/app/src/lib/panels");
+    await mkdir(panels, { recursive: true });
+    await writeFile(path.join(panels, "registry.ts"), registryTemplate);
+    await registerProfilePanels(project, profile);
+    const registry = await readFile(path.join(panels, "registry.ts"), "utf8");
+    for (const id of ["app", "org"]) assert.equal(registry.includes(`import { panel_${id} } from "./${id}.config";`), ids.includes(id), `${profile} registers ${id}`);
+    if (ids.includes("app")) assert.match(await readFile(path.join(panels, "app.config.ts"), "utf8"), /id: "app", label: "Personal", prefix: "\/app", context: "personal" \}/);
+    if (ids.includes("org")) assert.match(await readFile(path.join(panels, "org.config.ts"), "utf8"), /id: "org", label: "Organization", prefix: "\/org", context: "organization", tenantIdentifier: "slug" \}/);
+    assert.match(registry, /\{ id: "admin"/, "admin panel kept");
+    assert.equal(process.cwd(), cwd);
+  }
   try {
     process.chdir(target);
     await mkdir("apps/app/src/lib/panels", { recursive: true });
     await writeFile("apps/app/src/lib/panels/registry.ts", 'export const reservedPanelRoutes = ["api"] as const;\nexport const registry: readonly PanelConfig[] = validatePanels([\n]);\n');
     await runPanel(["ops-2", "--context", "global", "--prefix", "/ops-2"]);
     assert.match(await readFile("apps/app/src/lib/panels/ops-2.config.ts", "utf8"), /export const panel_ops\$2 =/);
-    await writeFile("apps/app/src/lib/panels/registry.ts", 'export const registry: readonly PanelConfig[] = validatePanels([\n  { id: "personal", label: "Personal", prefix: "/app", context: "personal" },\n]);\n');
+    await writeFile("apps/app/src/lib/panels/registry.ts", 'export const reservedPanelRoutes = ["api"] as const;\nexport const registry: readonly PanelConfig[] = validatePanels([\n  { id: "app", label: "Personal", prefix: "/app", context: "personal" },\n]);\n');
     await writeFile("apps/app/src/lib/panels/resources.ts", "// CLI_RESOURCE_IMPORTS\nexport const resourceRegistry = [\n  // CLI_RESOURCE_ENTRIES\n];\n");
     await mkdir("packages/db/src", { recursive: true });
     await writeFile("packages/db/src/schema.ts", 'export * from "./auth-schema";\n');
     await writeFile("packages/db/src/auth-schema.ts", "");
     const spec = JSON.stringify({ scope: "personal", fields: { title: { type: "string", required: true }, done: { type: "boolean", default: false } }, permissions: { read: ["personal"], create: ["personal"], update: ["personal"], delete: ["personal"] } });
-    await runResource(["Note", "--model", "note", "--panel", "personal", "--with-model", "--spec", spec]);
+    await runResource(["Note", "--model", "note", "--panel", "app", "--with-model", "--spec", spec]);
     const generated = await readFile("apps/app/src/lib/resources/definitions/note.ts", "utf8");
     assert.match(generated, /export const noteResource = defineResource\(/);
     assert.match(generated, /if \(!can\(role, operation\)\) throw new Error\("FORBIDDEN"\)/, "generated resource enforces declared roles inside tenant transaction");
     assert.match(generated, /inputSchema\.safeParse\(values\)/, "generated mutations validate input on the server");
-    assert.match(await readFile("apps/app/src/lib/panels/resources.ts", "utf8"), /\{ kind: "resource", definition: noteResource, panelIds: \["personal"\] \}/);
-    await assert.rejects(runResource(["Note", "--model", "note", "--panel", "personal", "--spec", spec]), /already registered/);
+    assert.match(generated, /if \(process\.env\.JOBS_ENABLED === "true"\) await enqueueEvent\(tx, \{ userId: ownerUserId, organizationId: context\.organizationId \}, \{ type: "note\.created", entityId: row!\.id \}\)/, "generated create enqueues outbox event in the same transaction");
+    assert.match(await readFile("apps/app/src/lib/panels/resources.ts", "utf8"), /\{ kind: "resource", definition: noteResource, panelIds: \["app"\] \}/);
+    await assert.rejects(runResource(["Note", "--model", "note", "--panel", "app", "--spec", spec]), /already registered/);
   } finally { process.chdir(cwd); }
 } finally {
   await rm(directory, { recursive: true, force: true });

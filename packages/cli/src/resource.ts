@@ -36,7 +36,8 @@ export async function runResource(argv: string[]) {
   const panelMatch = [...panelSource.matchAll(/\{[^{}]*\bid\s*:\s*["']([^"']+)["'][^{}]*\}/g)].find(match => match[1] === panel);
   const context = panelMatch?.[0].match(/\bcontext\s*:\s*["']([^"']+)["']/)?.[1];
   if (!context || context === "global" || context === "personal" && spec.scope === "organizations" || context === "organization" && spec.scope === "personal") throw new Error("Panel missing or incompatible with resource scope; global CRUD is unsupported");
-  if (registry.split("// CLI_RESOURCE_IMPORTS").length !== 2 || registry.split("// CLI_RESOURCE_ENTRIES").length !== 2 || registry.includes(`definitions/${slug}"`) || ["projects", "tasks", "new"].includes(slug)) throw new Error("Resource registry changed or resource already registered");
+  if (registry.split("// CLI_RESOURCE_IMPORTS").length !== 2 || registry.split("// CLI_RESOURCE_ENTRIES").length !== 2 || registry.includes(`definitions/${slug}"`) || slug === "new") throw new Error("Resource registry changed or resource already registered");
+  const eventType = `${slug.replace(/-/g, "_")}.created`; // matches @vibe/events type regex
   const schemaFile = "packages/db/src/schema.ts", schema = await readFile(schemaFile, "utf8");
   const changes: Change[] = [];
   if (values["with-model"]) {
@@ -89,6 +90,7 @@ import { z } from "zod";
 import { ${model} as table${[...new Set(Object.values(spec.relations).map(relation => relation.model))].map(value => `, ${value}`).join("")} } from "@vibe/db/schema";
 import { withTenantTransaction, type TenantTransaction } from "@vibe/db";
 import { requireSession, resolveTenant } from "@vibe/auth";
+import { enqueueEvent } from "@vibe/events";
 import { getIdentityEnv } from "@vibe/config/env";
 import { defineResource, type Operation, type ResourceScope } from "../define";
 import { likePattern } from "../list-state";
@@ -164,6 +166,8 @@ export const ${model}Resource = defineResource({
       const [context] = await tx.execute<{ organizationId: string | null }>(sql\`select nullif(current_setting('app.current_tenant_id', true), '') as "organizationId"\`);
       ${spec.scope === "organizations" ? 'if (!context.organizationId) throw new Error("ORGANIZATION_REQUIRED");' : ""}
       const [row] = await tx.insert(table).values({ ...input, ownerUserId, organizationId: context.organizationId }).returning({ id: table.id });
+      // Outbox event in the same transaction: worker notifies the actor (see docs/EVENTS.md).
+      if (process.env.JOBS_ENABLED === "true") await enqueueEvent(tx, { userId: ownerUserId, organizationId: context.organizationId }, { type: ${quote(eventType)}, entityId: row!.id });
       return row!.id;
     });
   },

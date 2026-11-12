@@ -51,11 +51,11 @@ export async function commitChanges(changes: Change[], preview: boolean, afterWr
 export function reportChanges(changes: Change[], json = false, preview = false) {
   console.log(json ? JSON.stringify({ preview, files: changes.map(({ file, after }) => ({ file, content: after })) }, null, 2) : changes.map(change => preview ? `--- ${change.file}\n${change.after}` : change.file).join("\n"));
 }
-export async function runPanel(argv: string[]) {
-  const { positionals, values } = parseArgs({ args: argv, allowPositionals: true, options: { context: { type: "string" }, prefix: { type: "string" }, identifier: { type: "string", default: "slug" }, preview: { type: "boolean" }, json: { type: "boolean" }, noninteractive: { type: "boolean" } } });
-  const id = positionals[0], context = values.context, prefix = values.prefix;
-  if (!["slug", "uuid"].includes(values.identifier)) throw new Error("identifier must be slug or uuid");
-  if (positionals.length !== 1 || !id || !/^[a-z][a-z0-9_-]*$/.test(id) || !["global", "personal", "organization"].includes(context ?? "") || !prefix || !/^\/[a-zA-Z0-9_-]+(?:\/[a-zA-Z0-9_-]+)*$/.test(prefix)) throw new Error("Usage: panel id --context global|personal|organization --prefix /path [--preview] [--json] [--noninteractive]");
+export type PanelOptions = { id: string; context: string; prefix: string; identifier?: string; label?: string };
+/** Validate a panel against the project registry in cwd and build the `<id>.config.ts` + registry changes. */
+export async function panelChanges({ id, context, prefix, identifier = "slug", label = id }: PanelOptions): Promise<Change[]> {
+  if (!["slug", "uuid"].includes(identifier)) throw new Error("identifier must be slug or uuid");
+  if (!/^[a-z][a-z0-9_-]*$/.test(id) || !["global", "personal", "organization"].includes(context) || !/^\/[a-zA-Z0-9_-]+(?:\/[a-zA-Z0-9_-]+)*$/.test(prefix) || !label.trim()) throw new Error("Usage: panel id --context global|personal|organization --prefix /path [--label text] [--identifier slug|uuid] [--preview] [--json] [--noninteractive]");
   const file = "apps/app/src/lib/panels/registry.ts", before = await readFile(file, "utf8");
   const marker = "export const registry: readonly PanelConfig[] = validatePanels([";
   if (before.split(marker).length !== 2) throw new Error("Panel registry shape changed; refusing unsafe registration");
@@ -67,11 +67,15 @@ export async function runPanel(argv: string[]) {
   if (!reservedBlock) throw new Error("Reserved route declaration missing");
   const reserved = [...reservedBlock[1].matchAll(/["']([^"']+)["']/g)].map(match => `/${match[1]}`);
   if (ids.includes(id) || [...prefixes, ...reserved].some(value => value === prefix || value.startsWith(`${prefix}/`) || prefix.startsWith(`${value}/`))) throw new Error("Panel id or prefix conflicts with existing routes");
-  const configFile = `apps/app/src/lib/panels/${id}.config.ts`;
   const symbol = `panel_${id.replace(/-/g, "$")}`;
-  const changes: Change[] = [
-    { file: configFile, before: null, after: `import type { PanelConfig } from "./registry";\nexport const ${symbol} = { id: ${JSON.stringify(id)}, label: ${JSON.stringify(id)}, prefix: ${JSON.stringify(prefix)}, context: ${JSON.stringify(context)}${context === "organization" ? `, tenantIdentifier: ${JSON.stringify(values.identifier)}` : ""} } satisfies PanelConfig;\n` },
+  return [
+    { file: `apps/app/src/lib/panels/${id}.config.ts`, before: null, after: `import type { PanelConfig } from "./registry";\nexport const ${symbol} = { id: ${JSON.stringify(id)}, label: ${JSON.stringify(label)}, prefix: ${JSON.stringify(prefix)}, context: ${JSON.stringify(context)}${context === "organization" ? `, tenantIdentifier: ${JSON.stringify(identifier)}` : ""} } satisfies PanelConfig;\n` },
     { file, before, after: `import { ${symbol} } from "./${id}.config";\n${before.replace(marker, `${marker}\n  ${symbol},`)}` },
   ];
+}
+export async function runPanel(argv: string[]) {
+  const { positionals, values } = parseArgs({ args: argv, allowPositionals: true, options: { context: { type: "string" }, prefix: { type: "string" }, label: { type: "string" }, identifier: { type: "string", default: "slug" }, preview: { type: "boolean" }, json: { type: "boolean" }, noninteractive: { type: "boolean" } } });
+  if (positionals.length !== 1) throw new Error("panel requires exactly one id");
+  const changes = await panelChanges({ id: positionals[0]!, context: values.context ?? "", prefix: values.prefix ?? "", identifier: values.identifier, label: values.label });
   await commitChanges(changes, !!values.preview); reportChanges(changes, values.json, values.preview);
 }

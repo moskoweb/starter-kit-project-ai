@@ -9,7 +9,7 @@ import { runPanel } from "./panel.js";
 import path from "node:path";
 
 export const commands = { create: createProject, model: runModel, resource: runResource, panel: runPanel };
-const help = `Usage: vibe <command>\n\nCommands:\n  create <dir> --profile <personal|organizations|hybrid> [--preview] [--json] [--noninteractive]\n  model <Name> --spec <JSON> [--preview] [--json] [--migration]\n  resource <Name> --model export --panel id --spec JSON-or-path [--with-model] [--preview] [--json] [--noninteractive]\n  panel <id> --context global|personal|organization --prefix /path [--preview] [--json] [--noninteractive]\n  doctor`;
+const help = `Usage: vibe <command>\n\nCommands:\n  create <dir> --profile <personal|organizations|hybrid> [--preview] [--json] [--noninteractive]\n    personal: registers panel app (/app); organizations: panel org (/org/<slug>); hybrid: both. Admin (/admin) always ships.\n  model <Name> --spec <JSON> [--preview] [--json] [--migration]\n  resource <Name> --model export --panel id --spec JSON-or-path [--with-model] [--migration] [--preview] [--json] [--noninteractive]\n  panel <id> --context global|personal|organization --prefix /path [--label text] [--identifier slug|uuid] [--preview] [--json] [--noninteractive]\n  doctor`;
 export async function main(argv = process.argv.slice(2)) {
   const [command, ...args] = argv;
   if (!command || command === "--help" || command === "-h") { console.log(help); return; }
