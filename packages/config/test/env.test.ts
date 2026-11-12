@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { validateRuntimeEnv, validateMigrationEnv } from "../src/env";
+import { validateRuntimeEnv, validateMigrationEnv, getGoogleEnv } from "../src/env";
 
 describe("validateRuntimeEnv", () => {
   it("accepts valid postgres URL and numeric port", () => {
@@ -80,5 +80,15 @@ describe("validateMigrationEnv", () => {
       () => validateMigrationEnv({}),
       /Migration environment validation failed/
     );
+  });
+});
+
+describe("getGoogleEnv", () => {
+  it("is disabled by default and ignores credentials", () => {
+    assert.deepEqual(getGoogleEnv({}), { enabled: false });
+  });
+  it("requires client id and secret only when enabled", () => {
+    assert.throws(() => getGoogleEnv({ GOOGLE_ENABLED: "true", GOOGLE_CLIENT_ID: "" }), /GOOGLE_CLIENT_ID.*GOOGLE_CLIENT_SECRET/);
+    assert.deepEqual(getGoogleEnv({ GOOGLE_ENABLED: "true", GOOGLE_CLIENT_ID: "id", GOOGLE_CLIENT_SECRET: "secret" }), { enabled: true, clientId: "id", clientSecret: "secret" });
   });
 });

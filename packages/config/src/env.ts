@@ -57,3 +57,26 @@ export function validateMigrationEnv(env: Record<string, string | undefined> = p
 }
 
 export { getIdentityEnv } from "./identity";
+
+const googleEnvSchema = z.object({
+  GOOGLE_ENABLED: z.enum(["true", "false"]).default("false").transform((value) => value === "true"),
+  GOOGLE_CLIENT_ID: z.preprocess((value) => value === "" ? undefined : value, z.string().min(1).optional()),
+  GOOGLE_CLIENT_SECRET: z.preprocess((value) => value === "" ? undefined : value, z.string().min(1).optional()),
+}).superRefine((env, ctx) => {
+  if (!env.GOOGLE_ENABLED) return;
+  for (const key of ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"] as const) {
+    if (!env[key]) ctx.addIssue({ code: "custom", path: [key], message: "Required when GOOGLE_ENABLED=true" });
+  }
+});
+
+export type GoogleEnv = { enabled: false } | { enabled: true; clientId: string; clientSecret: string };
+
+/** Optional Google sign-in. Credentials are required only when enabled; values never leave the server. */
+export function getGoogleEnv(env: Record<string, string | undefined> = process.env): GoogleEnv {
+  const result = googleEnvSchema.safeParse(env);
+  if (!result.success) {
+    throw new Error(`Google configuration invalid: ${Object.keys(result.error.flatten().fieldErrors).join(", ")}`);
+  }
+  const { GOOGLE_ENABLED, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } = result.data;
+  return GOOGLE_ENABLED ? { enabled: true, clientId: GOOGLE_CLIENT_ID!, clientSecret: GOOGLE_CLIENT_SECRET! } : { enabled: false };
+}

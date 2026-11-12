@@ -1,6 +1,6 @@
 # Email transacional
 
-`packages/email` separa renderização, preview e entrega. Não é serviço nem fila. Hooks existentes em `packages/auth/src/auth.ts` renderizam verificação de email, redefinição de senha, convite de organização e OTP antes de chamar o mesmo `sendEmail`. Políticas de autenticação, expiração dos tokens, single-tenant e 2FA continuam responsabilidade de `@vibe/auth`/Better Auth.
+`packages/email` separa renderização, preview e entrega. Não é serviço nem fila. Hooks existentes em `packages/auth/src/auth.ts` renderizam verificação de email, redefinição de senha, convite de organização, OTP, confirmação de troca de email e confirmação de exclusão de conta antes de chamar o mesmo `sendEmail`. Políticas de autenticação, expiração dos tokens, single-tenant e 2FA continuam responsabilidade de `@vibe/auth`/Better Auth.
 
 ## Renderizar
 
@@ -21,6 +21,8 @@ Contrato `AuthEmail`:
 - `{ type: "reset-password", url }`
 - `{ type: "invitation", url, organizationName }`
 - `{ type: "otp", code }` — seis dígitos, conforme OTP padrão usado pela autenticação.
+- `{ type: "change-email", url, newEmail }` — enviado ao email atual; `newEmail` validado (sem espaços/controles, até 254 caracteres).
+- `{ type: "delete-account", url }` — link Better Auth `/delete-user/callback`.
 
 `renderAuthEmail` retorna `Promise<{ subject, html, text }>`. Componentes React Email geram HTML; `toPlainText` gera alternativa textual do mesmo HTML. React escapa valores textuais; não usar interpolação HTML nem `dangerouslySetInnerHTML`. Nome de organização deve ser não vazio, até 255 caracteres, sem controles. URLs absolutas exigem HTTPS, não aceitam credenciais, controles ou espaços; HTTP é aceito apenas para `localhost`, `127.0.0.1` e `[::1]`, fora de `NODE_ENV=production`. Validação de URL não autoriza destinos: hooks devem fornecer URLs de ação criadas pela aplicação/autenticação, nunca destinos arbitrários enviados pelo usuário.
 

@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@vibe/auth/client";
@@ -7,7 +8,7 @@ import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@vi
 import { Input } from "@vibe/ui/components/input";
 import { AuthLayout } from "./auth-layout";
 type Mode = "login" | "signup" | "forgot" | "reset" | "verify";
-export function AuthForm({ mode, token, locale = "pt-BR" }: { mode: Mode; token?: string; locale?: "pt-BR" | "en" }) {
+export function AuthForm({ mode, token, locale = "pt-BR", google = false }: { mode: Mode; token?: string; locale?: "pt-BR" | "en"; google?: boolean }) {
   const en = locale === "en";
   const router = useRouter();
   const [email, setEmail] = useState(""); const [name, setName] = useState(""); const [password, setPassword] = useState("");
@@ -23,6 +24,7 @@ export function AuthForm({ mode, token, locale = "pt-BR" }: { mode: Mode; token?
     try {
       if (mode === "login") {
         const result = await authClient.signIn.email({ email, password, callbackURL: "/" });
+        if (result.error?.code === "BANNED_USER") return router.push("/banned");
         if (result.error) throw new Error();
         router.push(result.data && "twoFactorRedirect" in result.data && result.data.twoFactorRedirect ? "/two-factor" : "/");
       } else if (mode === "signup") {
@@ -46,20 +48,20 @@ export function AuthForm({ mode, token, locale = "pt-BR" }: { mode: Mode; token?
     finally { setPending(false); }
   }
   const descriptions: Record<Mode, string> = en ? { login: "Enter your email and password.", signup: "Create your account with email and password.", forgot: "We will email you a reset link.", reset: "Choose a new password.", verify: "After verification, sign in. You can request another email below." } : { login: "Informe seu email e senha.", signup: "Crie sua conta com email e senha.", forgot: "Enviaremos um link de redefinição por email.", reset: "Escolha uma nova senha.", verify: "Após confirmar email, entre. Você pode reenviar email abaixo." };
-  return <AuthLayout title={titles[mode]} description={descriptions[mode]}>
+  return <AuthLayout title={titles[mode]} description={descriptions[mode]} google={google && (mode === "login" || mode === "signup")} locale={locale}>
     <form onSubmit={submit}>
       <FieldGroup>
         {mode === "signup" && <Field><FieldLabel htmlFor="auth-name">{en ? "Name" : "Nome"}</FieldLabel><Input id="auth-name" required autoComplete="name" value={name} onChange={event => setName(event.target.value)} /></Field>}
         {mode !== "reset" && <Field><FieldLabel htmlFor="auth-email">Email</FieldLabel><Input id="auth-email" required type="email" autoComplete="email" placeholder="m@example.com" value={email} onChange={event => setEmail(event.target.value)} /></Field>}
         {["login", "signup", "reset"].includes(mode) && <Field>
-          <div className="flex items-center"><FieldLabel htmlFor="auth-password">{en ? "Password" : "Senha"}</FieldLabel>{mode === "login" && <a href="/forgot-password" className="ml-auto text-sm underline-offset-4 hover:underline">{titles.forgot}</a>}</div>
+          <div className="flex items-center"><FieldLabel htmlFor="auth-password">{en ? "Password" : "Senha"}</FieldLabel>{mode === "login" && <Link href="/forgot-password" className="ml-auto text-sm underline-offset-4 hover:underline">{titles.forgot}</Link>}</div>
           <Input id="auth-password" required type="password" minLength={8} autoComplete={mode === "login" ? "current-password" : "new-password"} value={password} onChange={event => setPassword(event.target.value)} />
         </Field>}
         {error && <FieldError>{error}</FieldError>}
         {notice && <p role="status" className="text-sm text-muted-foreground">{notice}</p>}
         <Field>
           <Button type="submit" disabled={pending}>{pending ? en ? "Please wait…" : "Aguarde…" : titles[mode]}</Button>
-          <FieldDescription className="text-center">{mode === "login" ? <><a href="/signup">{titles.signup}</a> · <a href="/verify-email">{titles.verify}</a></> : <a href="/login">{titles.login}</a>}</FieldDescription>
+          <FieldDescription className="text-center">{mode === "login" ? <><Link href="/signup">{titles.signup}</Link> · <Link href="/verify-email">{titles.verify}</Link></> : <Link href="/login">{titles.login}</Link>}</FieldDescription>
         </Field>
       </FieldGroup>
     </form>
