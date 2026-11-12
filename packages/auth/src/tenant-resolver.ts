@@ -1,7 +1,7 @@
 import "server-only";
 import { and, eq } from "drizzle-orm";
 import { getDb, withTenantTransaction, type TenantTransaction } from "@vibe/db";
-import { member, organization } from "@vibe/db/schema";
+import { member, organization, user } from "@vibe/db/schema";
 import { getIdentityEnv } from "@vibe/config/env";
 import { getAuth } from "./auth";
 import { canAccessScope, type ScopeAction } from "./permissions";
@@ -9,6 +9,12 @@ import { canAccessScope, type ScopeAction } from "./permissions";
 export async function requireSession(headers: Headers) {
   const session = await getAuth().api.getSession({ headers, query: { disableCookieCache: true } });
   if (!session || !session.user.emailVerified) throw new Error("UNAUTHORIZED");
+  // Impersonation is only as valid as the impersonator: banned or demoted admins lose it immediately.
+  const impersonatedBy = "impersonatedBy" in session.session ? session.session.impersonatedBy : null;
+  if (typeof impersonatedBy === "string" && impersonatedBy) {
+    const [admin] = await getDb().select({ role: user.role, banned: user.banned }).from(user).where(eq(user.id, impersonatedBy));
+    if (!admin || admin.role !== "admin" || admin.banned) throw new Error("UNAUTHORIZED");
+  }
   return session;
 }
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;

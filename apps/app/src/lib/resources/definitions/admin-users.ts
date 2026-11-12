@@ -2,7 +2,7 @@ import "server-only";
 import { and, asc, count, desc, eq, ilike, ne, or, sql } from "drizzle-orm";
 import { headers } from "next/headers";
 import { APIError } from "better-auth/api";
-import { getDb, member, user } from "@vibe/db";
+import { getDb, member, session, user } from "@vibe/db";
 import { getAuth, requireSession } from "@vibe/auth";
 import type { ActionResult, ResourceRecord } from "@vibe/ui/lib/schema";
 import { defineResource, type ResourceScope } from "../define";
@@ -37,11 +37,15 @@ export function adminError(error: unknown): ActionResult {
 }
 
 /** Run a Better Auth admin endpoint per target user; refuses to act on the current admin. */
-async function forEachUser(scope: ResourceScope, ids: string[], run: (headers: Headers, userId: string) => Promise<unknown>): Promise<ActionResult> {
+async function forEachUser(scope: ResourceScope, ids: string[], run: (headers: Headers, userId: string) => Promise<unknown>, revokeImpersonation = false): Promise<ActionResult> {
   try {
-    const { session, headers: currentHeaders } = await requireAdmin();
-    if (!scope.isAdmin || ids.includes(session.user.id) || ids.includes(scope.userId)) return { ok: false, error: "CANNOT_ACT_ON_SELF" };
-    for (const id of ids) await run(currentHeaders, id);
+    const { session: current, headers: currentHeaders } = await requireAdmin();
+    if (!scope.isAdmin || ids.includes(current.user.id) || ids.includes(scope.userId)) return { ok: false, error: "CANNOT_ACT_ON_SELF" };
+    for (const id of ids) {
+      await run(currentHeaders, id);
+      // Better Auth revokes sessions by userId only; also end impersonations this user started.
+      if (revokeImpersonation) await getDb().delete(session).where(eq(session.impersonatedBy, id));
+    }
     return { ok: true };
   } catch (error) { return adminError(error); }
 }
@@ -170,7 +174,7 @@ export const adminUserResource = defineResource({
       destructive: true,
       confirm: { title: { "pt-BR": "Remover acesso de admin?", en: "Remove admin access?" }, description: { "pt-BR": "O usuário perde acesso ao painel do sistema.", en: "The user loses access to the system panel." } },
       visible: (row, scope) => row.id !== scope.userId && row.role === "admin",
-      run: (scope, ids) => forEachUser(scope, ids, (h, userId) => getAuth().api.setRole({ headers: h, body: { userId, role: "user" } })),
+      run: (scope, ids) => forEachUser(scope, ids, (h, userId) => getAuth().api.setRole({ headers: h, body: { userId, role: "user" } }), true),
     },
     {
       name: "revokeSessions",
@@ -180,7 +184,7 @@ export const adminUserResource = defineResource({
       bulk: true,
       confirm: { title: { "pt-BR": "Encerrar todas as sessões?", en: "Revoke every session?" }, description: { "pt-BR": "O usuário precisará entrar novamente em todos os dispositivos.", en: "The user must sign in again on every device." } },
       visible: (row, scope) => row.id !== scope.userId,
-      run: (scope, ids) => forEachUser(scope, ids, (h, userId) => getAuth().api.revokeUserSessions({ headers: h, body: { userId } })),
+      run: (scope, ids) => forEachUser(scope, ids, (h, userId) => getAuth().api.revokeUserSessions({ headers: h, body: { userId } }), true),
     },
     {
       name: "ban",
@@ -190,7 +194,7 @@ export const adminUserResource = defineResource({
       bulk: true,
       confirm: { title: { "pt-BR": "Banir usuário?", en: "Ban user?" }, description: { "pt-BR": "As sessões são encerradas e o login fica bloqueado até o desbanimento.", en: "Sessions are revoked and sign-in is blocked until unbanned." } },
       visible: (row, scope) => row.id !== scope.userId && !row.banned,
-      run: (scope, ids) => forEachUser(scope, ids, (h, userId) => getAuth().api.banUser({ headers: h, body: { userId, banReason: "Banned by administrator" } })),
+      run: (scope, ids) => forEachUser(scope, ids, (h, userId) => getAuth().api.banUser({ headers: h, body: { userId, banReason: "Banned by administrator" } }), true),
     },
     {
       name: "unban",
