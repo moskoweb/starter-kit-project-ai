@@ -1,5 +1,5 @@
 import "server-only";
-import { asc, count, sql } from "drizzle-orm";
+import { asc, count, gte, sql } from "drizzle-orm";
 import { headers } from "next/headers";
 import { getDb, organization, projects, user } from "@vibe/db";
 import { getAuth, requireSession, resolveTenant, withAuthorizedProjects } from "@vibe/auth";
@@ -40,7 +40,7 @@ export async function loadProjectMetrics(identifier: string | null) {
     const rows = await tx
       .select({ month: sql<string>`to_char(date_trunc('month', ${projects.createdAt} at time zone 'UTC'), 'YYYY-MM')`, total: count() })
       .from(projects)
-      .where(sql`${projects.createdAt} >= ${start}`)
+      .where(gte(projects.createdAt, start))
       .groupBy(sql`date_trunc('month', ${projects.createdAt} at time zone 'UTC')`)
       .orderBy(asc(sql`date_trunc('month', ${projects.createdAt} at time zone 'UTC')`));
     const totals = new Map(rows.map(({ month, total }) => [month, total]));
