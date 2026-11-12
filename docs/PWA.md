@@ -6,6 +6,6 @@ Service worker `/sw.js` é compartilhado com Web Push. Manifest retorna404 desab
 
 Política offline: nenhuma resposta da aplicação é armazenada em CacheStorage. Navegação tenta rede e, sem conexão, mostra HTML público genérico sem dados pessoais. Nenhum HTML autenticado/API/IA/tenant é cacheado. Não há edição offline ou sincronização. Ícones e assets seguem cache HTTP normal; não cache privado pelo worker.
 
-Instalação depende navegador. Botão só aparece com beforeinstallprompt; iOS usa Adicionar à Tela de Início e Web Push exige aplicação instalada em versões compatíveis. HTTPS é obrigatório fora localhost. Atualização não recarrega formulário automaticamente: usuário ativa worker e recarrega quando seguro.
+Instalação depende do navegador. O aviso flutuante só aparece quando há ação: `beforeinstallprompt` disponível (Chrome/Edge/Android) ou nova versão do worker esperando. Ele pode ser dispensado e a escolha fica salva em `localStorage` (`pwa-install-dismissed`). No iOS, use "Adicionar à Tela de Início"; Web Push exige app instalado em versões compatíveis. HTTPS é obrigatório fora de localhost. A atualização não recarrega a página: o usuário ativa o worker e recarrega quando for seguro.
 
 PUSH_ENABLED pode registrar worker sem habilitar instalação PWA; suporte real depende navegador. Testar em produção HTTPS com navegador alvo, sem prometer suporte universal. Desligar feature não apaga dados de outros apps no mesmo origin.
