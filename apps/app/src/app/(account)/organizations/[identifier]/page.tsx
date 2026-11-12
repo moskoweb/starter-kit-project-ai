@@ -21,7 +21,7 @@ import { DeleteOrganization, LeaveOrganization, OrganizationGeneralForm, Transfe
 import { hasRole, organizationRoles, roleLabels, roleText } from "@/components/organization/shared";
 import { pageSession } from "@/lib/identity-session";
 import { currentLocale } from "@/lib/panels/chrome";
-import { buildPanelPath } from "@/lib/panels/routing";
+import { organizationPanelPath } from "@/lib/panels/routing";
 
 const text = {
   "pt-BR": {
@@ -74,7 +74,7 @@ export default async function OrganizationPage({ params }: { params: Promise<{ i
 
   return <>
     <PageHeader title={tenant.name} description={`${copy.yourRole}: ${roleText(tenant.role, locale)}`} breadcrumbs={[{ label: copy.breadcrumb, href: "/organizations" }, { label: tenant.name }]}
-      actions={<Link href={buildPanelPath("organization", { tenant: tenant.slug })} className={buttonVariants()}>{copy.openPanel}<ArrowRight data-icon="inline-end" /></Link>} />
+      actions={organizationPanelPath(tenant) && <Link href={organizationPanelPath(tenant)!} className={buttonVariants()}>{copy.openPanel}<ArrowRight data-icon="inline-end" /></Link>} />
     <Tabs defaultValue="general">
       <TabsList>
         <TabsTrigger value="general">{copy.tabs.general}</TabsTrigger>

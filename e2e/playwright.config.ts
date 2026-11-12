@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import { authFile } from "./helpers";
 
 const port = process.env.E2E_PORT ?? "3000";
 const baseURL = process.env.E2E_BASE_URL ?? `http://127.0.0.1:${port}`;
@@ -14,8 +15,9 @@ export default defineConfig({
   reporter: process.env.CI ? [["github"], ["html", { open: "never", outputFolder: "playwright-report" }]] : "list",
   use: { baseURL, trace: "retain-on-failure", locale: "pt-BR" },
   projects: [
-    { name: "desktop", use: { ...devices["Desktop Chrome"] }, grepInvert: /@mobile/ },
-    { name: "mobile", use: { ...devices["Pixel 7"] }, grep: /@mobile/ },
+    { name: "setup", testMatch: /auth\.setup\.ts/ },
+    { name: "desktop", use: { ...devices["Desktop Chrome"], storageState: authFile }, dependencies: ["setup"], grepInvert: /@mobile/ },
+    { name: "mobile", use: { ...devices["Pixel 7"], storageState: authFile }, dependencies: ["setup"], grep: /@mobile/ },
   ],
   webServer: process.env.E2E_BASE_URL ? undefined : {
     // Production server from `pnpm --filter app build` (output: standalone).

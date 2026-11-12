@@ -2,22 +2,24 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { headers } from "next/headers";
 import { notFound, redirect, forbidden } from "next/navigation";
-import { Ban, Building2, FolderKanban, ListTodo, TrendingUp, UserPlus, Users } from "lucide-react";
+import { Ban, Building2, LayoutDashboard, UserPlus, Users } from "lucide-react";
 import { getIdentityEnv } from "@vibe/config/env";
 import { resolveTenant } from "@vibe/auth";
 import { loadAdminUserStats } from "../../lib/resources/definitions/admin-users";
 import { PageHeader } from "@vibe/ui/components/resource/page-header";
-import { ChartWidget } from "@vibe/ui/components/widgets/chart-widget";
+import { Avatar, AvatarFallback } from "@vibe/ui/components/avatar";
+import { Card, CardContent } from "@vibe/ui/components/card";
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@vibe/ui/components/empty";
 import { StatsOverview } from "@vibe/ui/components/widgets/stats-overview";
+import { SignOut } from "../../components/identity/sign-out";
 import { PanelShell } from "../../components/panels/shell";
 import { PushSettings } from "../../components/push-settings";
 import { WebhookDeliveries } from "../../components/webhook-deliveries";
 import { AiAssistant } from "../../components/ai-assistant";
-import { Attachments } from "../../components/resources/attachments";
 import { buildPanelPath, resolvePanelPath } from "../../lib/panels/routing";
 import { getPanelResource } from "../../lib/panels/resources";
 import { currentLocale, panelChrome } from "../../lib/panels/chrome";
-import { loadGlobalMetrics, loadProjectMetrics, loadWorkspaceStats } from "../../lib/metrics/loaders";
+import { loadGlobalMetrics } from "../../lib/metrics/loaders";
 import { pageSession } from "../../lib/identity-session";
 import { messages } from "../../lib/i18n";
 import { t } from "../../lib/resources/define";
@@ -66,13 +68,13 @@ export default async function PanelPage({ params, searchParams }: Props) {
   type Loaded =
     | { kind: "node"; node: ReactNode }
     | { kind: "global"; metrics: Awaited<ReturnType<typeof loadGlobalMetrics>>; admin: Awaited<ReturnType<typeof loadAdminUserStats>> }
-    | { kind: "workspace"; stats: Awaited<ReturnType<typeof loadWorkspaceStats>>; monthly: Awaited<ReturnType<typeof loadProjectMetrics>> };
+    | { kind: "workspace" };
   let loaded: Loaded;
   try {
     if (entry?.kind === "resource") loaded = { kind: "node", node: await renderResource(entry.definition, { panel, panelTitle, basePath, route, query, scope, locale }) };
     else if (entry?.kind === "custom") loaded = { kind: "node", node: await entry.render({ panel, identifier, basePath, route, query, role: tenant?.role ?? "owner", locale }) };
     else if (panel.context === "global") { const [metrics, admin] = await Promise.all([loadGlobalMetrics(), loadAdminUserStats()]); loaded = { kind: "global", metrics, admin }; }
-    else { const [stats, monthly] = await Promise.all([loadWorkspaceStats(identifier), loadProjectMetrics(identifier)]); loaded = { kind: "workspace", stats, monthly }; }
+    else loaded = { kind: "workspace" };
   } catch (error) { return authError(error); }
 
   const format = new Intl.NumberFormat(locale);
@@ -91,22 +93,27 @@ export default async function PanelPage({ params, searchParams }: Props) {
       ]} />
     </>;
   } else {
-    const { stats, monthly } = loaded;
+    const initials = session.user.name.split(/\s+/).filter(Boolean).slice(0, 2).map(part => part[0]!.toUpperCase()).join("") || "?";
     content = <>
       <PageHeader title={`${copy.welcome}, ${session.user.name.split(" ")[0]}`} description={copy.dashboardDescription} />
-      <StatsOverview stats={[
-        { label: copy.totalProjects, value: format.format(stats.projectCount), icon: <FolderKanban className="size-4" /> },
-        { label: copy.totalTasks, value: format.format(stats.taskCount), icon: <ListTodo className="size-4" /> },
-        { label: `${copy.projects} · ${copy.thisMonth}`, value: format.format(stats.projectsThisMonth), icon: <TrendingUp className="size-4" /> },
-      ]} />
-      <ChartWidget title={copy.createdProjects} description={copy.projectsByMonth} data={monthly.some(point => point.total > 0) ? monthly.map(({ month, total }) => ({ label: month, value: total })) : []} seriesLabel={copy.projectsSeries} emptyMessage={copy.noProjects} />
+      <Card>
+        <CardContent className="flex flex-wrap items-center gap-4">
+          <Avatar className="size-10"><AvatarFallback>{initials}</AvatarFallback></Avatar>
+          <div className="grid min-w-0 flex-1 leading-tight"><span className="truncate font-medium">{session.user.name}</span><span className="truncate text-sm text-muted-foreground">{session.user.email}</span></div>
+          <SignOut locale={locale} />
+        </CardContent>
+      </Card>
+      <Empty className="border">
+        <EmptyHeader>
+          <EmptyMedia variant="icon"><LayoutDashboard /></EmptyMedia>
+          <EmptyTitle>{copy.emptyDashboard}</EmptyTitle>
+          <EmptyDescription>{copy.emptyDashboardDescription}</EmptyDescription>
+        </EmptyHeader>
+        {process.env.NODE_ENV !== "production" && <EmptyContent><p className="text-sm text-muted-foreground">{copy.emptyDashboardHint} <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">pnpm exec tsx packages/cli/src/index.ts resource</code></p></EmptyContent>}
+      </Empty>
       {process.env.WEBHOOKS_OUTBOUND_ENABLED === "true" && <WebhookDeliveries tenantIdentifier={identifier} locale={locale} />}
       {process.env.PUSH_ENABLED === "true" && <PushSettings key={identifier ?? "personal"} enabled tenantIdentifier={identifier} locale={locale} />}
     </>;
-  }
-
-  if (entry?.kind === "resource" && entry.definition.slug === "projects" && route.length === 2 && route[1] !== "new" && process.env.STORAGE_ENABLED === "true") {
-    content = <>{content}<Attachments key={`${identifier ?? "personal"}:${route[1]}`} projectId={route[1]!} tenantIdentifier={identifier} locale={locale} /></>;
   }
 
   const chrome = await panelChrome({ panel, basePath, tenant, user: { name: session.user.name, email: session.user.email }, locale });

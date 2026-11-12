@@ -66,3 +66,9 @@ export function buildPanelPath(
   }
   return `/${parts.map(encodeURIComponent).join("/")}`;
 }
+
+/** Organization panel URL for an organization, or undefined when no organization panel is registered. */
+export function organizationPanelPath(org: { id: string; slug: string }, panels: readonly PanelConfig[] = registry): string | undefined {
+  const panel = panels.find(({ context }) => context === "organization");
+  return panel && buildPanelPath(panel.id, { tenant: panel.tenantIdentifier === "uuid" ? org.id : org.slug }, panels);
+}

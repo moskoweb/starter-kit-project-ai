@@ -22,7 +22,7 @@ async function signedInLanding() {
   try {
     const currentHeaders = await headers();
     const session = await getAuth().api.getSession({ headers: currentHeaders });
-    return session?.user.emailVerified ? await landingPath(currentHeaders) : null;
+    return session?.user.emailVerified ? await landingPath(currentHeaders, session.user.role) : null;
   } catch {
     return null; // DB/auth unavailable: fall back to status page diagnostics.
   }

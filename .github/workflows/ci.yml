@@ -130,11 +130,18 @@ jobs:
           GRANT USAGE ON SCHEMA public TO app_runtime;
           ALTER DEFAULT PRIVILEGES FOR ROLE app_owner IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO app_runtime;
           SQL
+      - name: Generate personal panel and Note resource (exercises CLI output end to end)
+        run: |
+          pnpm exec tsx packages/cli/src/index.ts panel app --context personal --prefix /app --noninteractive
+          pnpm exec tsx packages/cli/src/index.ts resource Note --model note --panel app --with-model --migration --noninteractive \
+            --spec '{"scope":"personal","fields":{"title":{"type":"string","required":true},"body":{"type":"text","optional":true}},"permissions":{"read":["personal"],"create":["personal"],"update":["personal"],"delete":["personal"]}}'
       - run: pnpm db:migrate
       - run: pnpm db:seed
       - run: pnpm --filter app build
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
+        env:
+          E2E_GENERATED_RESOURCE: "1"
       - if: failure()
         uses: actions/upload-artifact@v4
         with:

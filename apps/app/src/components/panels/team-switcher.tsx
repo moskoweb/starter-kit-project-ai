@@ -7,13 +7,17 @@ import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@vi
 
 export type Workspace = { id: string; name: string; href: string };
 
-/** Tenant switcher (Filament tenancy menu). Adapted from shadcn/ui sidebar-07 (MIT). */
-export function TeamSwitcher({ title, subtitle, currentId, personal, organizations, labels }: { title: string; subtitle: string; currentId: string | null; personal?: Workspace; organizations: readonly Workspace[]; labels: { workspace: string; organizations: string; manage: string } }) {
+/** Tenant switcher (Filament tenancy menu); plain header when no workspace panel is registered. Adapted from shadcn/ui sidebar-07 (MIT). */
+export function TeamSwitcher({ title, subtitle, currentId, switchable, personal, organizations, labels }: { title: string; subtitle: string; currentId: string | null; switchable: boolean; personal?: Workspace; organizations: readonly Workspace[]; labels: { workspace: string; organizations: string; manage: string } }) {
   const { isMobile } = useSidebar();
+  const identity = <>
+    <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">{currentId ? <Building2 className="size-4" /> : <UserRound className="size-4" />}</div>
+    <div className="grid flex-1 text-left text-sm leading-tight"><span className="truncate font-medium">{title}</span><span className="truncate text-xs text-muted-foreground">{subtitle}</span></div>
+  </>;
+  if (!switchable) return <SidebarMenu><SidebarMenuItem><SidebarMenuButton size="lg" render={<Link href="/account" />}>{identity}</SidebarMenuButton></SidebarMenuItem></SidebarMenu>;
   return <SidebarMenu><SidebarMenuItem><DropdownMenu>
     <DropdownMenuTrigger render={<SidebarMenuButton size="lg" className="data-popup-open:bg-sidebar-accent data-popup-open:text-sidebar-accent-foreground" />}>
-      <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">{currentId ? <Building2 className="size-4" /> : <UserRound className="size-4" />}</div>
-      <div className="grid flex-1 text-left text-sm leading-tight"><span className="truncate font-medium">{title}</span><span className="truncate text-xs text-muted-foreground">{subtitle}</span></div>
+      {identity}
       <ChevronsUpDown className="ml-auto" />
     </DropdownMenuTrigger>
     <DropdownMenuContent className="min-w-56" align="start" side={isMobile ? "bottom" : "right"} sideOffset={4}>

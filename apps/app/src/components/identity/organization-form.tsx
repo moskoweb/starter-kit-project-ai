@@ -9,7 +9,7 @@ import { FieldGroup, FieldSet } from "@vibe/ui/components/field";
 import { ConfirmAction } from "@vibe/ui/components/resource/confirm-action";
 import { Spinner } from "@vibe/ui/components/spinner";
 import type { Locale } from "@/lib/i18n";
-import { buildPanelPath } from "@/lib/panels/routing";
+import { organizationPanelPath } from "@/lib/panels/routing";
 import { organizationRoles, validOrganizationSlug, type OrganizationRole } from "@/components/organization/shared";
 
 type Action = "create" | "invite" | "cancel" | "resend" | "role" | "remove" | "select" | "accept" | "reject";
@@ -35,7 +35,7 @@ const text = {
   },
 } satisfies Record<Locale, unknown>;
 
-/** Better Auth organization operations; the server enforces membership and role. `create` opens the new organization panel. */
+/** Better Auth organization operations; the server enforces membership and role. `create` opens the new organization panel when registered, else its settings page. */
 export function OrganizationForm({ action, organizationId, targetId, email, role, children, label, size, locale = "pt-BR" }: { action: Action; organizationId?: string; targetId?: string; email?: string; role?: string; children?: ReactNode; label: string; size?: "sm" | "default"; locale?: Locale }) {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
@@ -61,7 +61,8 @@ export function OrganizationForm({ action, organizationId, targetId, email, role
       if (result.error) throw new Error("REQUEST_FAILED");
       form.reset();
       toast.success(copy.done);
-      if (action === "create") router.push(buildPanelPath("organization", { tenant: slug }));
+      const created = action === "create" && result.data && typeof result.data === "object" && "id" in result.data && typeof result.data.id === "string" ? result.data.id : null;
+      if (action === "create") router.push((created && organizationPanelPath({ id: created, slug })) ?? `/organizations/${encodeURIComponent(slug)}`);
       else if (action === "accept" || action === "reject") router.push("/organizations");
       router.refresh();
     } catch (error) {

@@ -8,12 +8,18 @@ import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetT
 import { Skeleton } from "@vibe/ui/components/skeleton";
 import type { Locale } from "@/lib/i18n";
 
-type Item = { id: string; payload: { type: "project.created"; projectId: string }; createdAt: string; readAt: string | null };
+type Item = { id: string; payload: { type: string; entityId: string }; createdAt: string; readAt: string | null };
 type Data = { items: Item[]; unreadCount: number; page: number; pageSize: number };
 const text = {
-  "pt-BR": { title: "Notificações", empty: "Nenhuma notificação.", error: "Não foi possível carregar notificações.", read: "Marcar como lida", all: "Marcar todas como lidas", project: "Novo projeto criado", loading: "Carregando…", unread: "não lidas", previous: "Anterior", next: "Próxima", page: "Página" },
-  en: { title: "Notifications", empty: "No notifications.", error: "Could not load notifications.", read: "Mark as read", all: "Mark all as read", project: "New project created", loading: "Loading…", unread: "unread", previous: "Previous", next: "Next", page: "Page" },
+  "pt-BR": { title: "Notificações", empty: "Nenhuma notificação.", error: "Não foi possível carregar notificações.", read: "Marcar como lida", all: "Marcar todas como lidas", created: "Criado", loading: "Carregando…", unread: "não lidas", previous: "Anterior", next: "Próxima", page: "Página" },
+  en: { title: "Notifications", empty: "No notifications.", error: "Could not load notifications.", read: "Mark as read", all: "Mark all as read", created: "Created", loading: "Loading…", unread: "unread", previous: "Previous", next: "Next", page: "Page" },
 } as const;
+/** Domain-neutral label for `<entity>.<action>` events, e.g. `note.created` → "Note · Created". */
+function eventLabel(type: string, created: string) {
+  const [entity = type, action] = type.split(".");
+  const name = entity.replace(/_/g, " ").replace(/^./, letter => letter.toUpperCase());
+  return action === "created" ? `${name} · ${created}` : `${name} · ${action ?? ""}`.replace(/ · $/, "");
+}
 export function Notifications({ tenantIdentifier, locale }: { tenantIdentifier: string | null; locale: Locale }) {
   const [data, setData] = useState<Data | null>(null);
   const [error, setError] = useState(false);
@@ -60,7 +66,7 @@ export function Notifications({ tenantIdentifier, locale }: { tenantIdentifier: 
         {data?.items.length === 0 && <Empty className="py-10"><EmptyHeader><EmptyMedia variant="icon"><BellOff /></EmptyMedia><EmptyTitle>{t.empty}</EmptyTitle></EmptyHeader></Empty>}
         {data?.items.map(item => <div key={item.id} className="flex items-start gap-3 rounded-lg border p-3">
           <span aria-hidden className={item.readAt ? "mt-1.5 size-2 shrink-0 rounded-full bg-transparent" : "mt-1.5 size-2 shrink-0 rounded-full bg-primary"} />
-          <div className="flex min-w-0 flex-1 flex-col gap-0.5"><p className={item.readAt ? "text-sm" : "text-sm font-medium"}>{t.project}</p><time dateTime={item.createdAt} className="text-xs text-muted-foreground">{new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(item.createdAt))}</time></div>
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5"><p className={item.readAt ? "text-sm" : "text-sm font-medium"}>{eventLabel(item.payload.type, t.created)}</p><time dateTime={item.createdAt} className="text-xs text-muted-foreground">{new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(item.createdAt))}</time></div>
           {!item.readAt && <Button type="button" variant="ghost" size="icon-sm" aria-label={t.read} disabled={pending} onClick={() => void mark(item.id)}><Check /></Button>}
         </div>)}
       </div>

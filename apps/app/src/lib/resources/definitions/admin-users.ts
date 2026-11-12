@@ -152,7 +152,7 @@ export const adminUserResource = defineResource({
       run: async (scope, ids) => {
         if (ids.length !== 1) return { ok: false, error: "INVALID_INPUT" };
         const done = await forEachUser(scope, ids, (h, userId) => getAuth().api.impersonateUser({ headers: h, body: { userId } }));
-        return done.ok ? { ok: true, redirectTo: "/app" } : done;
+        return done.ok ? { ok: true, redirectTo: "/" } : done; // `/` redirects to the impersonated user's landing.
       },
     },
     {

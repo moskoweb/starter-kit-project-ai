@@ -14,6 +14,8 @@ export type PanelShellProps = {
   subtitle: string;
   groups: NavGroup[];
   currentWorkspaceId: string | null;
+  /** False when no personal/organization panel is registered: header shows title only, no workspace menu. */
+  switchable: boolean;
   personal?: Workspace;
   organizations: readonly Workspace[];
   user: { name: string; email?: string };
@@ -25,11 +27,11 @@ export type PanelShellProps = {
 };
 
 /** Panel layout: collapsible sidebar with tenant switcher, grouped navigation and user menu; topbar with search and notifications. */
-export function PanelShell({ title, subtitle, groups, currentWorkspaceId, personal, organizations, user, children, locale, initialCollapsed = false, showNotifications = false, tenantIdentifier = null }: PanelShellProps) {
+export function PanelShell({ title, subtitle, groups, currentWorkspaceId, switchable, personal, organizations, user, children, locale, initialCollapsed = false, showNotifications = false, tenantIdentifier = null }: PanelShellProps) {
   const copy = messages[locale];
   return <SidebarProvider defaultOpen={!initialCollapsed}>
     <Sidebar collapsible="icon" variant="inset">
-      <SidebarHeader><TeamSwitcher title={title} subtitle={subtitle} currentId={currentWorkspaceId} personal={personal} organizations={organizations} labels={{ workspace: copy.workspace, organizations: copy.organizations, manage: copy.manageOrganizations }} /></SidebarHeader>
+      <SidebarHeader><TeamSwitcher title={title} subtitle={subtitle} currentId={currentWorkspaceId} switchable={switchable} personal={personal} organizations={organizations} labels={{ workspace: copy.workspace, organizations: copy.organizations, manage: copy.manageOrganizations }} /></SidebarHeader>
       <SidebarContent><NavMain groups={groups} /></SidebarContent>
       <SidebarFooter><NavUser user={user} locale={locale} copy={copy} /></SidebarFooter>
       <SidebarRail />

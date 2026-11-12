@@ -1,10 +1,6 @@
 import assert from "node:assert/strict";
-import { taskUpdateSchema } from "./validation";
-import { parseListState } from "./list-state";
+import { likePattern, parseListState } from "./list-state";
 import type { ResourceDefinition } from "./define";
-
-assert.deepEqual(taskUpdateSchema.parse({ title: "Updated task" }), { title: "Updated task" });
-assert.equal(taskUpdateSchema.safeParse({ title: "Updated task", projectId: "11111111-1111-4111-8111-111111111111" }).success, false);
 
 const resource = { table: { columns: [], sortable: ["name"], defaultSort: { key: "createdAt", direction: "desc" } } } as unknown as ResourceDefinition;
 const filters = [{ key: "status", label: "Status", type: "select" as const, options: [{ value: "open", label: "Open" }] }];
@@ -16,3 +12,4 @@ assert.deepEqual(state.filters, {}, "filter values outside options are dropped")
 assert.ok(state.search.length <= 200);
 const valid = parseListState(resource, { page: "3", perPage: "25", sort: "name", direction: "asc", status: "open" }, filters);
 assert.deepEqual([valid.page, valid.pageSize, valid.sort, valid.direction, valid.filters.status], [3, 25, "name", "asc", "open"]);
+assert.equal(likePattern("50%_a\\b"), "%50\\%\\_a\\\\b%");

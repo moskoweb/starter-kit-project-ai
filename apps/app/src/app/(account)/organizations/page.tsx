@@ -12,7 +12,7 @@ import { PageHeader } from "@vibe/ui/components/resource/page-header";
 import { CreateOrganizationForm } from "@/components/organization/create-organization";
 import { pageSession } from "@/lib/identity-session";
 import { currentLocale } from "@/lib/panels/chrome";
-import { buildPanelPath } from "@/lib/panels/routing";
+import { organizationPanelPath } from "@/lib/panels/routing";
 
 const text = {
   "pt-BR": {
@@ -48,7 +48,7 @@ export default async function OrganizationsPage() {
           <ItemContent><ItemTitle><Link href={`/organizations/${encodeURIComponent(org.slug)}`} className="hover:underline">{org.name}</Link></ItemTitle><ItemDescription>{org.slug}</ItemDescription></ItemContent>
           <ItemActions>
             <Link href={`/organizations/${encodeURIComponent(org.slug)}`} className={buttonVariants({ variant: "outline", size: "sm" })}>{copy.manage}</Link>
-            <Link href={buildPanelPath("organization", { tenant: org.slug })} className={buttonVariants({ size: "sm" })}>{copy.open}<ArrowRight data-icon="inline-end" /></Link>
+            {organizationPanelPath(org) && <Link href={organizationPanelPath(org)!} className={buttonVariants({ size: "sm" })}>{copy.open}<ArrowRight data-icon="inline-end" /></Link>}
           </ItemActions>
         </Item>)}</ItemGroup> : <Empty><EmptyHeader><EmptyMedia variant="icon"><Building2 /></EmptyMedia><EmptyTitle>{copy.empty}</EmptyTitle><EmptyDescription>{single ? copy.emptySingle : copy.emptyMulti}</EmptyDescription></EmptyHeader></Empty>}
       </CardContent>

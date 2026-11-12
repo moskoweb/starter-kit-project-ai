@@ -2,8 +2,6 @@ import type { ReactNode } from "react";
 import type { PanelConfig } from "./registry";
 import type { Locale } from "../i18n";
 import type { ResourceDefinition } from "../resources/define";
-import { projectResource } from "../resources/definitions/projects";
-import { taskResource } from "../resources/definitions/tasks";
 import { adminUserResource } from "../resources/definitions/admin-users";
 import { adminOrganizationResource } from "../resources/definitions/admin-organizations";
 
@@ -26,8 +24,6 @@ export type PanelResource = { panelIds: readonly string[] } & (
 // CLI inserts explicit domain imports and registrations; no runtime directory discovery.
 // CLI_RESOURCE_IMPORTS
 export const resourceRegistry: readonly PanelResource[] = [
-  { kind: "resource", definition: projectResource, panelIds: ["personal", "organization"] },
-  { kind: "resource", definition: taskResource, panelIds: ["personal", "organization"] },
   { kind: "resource", definition: adminUserResource, panelIds: ["admin"] },
   { kind: "resource", definition: adminOrganizationResource, panelIds: ["admin"] },
   // CLI_RESOURCE_ENTRIES
