@@ -93,6 +93,7 @@ export async function runResource(argv: string[]) {
   const valueType = (type: string) => type === "boolean" ? "boolean" : type === "integer" ? "number" : "text";
   const fieldType = (type: string) => type === "boolean" ? "boolean" : type === "integer" ? "number" : type === "text" ? "textarea" : type === "uuid" ? "select" : "text";
   const searchable = fields.filter(([, field]) => field.type === "string" || field.type === "text").slice(0, 1).map(([key]) => key);
+  const hasRelations = Object.keys(spec.relations).length > 0;
   const definition = `import "server-only";
 import { and, asc, count, desc, eq, ilike, inArray, sql } from "drizzle-orm";
 import { headers } from "next/headers";
@@ -155,7 +156,7 @@ export const ${model}Resource = defineResource({
     defaultSort: { key: ${quote(title === "id" ? fields[0]![0] : title)}, direction: "asc" },
     sortable: Object.keys(columns),
   },
-  form: async scope => [{ fields: [
+  form: async ${hasRelations ? "scope" : "_scope"} => [{ fields: [
     ${fields.map(([key, field]) => `{ name: ${quote(key)}, label: ${label(human(key))}, type: ${quote(fieldType(field.type))}${field.required || !field.optional && field.default === undefined && field.type !== "boolean" ? ", required: true" : ""}${field.type === "string" ? ", maxLength: 255" : field.type === "text" ? ", maxLength: 5000" : ""}${field.type === "uuid" ? `, options: await options${key}(scope)` : ""} },`).join("\n    ")}
   ] }],
   infolist: async () => [{ columns: 2, entries: [
@@ -174,7 +175,7 @@ export const ${model}Resource = defineResource({
   create: async (scope, values) => {
     const parsed = inputSchema.safeParse(values);
     if (!parsed.success) return { ok: false, error: "INVALID_INPUT", fieldErrors: Object.fromEntries(parsed.error.issues.map(issue => [String(issue.path[0]), issue.message])) };
-    return mutate(scope, "create", async (tx, ownerUserId, role) => {
+    return mutate(scope, "create", async (tx, ownerUserId, ${hasRelations ? "role" : "_role"}) => {
       const input = parsed.data;
       ${Object.entries(spec.relations).map(([key, relation]) => `if (input.${key}) { if (!canReadParent(${quote(relation.model)}, role, scope)) throw new Error("FORBIDDEN"); const [parent] = await tx.select({ id: ${relation.model}.id }).from(${relation.model}).where(eq(${relation.model}.id, input.${key})).limit(1); if (!parent) throw new Error("NOT_FOUND"); }`).join("\n      ")}
       const [context] = await tx.execute<{ organizationId: string | null }>(sql\`select nullif(current_setting('app.current_tenant_id', true), '') as "organizationId"\`);
@@ -188,7 +189,7 @@ export const ${model}Resource = defineResource({
   update: async (scope, id, values) => {
     const parsed = inputSchema.safeParse(values);
     if (!parsed.success || !z.string().uuid().safeParse(id).success) return { ok: false, error: "INVALID_INPUT", fieldErrors: parsed.success ? undefined : Object.fromEntries(parsed.error.issues.map(issue => [String(issue.path[0]), issue.message])) };
-    return mutate(scope, "update", async (tx, _userId, role) => {
+    return mutate(scope, "update", async (tx, _userId, ${hasRelations ? "role" : "_role"}) => {
       const input = parsed.data;
       ${Object.entries(spec.relations).map(([key, relation]) => `if (input.${key}) { if (!canReadParent(${quote(relation.model)}, role, scope)) throw new Error("FORBIDDEN"); const [parent] = await tx.select({ id: ${relation.model}.id }).from(${relation.model}).where(eq(${relation.model}.id, input.${key})).limit(1); if (!parent) throw new Error("NOT_FOUND"); }`).join("\n      ")}
       const [row] = await tx.update(table).set(input).where(eq(table.id, id)).returning({ id: table.id });
