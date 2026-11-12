@@ -9,6 +9,8 @@ Este guia distingue conteúdo já incluído no repositório de ferramentas opcio
 | `AGENTS.md` e `.planning/` | Incluídos no kit | Mínimo: ler instruções locais e usar continuidade GSD já existente | Arquivos do projeto; sem instalação |
 | `atomic-commits` | Vendored em `.agents/skills/atomic-commits/` | Mínimo para mudanças com vários commits lógicos; leia skill antes de usar | Skill local, MIT, versão 1.0.0; sem scripts |
 | `frontend-design` | Vendored em `.agents/skills/frontend-design/` | Mínimo quando criar ou reformular UI | Skill local modificada, licença Apache-2.0 em `LICENSE.txt`; sem scripts. Tokens e padrões do kit prevalecem |
+| `shadcn` (skill oficial) | Vendored em `.agents/skills/shadcn/`; lock em `skills-lock.json` | Mínimo para qualquer UI do app: componentes, blocos, forms e tema via `components.json` | Skill MIT do repositório `shadcn-ui/ui`; executa `shadcn info --json`. Atualizar com `pnpm dlx skills update shadcn` e revisar diff |
+| MCP `shadcn` | Configurado em `.mcp.json` (`pnpm dlx shadcn@4.23.0 mcp`) | Recomendado: busca e instala itens dos registries `@shadcn` e `@cult-ui` declarados em `components.json` | Executa CLI shadcn localmente; instalações seguem aliases monorepo |
 | GSD Core | Não vendored; disponível no runtime atual não implica disponibilidade em outro runtime | Recomendado para projetos médios/grandes que precisam de planejamento e continuidade; menor escopo pode usar `.planning/` existente | Instalador pergunta runtime e escopo; selecione local/project quando oferecido |
 | `find-skills` (Vercel) | Externo | Opcional para descobrir skills pertinentes; auditar cada skill antes da instalação | `npx skills` pode instalar no projeto ou ambiente do agente; escolher escopo explicitamente |
 | React Best Practices (Vercel) | Externo; não incluído | Opcional para revisão de performance React/Next.js | Skill do repositório Vercel; instalar somente quando trabalho React justificar |
@@ -38,6 +40,12 @@ Origem: [nullswan/atomic-commits](https://github.com/nullswan/atomic-commits), s
 ### `frontend-design`
 
 Origem: [anthropics/skills](https://github.com/anthropics/skills), plugin example-skills; snapshot `41bbe19d1a1a7eaab5e7bb9050a417e5c6cffc8f` (folder hash `0d5b74a14bdf3ebcd64f352d06376a2ef05ed296`). Licença Apache-2.0, cópia local em [`../.agents/skills/frontend-design/LICENSE.txt`](../.agents/skills/frontend-design/LICENSE.txt). A cópia local foi adaptada para dar precedência ao design system e acessibilidade do kit; dashboards não exigem hero, fonte externa ou animação. Consulte a licença e instruções locais. Não substitua a skill local por cópia externa sem revisar diferenças/licença.
+
+### `shadcn`
+
+Origem: [shadcn-ui/ui `skills/shadcn`](https://github.com/shadcn-ui/ui/tree/main/skills/shadcn), instalada por `pnpm dlx skills add shadcn/ui` em 2026-11-12 (upstream `main` `dd41d19e2f80ff6891951f7ced74c2c9a650b065`; hash em `skills-lock.json`). Licença MIT em [`../.agents/skills/shadcn/LICENSE.md`](../.agents/skills/shadcn/LICENSE.md). Movida de `.claude/skills/` para `.agents/skills/` para seguir convenção do kit; skill `migrate-radix-to-base` instalada junto foi removida (kit usa base Radix). `scripts/showcase-coverage.mjs` só lê arquivos locais.
+
+Registries e MCP: `apps/app/components.json` e `packages/ui/components.json` declaram `@cult-ui` ([Cult UI MCP](https://www.cult-ui.com/docs/mcp-server)). Rode `shadcn add` sempre em `apps/app`: primitivos vão para `packages/ui/src/components` (`@vibe/ui/components/<nome>`), blocos para `apps/app/src/components`. Revise código de registries de terceiros antes de commitar.
 
 ## Ferramentas externas opcionais
 
