@@ -7,6 +7,8 @@ const templates: AuthEmail[] = [
   { type: "reset-password", url: "https://example.test/reset?token=synthetic-check" },
   { type: "invitation", url: "https://example.test/invitations/synthetic-check", organizationName: '<img src=x onerror="bad()"> & equipe' },
   { type: "otp", code: "123456" },
+  { type: "change-email", url: "https://example.test/verify-email?token=synthetic-check", newEmail: "novo@example.test" },
+  { type: "delete-account", url: "https://example.test/delete-user/callback?token=synthetic-check" },
 ];
 for (const template of templates) {
   const result = await renderAuthEmail(template);
@@ -25,6 +27,8 @@ for (const url of ["javascript:alert(1)", "data:text/html,bad", "http://example.
 await assert.rejects(renderAuthEmail({ type: "otp", code: "<1234>" }));
 await assert.rejects(renderAuthEmail({ type: "invitation", url: "https://example.test/action", organizationName: "bad\r\nsubject" }));
 const previous = process.env.NODE_ENV;
+await assert.rejects(renderAuthEmail({ type: "change-email", url: "https://example.test/action", newEmail: "bad\r\n@example.test" }));
+assert.ok((await renderAuthEmail({ type: "change-email", url: "https://example.test/action", newEmail: "novo@example.test" })).text.includes("novo@example.test"));
 try {
   process.env.NODE_ENV = "development";
   for (const host of ["localhost", "127.0.0.1", "[::1]"]) {
@@ -32,7 +36,11 @@ try {
   }
   process.env.NODE_ENV = "production";
   await assert.rejects(renderAuthEmail({ type: "verification", url: "http://127.0.0.1:3001/action" }));
+  process.env.EMAIL_ALLOW_INSECURE_LOOPBACK = "true";
+  await renderAuthEmail({ type: "verification", url: "http://127.0.0.1:3001/action" });
+  await assert.rejects(renderAuthEmail({ type: "verification", url: "http://example.test/action" }), "opt-in never allows non-loopback HTTP");
 } finally {
+  delete process.env.EMAIL_ALLOW_INSECURE_LOOPBACK;
   if (previous === undefined) delete process.env.NODE_ENV;
   else process.env.NODE_ENV = previous;
 }

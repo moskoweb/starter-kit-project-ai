@@ -5,7 +5,9 @@ export type AuthEmail =
   | { type: "verification"; url: string }
   | { type: "reset-password"; url: string }
   | { type: "invitation"; url: string; organizationName: string }
-  | { type: "otp"; code: string };
+  | { type: "otp"; code: string }
+  | { type: "change-email"; url: string; newEmail: string }
+  | { type: "delete-account"; url: string };
 
 export type RenderedEmail = { subject: string; html: string; text: string };
 
@@ -16,7 +18,9 @@ function actionUrl(value: string): string {
   let url: URL;
   try { url = new URL(value); } catch { throw new Error("Invalid email action URL"); }
   const local = ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname);
-  if (url.username || url.password || !(url.protocol === "https:" || (url.protocol === "http:" && local && process.env.NODE_ENV !== "production"))) {
+  // Loopback HTTP: always outside production; in production only with explicit opt-in for local E2E against a production build.
+  const loopbackAllowed = process.env.NODE_ENV !== "production" || process.env.EMAIL_ALLOW_INSECURE_LOOPBACK === "true";
+  if (url.username || url.password || !(url.protocol === "https:" || (url.protocol === "http:" && local && loopbackAllowed))) {
     throw new Error("Email action URL requires HTTPS (HTTP loopback allowed outside production)");
   }
   return url.href;
@@ -25,6 +29,13 @@ function actionUrl(value: string): string {
 function organizationText(value: string): string {
   if (typeof value !== "string" || !value.trim() || value.length > 255 || /[\u0000-\u001f\u007f]/.test(value)) {
     throw new Error("Invalid email organization name");
+  }
+  return value;
+}
+
+function emailText(value: string): string {
+  if (typeof value !== "string" || value.length > 254 || !/^[^\s@]+@[^\s@]+$/.test(value)) {
+    throw new Error("Invalid email address");
   }
   return value;
 }
@@ -42,6 +53,12 @@ function content(props: AuthEmail): { subject: string; body: ReactNode; url?: st
     case "otp":
       if (typeof props.code !== "string" || !/^[0-9]{6}$/.test(props.code)) throw new Error("Invalid email OTP code");
       return { subject: "Código de autenticação", body: <>Seu código de autenticação é:<br /><strong style={{ fontSize: "28px", letterSpacing: "6px" }}>{props.code}</strong><br />Não compartilhe este código.</> };
+    case "change-email": {
+      const newEmail = emailText(props.newEmail);
+      return { subject: "Confirmar troca de email", body: <>Recebemos uma solicitação para trocar o email da sua conta para <strong>{newEmail}</strong>. Confirme pelo link abaixo; em seguida enviaremos uma verificação para o novo endereço.</>, url: actionUrl(props.url), action: "Confirmar troca de email" };
+    }
+    case "delete-account":
+      return { subject: "Confirmar exclusão da conta", body: "Recebemos uma solicitação para excluir sua conta. Ao confirmar pelo link abaixo, sua conta e sessões serão removidas permanentemente. Esta ação não pode ser desfeita.", url: actionUrl(props.url), action: "Excluir minha conta" };
     default:
       throw new Error("Invalid email template type");
   }

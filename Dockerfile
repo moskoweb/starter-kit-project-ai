@@ -26,6 +26,7 @@ WORKDIR /app
 RUN groupadd --system --gid 1001 nodejs && useradd --system --uid 1001 --gid nodejs nextjs
 COPY --from=builder --chown=nextjs:nodejs /workspace/apps/app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /workspace/apps/app/.next/static ./apps/app/.next/static
+COPY --from=builder --chown=nextjs:nodejs /workspace/apps/app/public ./apps/app/public
 USER nextjs
 EXPOSE 3000
 CMD ["node", "apps/app/server.js"]

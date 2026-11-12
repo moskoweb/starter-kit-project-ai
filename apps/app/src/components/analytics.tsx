@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { Button } from "@vibe/ui/components/button";
 import { Card, CardContent } from "@vibe/ui/components/card";
 
@@ -8,8 +8,9 @@ const CONSENT_KEY = "analytics-consent";
 const DISTINCT_ID_KEY = "analytics-distinct-id";
 
 export function AnalyticsConsent() {
-  const [consent, setConsent] = useState<string | null>(null);
-  useEffect(() => setConsent(localStorage.getItem(CONSENT_KEY)), []);
+  const stored = useSyncExternalStore(() => () => {}, () => localStorage.getItem(CONSENT_KEY), () => null);
+  const [choice, setConsent] = useState<string | null>(null);
+  const consent = choice ?? stored;
   useEffect(() => {
     if (consent !== "accepted" || process.env.NEXT_PUBLIC_ANALYTICS_ENABLED !== "true") return;
     const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;

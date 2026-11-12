@@ -1,6 +1,6 @@
 import { sql, type SQLWrapper } from "drizzle-orm";
 import { check, foreignKey, index, integer, pgPolicy, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
-import { member, organization, user } from "./auth-schema";
+import { organization, user } from "./auth-schema";
 import { projects } from "./domain-schema";
 
 const currentUser = sql`nullif(current_setting('app.current_user_id', true), '')::uuid`;

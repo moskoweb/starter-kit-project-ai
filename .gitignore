@@ -30,3 +30,8 @@ pnpm-debug.log*
 # System
 .DS_Store
 *.pem
+
+# Playwright
+e2e/playwright-report/
+e2e/test-results/
+test-results/

@@ -21,16 +21,16 @@ export function Notifications({ tenantIdentifier, locale }: { tenantIdentifier: 
   const [page, setPage] = useState(1);
   const t = text[locale];
   const refresh = useCallback(async (signal?: AbortSignal) => {
-    setError(false); setPending(true);
     const query = new URLSearchParams({ page: String(page) }); if (tenantIdentifier) query.set("tenantIdentifier", tenantIdentifier);
     try {
       const response = await fetch(`/api/notifications?${query}`, { signal, cache: "no-store" });
       if (!response.ok) throw new Error("REQUEST_FAILED");
       const result = await response.json() as Data;
-      if (!signal?.aborted) setData(result);
+      if (!signal?.aborted) { setData(result); setError(false); }
     } catch { if (!signal?.aborted) setError(true); } finally { if (!signal?.aborted) setPending(false); }
   }, [tenantIdentifier, page]);
-  useEffect(() => { const controller = new AbortController(); setData(null); void refresh(controller.signal); return () => controller.abort(); }, [refresh]);
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- state is set after an awaited fetch (external sync), not synchronously
+  useEffect(() => { const controller = new AbortController(); void refresh(controller.signal); return () => controller.abort(); }, [refresh]);
   function changePage(nextPage: number) { setData(null); setPending(true); setPage(nextPage); }
   async function mark(id?: string) {
     setPending(true); setError(false);

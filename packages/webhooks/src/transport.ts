@@ -14,6 +14,7 @@ export async function deliverWebhook({ url: destination, allowedHosts, secret, e
   if (body.byteLength > MAX_BODY_BYTES) throw new Error("WEBHOOK_BODY_TOO_LARGE");
   const { promise, resolve } = Promise.withResolvers<DeliveryResult>();
   let settled = false;
+  // eslint-disable-next-line prefer-const -- timer closure below must see the request created after it.
   let req: ReturnType<typeof httpsRequest> | undefined;
   const finish = (result: DeliveryResult) => { if (!settled) { settled = true; clearTimeout(timer); resolve(result); } };
   const timer = delay(() => { req?.destroy(); finish({ status: "retryable", statusCode: null }); }, 10_000);

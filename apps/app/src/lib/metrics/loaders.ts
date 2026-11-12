@@ -2,7 +2,7 @@ import "server-only";
 import { asc, count, gte, sql } from "drizzle-orm";
 import { headers } from "next/headers";
 import { getDb, organization, projects, tasks, user } from "@vibe/db";
-import { getAuth, requireSession, resolveTenant, withAuthorizedProjects } from "@vibe/auth";
+import { getAuth, requireSession, withAuthorizedProjects } from "@vibe/auth";
 import { getIdentityEnv } from "@vibe/config/env";
 
 export async function loadGlobalMetrics() {

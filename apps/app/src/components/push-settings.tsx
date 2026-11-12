@@ -27,7 +27,8 @@ export function PushSettings({ enabled, tenantIdentifier = null, locale }: { ena
     void navigator.serviceWorker.getRegistration().then(async registration => {
       const subscription = await registration?.pushManager.getSubscription();
       if (!subscription || controller.signal.aborted) return;
-      const query = new URLSearchParams({ ...scope, endpoint: subscription.endpoint });
+      const query = new URLSearchParams({ endpoint: subscription.endpoint });
+      if (tenantIdentifier) query.set("tenantIdentifier", tenantIdentifier);
       const response = await fetch(`/api/push?${query}`, { cache: "no-store", signal: controller.signal });
       if (!response.ok) return;
       const data: unknown = await response.json();

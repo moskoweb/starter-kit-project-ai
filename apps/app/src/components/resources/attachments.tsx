@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import { useCallback, useEffect, useId, useState } from "react";
 import { z } from "zod";
 import { Badge } from "@vibe/ui/components/badge";
 import { Button } from "@vibe/ui/components/button";
@@ -24,8 +24,10 @@ export function Attachments({ projectId, tenantIdentifier, locale = "pt-BR" }: {
   const fileId = useId();
   const scopeQuery = tenantIdentifier === null ? "" : `&tenantIdentifier=${encodeURIComponent(tenantIdentifier)}`;
   const query = `projectId=${encodeURIComponent(projectId)}${scopeQuery}`;
-  async function refresh(signal?: AbortSignal) { const response = await fetch(`/api/storage?${query}`, { signal, cache: "no-store" }); if (!response.ok) throw new Error(t.loadError); const data = listResponse.parse(await response.json()); if (!signal?.aborted) setItems(data.items); }
-  useEffect(() => { const controller = new AbortController(); void refresh(controller.signal).catch(() => { if (!controller.signal.aborted) setError(t.loadError); }); return () => controller.abort(); }, [projectId, tenantIdentifier, locale]);
+  const refresh = useCallback(async (signal?: AbortSignal) => { const response = await fetch(`/api/storage?${query}`, { signal, cache: "no-store" }); if (!response.ok) throw new Error("LOAD_FAILED"); const data = listResponse.parse(await response.json()); if (!signal?.aborted) setItems(data.items); }, [query]);
+  const loadError = t.loadError;
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- state is set after an awaited fetch (external sync), not synchronously
+  useEffect(() => { const controller = new AbortController(); void refresh(controller.signal).catch(() => { if (!controller.signal.aborted) setError(loadError); }); return () => controller.abort(); }, [refresh, loadError]);
   async function upload(file?: File) {
     if (!file) return; setBusy(true); setError("");
     try {

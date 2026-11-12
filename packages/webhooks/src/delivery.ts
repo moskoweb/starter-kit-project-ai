@@ -3,7 +3,6 @@ import { and, eq } from "drizzle-orm";
 import { canAccessProject } from "@vibe/auth/permissions";
 import { getSql, type TenantTransaction, webhookDeliveries } from "@vibe/db";
 import { parseJobEnvelope, sendJob, type JobEnvelope } from "@vibe/jobs";
-import type { TransactionSql } from "postgres";
 import type { PgBoss } from "pg-boss";
 import { deliverWebhook, verifySignature } from "./index";
 import { checkedWorkerSql } from "./worker-connection";

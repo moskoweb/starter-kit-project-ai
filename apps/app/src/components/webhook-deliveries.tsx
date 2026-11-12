@@ -17,15 +17,16 @@ export function WebhookDeliveries({ tenantIdentifier, locale }: { tenantIdentifi
   const [error, setError] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
   const t = text[locale];
-  const query = new URLSearchParams(); if (tenantIdentifier !== null) query.set("tenantIdentifier", tenantIdentifier);
   const refresh = useCallback(async (signal?: AbortSignal) => {
-    setError("");
+    const query = new URLSearchParams(); if (tenantIdentifier !== null) query.set("tenantIdentifier", tenantIdentifier);
     try {
       const response = await fetch(`/api/webhooks/deliveries?${query}`, { cache: "no-store", signal });
       if (!response.ok) throw new Error("REQUEST_FAILED");
       setItems((await response.json() as Data).items);
+      setError("");
     } catch (cause) { if (!(cause instanceof DOMException && cause.name === "AbortError")) setError(t.error); }
   }, [tenantIdentifier, t.error]);
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- state is set after an awaited fetch (external sync), not synchronously
   useEffect(() => { const controller = new AbortController(); void refresh(controller.signal); return () => controller.abort(); }, [refresh]);
   async function retry(id: string) {
     if (!window.confirm(t.confirm)) return;
