@@ -10,6 +10,9 @@ Este guia distingue conteúdo já incluído no repositório de ferramentas opcio
 | `atomic-commits` | Vendored em `.agents/skills/atomic-commits/` | Mínimo para mudanças com vários commits lógicos; leia skill antes de usar | Skill local, MIT, versão 1.0.0; sem scripts |
 | `frontend-design` | Vendored em `.agents/skills/frontend-design/` | Mínimo quando criar ou reformular UI | Skill local modificada, licença Apache-2.0 em `LICENSE.txt`; sem scripts. Tokens e padrões do kit prevalecem |
 | `shadcn` (skill oficial) | Vendored em `.agents/skills/shadcn/`; lock em `skills-lock.json` | Mínimo para qualquer UI do app: componentes, blocos, forms e tema via `components.json` | Skill MIT do repositório `shadcn-ui/ui`; executa `shadcn info --json`. Atualizar com `pnpm dlx skills update shadcn` e revisar diff |
+| `unslop` | Vendored em `.agents/skills/unslop/`; lock em `skills-lock.json` | Recomendado ao redesenhar telas existentes com cara genérica de IA (espaçamento, hierarquia, tipo, densidade) | Skill CC-BY-4.0 por Damir Sokolovsky (`heydamir/unslop`, snapshot `97daa3e`). Scripts usam headless Chrome local para snapshots/story; fotos/vídeos têm atribuição obrigatória |
+| `hallmark` | Vendored em `.agents/skills/hallmark/`; lock em `skills-lock.json` | Recomendado para criar landing pages ou páginas com direção visual marcante (editorial, atmospheric, playful, modern-minimal) | Skill MIT por Hassan El Mghari (`Nutlope/hallmark`, v2.0.0, snapshot `04977e1`). Hooks e scripts são opt-in; geração de imagem exige `TOGETHER_API_KEY` opcional |
+| `improve` | Vendored em `.agents/skills/improve/`; lock em `skills-lock.json` | Recomendado para plano de melhoria e refinamento de UX/UI sem alterar código de forma destrutiva | Skill MIT por shadcn (`shadcn/improve`, snapshot `cac56e1`). Regra rígida: só gera planos em `plans/`, nunca edita código diretamente |
 | MCP `shadcn` | Configurado em `.mcp.json` (`pnpm dlx shadcn@4.23.0 mcp`) | Recomendado: busca e instala itens dos registries `@shadcn` e `@cult-ui` declarados em `components.json` | Executa CLI shadcn localmente; instalações seguem aliases monorepo |
 | `security-audit` (Cloudflare) | Vendored em `.agents/skills/security-audit/`; lock em `skills-lock.json` | Recomendado para revisão de segurança: modo guia por padrão; auditoria completa só sob pedido explícito | Skill MIT; validadores Node locais sem rede; exige sandbox para executar código do alvo |
 | `upgrade-kit` | Vendored em `.agents/skills/upgrade-kit/` | Mínimo em projeto derivado ao sincronizar com o kit via `vibe upgrade` | Skill local adaptada de `merge-seed` (kriasoft, MIT); sem scripts próprios |
@@ -54,6 +57,31 @@ Registries e MCP: `apps/app/components.json` e `packages/ui/components.json` dec
 Origem: [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill), instalada por `pnpm dlx skills add https://github.com/cloudflare/security-audit-skill --skill security-audit` em 2026-11-12 (upstream `main` `c1c8a8c1471069fb0e188eeaff69b8e8db6564a8`; hash em `skills-lock.json`). Licença MIT em [`../.agents/skills/security-audit/LICENSE`](../.agents/skills/security-audit/LICENSE). Movida de `.claude/skills/` para `.agents/skills/`. Os scripts `validate-*.cjs` só leem JSON local, sem rede nem processos filhos; os testes deles passam com `node`.
 
 Uso: "security audit this codebase" roda as 6 fases (reconhecimento, caça por cobertura, validação adversarial, registros estruturados, verificação independente e relatório). Os artefatos saem fora do repositório (`~/security-audit-skill/<repo>/run-<N>`). Perguntas pontuais de segurança usam modo guia, sem gerar arquivos. Achados confirmados exigem trace na fonte e resultado observado. Lacunas de defesa em profundidade são notas, não vulnerabilidades.
+
+### `unslop`
+
+Origem: [heydamir/unslop](https://github.com/heydamir/unslop), autor Damir Sokolovsky ([@heydamir](https://x.com/heydamir)), snapshot `97daa3eb365670ea3f87ed85356cbfcee18105a5` (2026-11). Licença Creative Commons Attribution 4.0 International (CC-BY-4.0) em [`../.agents/skills/unslop/LICENSE`](../.agents/skills/unslop/LICENSE), mantendo a atribuição original.
+
+Gatilho: quando uma tela pronta parece genérica de IA (bordas arredondadas excessivas, falta de contraste, hierarquia confusa, texto corporativo sem personalidade, ícones genéricos de estrelinhas). Leia `.agents/skills/unslop/SKILL.md` antes de aplicar. Os scripts `scripts/snapshot.mjs` e `scripts/story.mjs` dependem de Chrome headless local (e Playwright/ffmpeg para vídeo); o uso de scripts é opt-in, o guia de design pode ser aplicado lendo o documento diretamente.
+
+### `hallmark`
+
+Origem: [Nutlope/hallmark](https://github.com/Nutlope/hallmark), autor Hassan El Mghari ([@nutlope](https://x.com/nutlope)), v2.0.0, snapshot `04977e15f3dfd6ee4b74c887dac3eb52665d6c92` (2026-11). Licença MIT em [`../.agents/skills/hallmark/LICENSE`](../.agents/skills/hallmark/LICENSE).
+
+Gatilho: quando o usuário pedir para desenhar uma página nova com estilo autoral e forte identidade visual (direções: editorial, atmospheric, modern-minimal, playful). Leia `.agents/skills/hallmark/SKILL.md`.
+
+Cuidados operacionais:
+- Não execute scripts de instalação global de hooks (`scripts/install-hook.mjs` ou `scripts/install.mjs`) sem aprovação explícita; o starter kit prefere execução declarativa a hooks implícitos.
+- Scripts que usam rede (`imagegen.mjs`) usam a Together AI (`TOGETHER_API_KEY`) e consomem créditos; scripts de busca em Wikimedia baixam apenas imagens públicas de domínio comprovado.
+- Os templates são independentes do kit e servem como referência de direção criativa.
+
+### `improve`
+
+Origem: [shadcn/improve](https://github.com/shadcn/improve), autor shadcn ([@shadcn](https://x.com/shadcn)), snapshot `cac56e1ebd3c279aa9153616cfeac7b174ab90f9` (2026-11). Licença MIT em [`../.agents/skills/improve/LICENSE.md`](../.agents/skills/improve/LICENSE.md).
+
+Gatilho: quando o usuário pedir revisão, hardening ou refinamento estruturado de UI/UX antes de implementar. Leia `.agents/skills/improve/SKILL.md`.
+
+Regra central: a skill é estritamente analítica e planejadora — **nunca altera código diretamente**, apenas escreve arquivos estruturados em `plans/` com critérios de aceite, escopo e passos para um executor subagente.
 
 ## Ferramentas externas opcionais
 

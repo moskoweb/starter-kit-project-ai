@@ -17,6 +17,10 @@ Kit entrega ferramentas, sem domínio de exemplo. Template registra só painel `
 ## Implementação
 
 - UI: ler `.agents/skills/shadcn/SKILL.md` e `docs/UI.md`. Primitivos shadcn estilo `base-nova` sobre Base UI: compor com `render`, nunca `asChild`. CRUD novo = `defineResource` em `apps/app/src/lib/resources/definitions/` (padrão Filament), gerado por `pnpm exec tsx packages/cli/src/index.ts resource`, nunca página manual. Faltando primitivo: `pnpm dlx shadcn@4.23.0 add <item>` em `apps/app` (registries `@shadcn`, `@cult-ui`). Ícones: somente `lucide-react` (`iconLibrary: lucide`); SVG próprio só para logos de marca que o Lucide não tem.
+- Skills de design e UX (leia a respectiva `SKILL.md` antes de aplicar; detalhes em `docs/AGENT-TOOLS.md`):
+  - `.agents/skills/hallmark/SKILL.md`: nova página pública, landing page ou direção visual autoral (editorial, atmospheric, modern-minimal, playful). Não rodar hooks/scripts de instalação global; geração de imagem Together AI opcional.
+  - `.agents/skills/unslop/SKILL.md`: des-slopizar telas existentes com cara genérica de IA (espaçamento, contraste, hierarquia, tipo, densidade, cópia). Scripts locais com Chrome headless são opt-in; guia de design aplica direto no código.
+  - `.agents/skills/improve/SKILL.md`: plano de melhoria e refinamento estruturado de UI/UX. Regra rígida: gera planos em `plans/`, **nunca edita código diretamente**.
 - Segurança: para revisão, auditoria ou dúvida de vulnerabilidade, ler `.agents/skills/security-audit/SKILL.md` (modo guia por padrão; auditoria completa só sob pedido explícito, artefatos fora do repositório).
 - Themes por tokens e CSS variables. Acessibilidade, responsividade e estados de erro são requisitos.
 - Capacidades opcionais não entregues (provedores de IA por tenant, conversas, tools/agentes, KB/RAG, MCP, API com chaves, SSE, auditoria, cifra de segredos, guarda SSRF): ler a receita em `docs/recipes/` antes de implementar. Receita é orientação, não código existente. Não implementar sem o projeto precisar.

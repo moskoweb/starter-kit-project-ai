@@ -1,6 +1,6 @@
 # Roadmap: Starter kit com IA
 
-Data: 2026-11-11. Status: proposta estruturada para execução; fase 1 pronta para planejamento.
+Data: 2026-11-11 (atualizado 2026-11-12). Status: fase 1 verificada; fases 2–8 implementadas com lacunas de verificação, ver tabela Progress.
 Contrato: [PROJECT.md](PROJECT.md). Requisitos: [REQUIREMENTS.md](REQUIREMENTS.md).
 
 ## Overview
@@ -9,7 +9,7 @@ Template independente para projetos desenvolvidos com IA e com integrações opc
 
 ## Phases
 
-- [ ] **Phase 1: Fundação e contexto para agentes** - Ambiente reproduzível e convenções que agentes consigam seguir sem esta conversa.
+- [x] **Phase 1: Fundação e contexto para agentes** - Ambiente reproduzível e convenções que agentes consigam seguir sem esta conversa.
 - [ ] **Phase 2: Identidade, email e isolamento** - Contas, organizações e permissões seguras antes da expansão de UI.
 - [ ] **Phase 3: Painéis, componentes, themes e i18n** - Painéis com tenancy independente e componentes reutilizáveis.
 - [ ] **Phase 4: Resource completo de referência** - Provar padrão de resource antes de gerar código.
@@ -164,9 +164,11 @@ Template independente para projetos desenvolvidos com IA e com integrações opc
 | 3. Painéis, componentes, themes e i18n | 0/1 | Implemented; UI coverage verification | - |
 | 4. Resource completo de referência | 0/1 | Personal CRUD verified; remaining matrix pending | - |
 | 5. CLIs e geração | 0/1 | Generated CRUD verified; remaining generator cases pending | - |
-| 6. Storage, notificações, jobs e webhooks | 0/1 | Worker/inbound verified; external delivery/storage pending | - |
-| 7. IA, observabilidade, analytics, segurança e SEO | 0/1 | Implemented; external smoke pending | - |
+| 6. Storage, notificações, jobs e webhooks | 0/1 | Worker/inbound verified; sem VERIFICATION.md; external delivery/storage pending | - |
+| 7. IA, observabilidade, analytics, segurança e SEO | 0/1 | Implemented; sem VERIFICATION.md; external smoke pending | - |
 | 8. Replicação e entrega operacional | 0/1 | Clone and Docker app smoke passed; closure pending | - |
+
+Provas de CRUD anteriores a 2026-11-12 usaram o domínio de exemplo projects/tasks, removido do kit. Refazer com recurso gerado pela CLI antes de marcar fases 2–5 e 8 como completas.
 
 ## Gates comuns
 
