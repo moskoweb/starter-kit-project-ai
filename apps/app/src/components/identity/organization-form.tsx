@@ -1,42 +1,65 @@
 "use client";
-import { useState, type ReactNode, type FormEvent } from "react";
+
+import { useRef, useState, type ReactNode, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { authClient } from "@vibe/auth/client";
 import { Button } from "@vibe/ui/components/button";
 import { FieldGroup, FieldSet } from "@vibe/ui/components/field";
+import { ConfirmAction } from "@vibe/ui/components/resource/confirm-action";
+import { Spinner } from "@vibe/ui/components/spinner";
+
 type Action = "create" | "invite" | "cancel" | "resend" | "role" | "remove" | "select" | "accept" | "reject";
+type Role = "owner" | "admin" | "member" | "viewer";
 const variants: Partial<Record<Action, "destructive" | "outline">> = { remove: "destructive", cancel: "outline", reject: "outline", resend: "outline", select: "outline", role: "outline" };
-export function OrganizationForm({ action, organizationId, targetId, email, role, children, label }: { action: Action; organizationId?: string; targetId?: string; email?: string; role?: string; children?: ReactNode; label: string }) {
-  const router = useRouter(); const [busy, setBusy] = useState(false); const [message, setMessage] = useState(""); const [failed, setFailed] = useState(false);
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); const form = event.currentTarget; const data = new FormData(form);
-    if ((action === "remove" || action === "role") && !window.confirm(action === "remove" ? "Remover este membro da organização?" : "Alterar a função deste membro?")) return;
-    setBusy(true); setMessage(""); setFailed(false);
+const confirmations: Partial<Record<Action, { title: string; description: string }>> = {
+  remove: { title: "Remover membro?", description: "O membro perde acesso imediatamente aos dados desta organização." },
+  role: { title: "Alterar função?", description: "As permissões do membro mudam imediatamente." },
+  cancel: { title: "Cancelar convite?", description: "O link enviado deixa de funcionar." },
+};
+
+/** Better Auth organization operations; the server enforces membership and role. */
+export function OrganizationForm({ action, organizationId, targetId, email, role, children, label, size }: { action: Action; organizationId?: string; targetId?: string; email?: string; role?: string; children?: ReactNode; label: string; size?: "sm" | "default" }) {
+  const router = useRouter();
+  const formRef = useRef<HTMLFormElement>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function execute(form: HTMLFormElement) {
+    const data = new FormData(form);
     const selectedRole = String(data.get("role") ?? role ?? "member");
-    if (!["owner", "admin", "member", "viewer"].includes(selectedRole)) { setFailed(true); setMessage("Função inválida."); setBusy(false); return; }
+    if (!["owner", "admin", "member", "viewer"].includes(selectedRole)) { toast.error("Função inválida."); throw new Error("INVALID_ROLE"); }
+    setBusy(true);
     try {
       const result = action === "create" ? await authClient.organization.create({ name: String(data.get("name")), slug: String(data.get("slug")) })
-        : action === "invite" || action === "resend" ? await authClient.organization.inviteMember({ organizationId, email: email ?? String(data.get("email")), role: selectedRole as "owner" | "admin" | "member" | "viewer", resend: action === "resend" })
+        : action === "invite" || action === "resend" ? await authClient.organization.inviteMember({ organizationId, email: email ?? String(data.get("email")), role: selectedRole as Role, resend: action === "resend" })
         : action === "cancel" ? await authClient.organization.cancelInvitation({ invitationId: targetId! })
-        : action === "role" ? await authClient.organization.updateMemberRole({ organizationId, memberId: targetId!, role: selectedRole as "owner" | "admin" | "member" | "viewer" })
+        : action === "role" ? await authClient.organization.updateMemberRole({ organizationId, memberId: targetId!, role: selectedRole as Role })
         : action === "remove" ? await authClient.organization.removeMember({ organizationId, memberIdOrEmail: targetId! })
         : action === "select" ? await authClient.organization.setActive({ organizationId })
         : action === "accept" ? await authClient.organization.acceptInvitation({ invitationId: targetId! })
         : await authClient.organization.rejectInvitation({ invitationId: targetId! });
-      if (result.error) throw new Error();
-      form.reset(); setMessage("Operação concluída.");
+      if (result.error) throw new Error("REQUEST_FAILED");
+      form.reset();
+      toast.success("Operação concluída.");
       if (action === "accept" || action === "reject") router.push("/organizations");
       router.refresh();
-    } catch { setFailed(true); setMessage("Não foi possível concluir. Confira os dados e suas permissões, atualize a página e tente novamente."); }
-    finally { setBusy(false); }
+    } catch (error) {
+      toast.error("Não foi possível concluir. Confira os dados e suas permissões e tente novamente.");
+      throw error;
+    } finally { setBusy(false); }
   }
-  return <form onSubmit={submit} aria-busy={busy} className="flex flex-col gap-3">
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!confirmations[action]) void execute(event.currentTarget).catch(() => {});
+  }
+  const confirmation = confirmations[action];
+  const button = <Button type={confirmation ? "button" : "submit"} size={size} variant={variants[action] ?? "default"} disabled={busy}>{busy && <Spinner data-icon="inline-start" />}{label}</Button>;
+  return <form ref={formRef} onSubmit={submit} aria-busy={busy}>
     <FieldSet disabled={busy}>
-      <FieldGroup>
+      <FieldGroup className={children ? undefined : "contents"}>
         {children}
-        <div><Button type="submit" variant={variants[action] ?? "default"}>{busy ? "Aguarde…" : label}</Button></div>
+        <div>{confirmation ? <ConfirmAction title={confirmation.title} description={confirmation.description} confirmLabel={label} cancelLabel="Voltar" destructive={action !== "role"} trigger={button} onConfirm={() => formRef.current?.reportValidity() ? execute(formRef.current) : Promise.reject(new Error("INVALID_FORM"))} /> : button}</div>
       </FieldGroup>
     </FieldSet>
-    {message && (failed ? <p role="alert" className="text-sm text-destructive">{message}</p> : <p role="status" className="text-sm text-muted-foreground">{message}</p>)}
   </form>;
 }

@@ -25,7 +25,6 @@ export function SecurityForm({ locale = "pt-BR" }: { locale?: "pt-BR" | "en" }) 
     finally { setBusy(false); }
   }
   return <section className="flex flex-col gap-6">
-    <h2 className="text-lg font-semibold">{t("Autenticação de dois fatores", "Two-factor authentication")}</h2>
     <FieldGroup>
       <Field>
         <FieldLabel htmlFor={`${id}-password`}>{t("Senha", "Password")}</FieldLabel>

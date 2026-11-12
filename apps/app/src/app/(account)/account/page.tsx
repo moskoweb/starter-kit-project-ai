@@ -1,27 +1,30 @@
-import Link from "next/link";
-import { cookies } from "next/headers";
-import { getIdentityEnv } from "@vibe/config/env";
-import { Button } from "@vibe/ui/components/button";
+import type { Metadata } from "next";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@vibe/ui/components/card";
-import { pageSession } from "../../lib/identity-session";
-import { buildPanelPath } from "../../lib/panels/routing";
-import { SignOut } from "../../components/identity/sign-out";
-import { PushSettings } from "../../components/push-settings";
-export default async function Page() { const { session } = await pageSession(); const profile = getIdentityEnv().IDENTITY_PROFILE; const locale = (await cookies()).get("locale")?.value === "en" ? "en" : "pt-BR"; const en = locale === "en";
-return <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-6">
-  <Card>
-    <CardHeader>
-      <CardTitle><h1>{en ? "My account" : "Minha conta"}</h1></CardTitle>
-      <CardDescription>{session.user.name}</CardDescription>
-    </CardHeader>
-    <CardContent className="flex flex-col gap-6">
-      <nav className="flex flex-wrap gap-2" aria-label={en ? "Account" : "Conta"}>
-        {profile !== "organizations" && <Button asChild variant="link"><Link href={buildPanelPath("personal")}>{en ? "Personal panel" : "Painel pessoal"}</Link></Button>}
-        {profile !== "personal" && <Button asChild variant="link"><Link href="/organizations">{en ? "Organizations" : "Organizações"}</Link></Button>}
-        <Button asChild variant="link"><Link href="/security">{en ? "Security" : "Segurança"}</Link></Button>
-      </nav>
-      <PushSettings enabled={process.env.PUSH_ENABLED === "true"} locale={locale} />
-    </CardContent>
-    <CardFooter><SignOut locale={locale} /></CardFooter>
-  </Card>
-</main>; }
+import { PageHeader } from "@vibe/ui/components/resource/page-header";
+import { SignOut } from "@/components/identity/sign-out";
+import { PushSettings } from "@/components/push-settings";
+import { pageSession } from "@/lib/identity-session";
+import { currentLocale } from "@/lib/panels/chrome";
+import { messages } from "@/lib/i18n";
+
+export async function generateMetadata(): Promise<Metadata> { return { title: messages[await currentLocale()].account }; }
+
+export default async function AccountPage() {
+  const { session } = await pageSession();
+  const locale = await currentLocale();
+  const en = locale === "en";
+  return <>
+    <PageHeader title={messages[locale].account} description={en ? "Your profile and session." : "Seu perfil e sessão."} />
+    <Card>
+      <CardHeader><CardTitle>{en ? "Profile" : "Perfil"}</CardTitle><CardDescription>{en ? "Information from your sign-in account." : "Informações da sua conta de acesso."}</CardDescription></CardHeader>
+      <CardContent>
+        <dl className="grid gap-x-6 gap-y-5 md:grid-cols-2">
+          <div className="flex flex-col gap-1"><dt className="text-sm font-medium text-muted-foreground">{en ? "Name" : "Nome"}</dt><dd className="text-sm">{session.user.name}</dd></div>
+          <div className="flex flex-col gap-1"><dt className="text-sm font-medium text-muted-foreground">Email</dt><dd className="text-sm">{session.user.email}</dd></div>
+        </dl>
+      </CardContent>
+      <CardFooter className="border-t"><SignOut locale={locale} /></CardFooter>
+    </Card>
+    <PushSettings enabled={process.env.PUSH_ENABLED === "true"} locale={locale} />
+  </>;
+}
