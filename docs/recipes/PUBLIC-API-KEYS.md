@@ -81,9 +81,9 @@ Operações que criam efeito (enviar mensagem, criar cobrança) aceitam `Idempot
 O kit já tem `@vibe/webhooks` (assinatura HMAC com timestamp, rejeição de destino interno, entrega via jobs). Para expor webhooks configuráveis pelo tenant na API:
 
 - `POST /api/v1/webhooks` com `url`, `secret`, `eventTypes`, `status`, `retryPolicy`. Segredo cifrado e nunca devolvido.
-- **Catálogo fechado e versionado de eventos** (`contact.created`, versão `v1`). Envelope mínimo: `eventId`, `type`, `version`, IDs da entidade, timestamp e lista de campos alterados. **Sem** corpo de mensagem, sem campos livres, sem segredos.
+- **Catálogo fechado e versionado de eventos** (`contact.created`, versão `v1`). Dados do envelope: IDs da entidade, versão do evento e lista de campos alterados. **Sem** corpo de mensagem, sem campos livres, sem segredos.
 - Destino validado contra SSRF na escrita **e** antes de cada envio. Sem seguir redirects. HTTPS em produção.
-- Assinatura sobre o corpo bruto, com timestamp: `HMAC(secret, "<timestamp>.<eventId>.<corpo>")`. Receptor valida janela de tempo e usa `eventId` como chave de idempotência. Retries preservam o `eventId`.
+- Assinatura do `@vibe/webhooks`: HMAC-SHA-256 de `"<timestamp>." + corpo bruto`, enviada nos headers `x-webhook-timestamp` e `x-webhook-signature`. O envelope do kit é `{ id, event, createdAt, data }`. Receptor valida a janela de tempo e usa `id` como chave de idempotência. Retries preservam o `id`.
 - Entrega concluída só com `2xx`. Retry com backoff e limite (por exemplo 6 tentativas).
 - Histórico de entregas e tentativas **sem payload** e sem segredo: status, código HTTP, duração, erro sanitizado, próxima tentativa.
 - Outbox transacional: o evento nasce na mesma transação da mudança (`enqueueEvent`). Job de recuperação reprocessa entregas presas.
@@ -103,5 +103,5 @@ O kit já tem `@vibe/webhooks` (assinatura HMAC com timestamp, rejeição de des
 - [ ] Idempotência: repetição devolve o mesmo resultado, reuso indevido retorna 409.
 - [ ] Toda rota está no OpenAPI com escopo, verificado por teste.
 - [ ] Webhook para IP privado, localhost, metadata e redirect é recusado.
-- [ ] Entrega duplicada do mesmo `eventId` não duplica efeito no receptor de exemplo.
+- [ ] Entrega duplicada do mesmo `id` de envelope não duplica efeito no receptor de exemplo.
 - [ ] Revogar chave encerra sessões MCP ligadas a ela.

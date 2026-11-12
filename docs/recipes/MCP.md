@@ -49,7 +49,7 @@ Regras:
 
 ### Observabilidade
 
-Registre em auditoria: sessão criada, encerrada, expirada, rotacionada, revogada ([AUDIT-LOG](AUDIT-LOG.md)). Métricas por tool, sem argumentos nem resultados no log.
+Registre em auditoria: sessão criada, encerrada, expirada, rotacionada, revogada ([AUDIT-LOG](AUDIT-LOG.md)). Log estruturado por tool (nome, duração, status), sem argumentos nem resultados.
 
 ## Parte 2: cliente MCP dos agentes
 

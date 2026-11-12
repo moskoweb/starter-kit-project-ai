@@ -1,6 +1,6 @@
 # Receita: trilha de auditoria
 
-Estado do kit: logs estruturados e métricas em `@vibe/observability`, sem trilha de auditoria persistida. Log não é auditoria: some com a retenção, não é consultável pelo tenant e não prova quem fez o quê.
+Estado do kit: log estruturado (`logEvent`) e exportação opcional em `@vibe/observability`, sem trilha de auditoria persistida. Log não é auditoria: some com a retenção, não é consultável pelo tenant e não prova quem fez o quê.
 
 Adote quando houver administração por tenant, chaves de API, papéis, dados pessoais ou exigência de conformidade. Para um protótipo de usuário único, não adote.
 
@@ -56,7 +56,7 @@ recordAudit(tx, { action: "api_key.revoked", entityType: "api_key", entityId: id
   - **Crítica** (permissão, chave, exclusão, exportação): falha na gravação **aborta** a operação.
   - **Informativa** (leitura, visualização): melhor esforço, com log de aviso.
 - Capture IP, user agent e `requestId` dos headers no servidor. Em jobs, receba por parâmetro.
-- Resolva IP com cuidado: só confie em `x-forwarded-for` atrás de proxy conhecido. O kit já tem lógica de IP em `rate-limit.ts` para reaproveitar.
+- Resolva IP com cuidado: só confie em `x-forwarded-for` atrás de proxy conhecido. O kit não resolve IP de cliente hoje: defina uma função única para isso e reaproveite no rate limit.
 
 ## O que registrar e o que nunca registrar
 

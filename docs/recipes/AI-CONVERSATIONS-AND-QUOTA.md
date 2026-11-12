@@ -21,7 +21,7 @@ ai_conversation              ai_run                          ai_message
 ```
 
 - Mesmo padrão de RLS de `ai_usage_daily`: política por `app.current_user_id` e `app.current_tenant_id`, com `organization_id` nulo para contexto pessoal. Conversa organizacional pode ser compartilhada por papel. Decida cedo: privada por usuário (padrão seguro) ou visível à equipe.
-- Gere com `vibe model`. `parts` é JSON, tipo que o gerador recusa em resource. Escreva o model à mão e use resource só para listagem e arquivamento.
+- `parts` é JSON, tipo que o gerador da CLI não suporta. Escreva o schema Drizzle e as políticas RLS à mão. Resource só entra para listagem e arquivamento, sobre colunas de tipos suportados.
 - Status de run: `reserved`, `running`, `completed`, `aborted`, `failed`, `expired`.
 - `idempotency_key` com índice único por `(owner_user_id, idempotency_key)`. O cliente gera a chave por envio. Reenvio devolve o run existente em vez de gastar quota de novo.
 
@@ -54,7 +54,7 @@ Job recorrente no pg-boss (`@vibe/jobs`):
 
 1. Seleciona `ai_run` em `reserved` ou `running` com `started_at` anterior ao deadline máximo mais margem.
 2. Marca como `expired` e aplica a política de liquidação (reserva integral ou estimada) de forma idempotente.
-3. Emite evento de métrica. Taxa alta de `expired` indica problema de infraestrutura.
+3. Emite log estruturado (`logEvent`). Taxa alta de `expired` indica problema de infraestrutura.
 
 Esse job precisa de um papel de servidor que acesse runs de vários tenants. Use função `SECURITY DEFINER` estreita ou o papel de worker dedicado do kit, sem dar ao runtime web um bypass de RLS.
 
