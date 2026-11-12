@@ -1,6 +1,7 @@
 import path from "node:path";
 import { assertSafeDestination, copyTemplate, type Profile, withStaging } from "./files.js";
 import { commitChanges, panelChanges, type PanelOptions } from "./panel.js";
+import { readKitInfo, writeKitInfo } from "./upstream.js";
 
 /** Workspace panels generated per identity profile; the template itself ships only the admin panel. */
 export const profilePanels: Record<Profile, PanelOptions[]> = {
@@ -28,6 +29,8 @@ export async function createProject(directory: string, profile: Profile, source 
   await withStaging(target, async stage => {
     await copyTemplate(root, stage, profile);
     await registerProfilePanels(stage, profile);
+    const kit = await readKitInfo(root);
+    if (kit) await writeKitInfo(stage, kit); // Base for `vibe upgrade`; absent when the template is not a git checkout.
   });
   return target;
 }

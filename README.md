@@ -59,7 +59,18 @@ cd ../meu-produto
 pnpm install
 ```
 
-O destino deve não existir, ficar fora do template e ter diretório pai existente. A cópia exclui credenciais `.env*` (exceto `.env.example`), dependências, caches, `.git`, `.planning` e índice CodeGraph; gera `AGENTS.md` portátil, grava perfil no exemplo de ambiente e registra os painéis do perfil (`personal` → `app` em `/app`; `organizations` → `org` em `/org/<slug>`; `hybrid` → ambos; `admin` sempre). Não copia o ambiente de preparação. Inicie histórico Git próprio se desejar.
+O destino deve não existir, ficar fora do template e ter diretório pai existente. A cópia exclui credenciais `.env*` (exceto `.env.example`), dependências, caches, `.git`, `.planning` e índice CodeGraph; gera `AGENTS.md` portátil, grava perfil no exemplo de ambiente e registra os painéis do perfil (`personal` → `app` em `/app`; `organizations` → `org` em `/org/<slug>`; `hybrid` → ambos; `admin` sempre). Não copia o ambiente de preparação. Grava `.vibe-kit.json` (repositório, branch e commit do kit) como base de atualização.
+
+### Atualizar projeto derivado com o kit
+
+```bash
+cd ../meu-produto
+git init && git add -A && git commit -m "chore: initial import"   # uma vez
+pnpm exec tsx packages/cli/src/index.ts upgrade --preview   # commits e migrations alteradas
+pnpm exec tsx packages/cli/src/index.ts upgrade             # merge em chore/upgrade-kit-<sha>, sem commit
+```
+
+`upgrade` faz merge de três vias entre a base gravada, o kit atual e o projeto; conflitos ficam para resolução. Agentes seguem [`.agents/skills/upgrade-kit/SKILL.md`](.agents/skills/upgrade-kit/SKILL.md) (upstream é dono do mecanismo; projeto é dono de identidade e escopo; migrations aplicadas são imutáveis). Verifique, commite `chore: upgrade kit to <sha>` e faça fast-forward em `main`.
 
 Em seguida, siga [GETTING-STARTED](docs/GETTING-STARTED.md): provisionar roles, configurar ambiente, aplicar migrations, conceder grants, provisionar admin e entrar. Resumo **após** esses preparativos:
 

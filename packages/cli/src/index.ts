@@ -6,10 +6,11 @@ import { runModel } from "./model.js";
 import { readFile, access } from "node:fs/promises";
 import { runResource } from "./resource.js";
 import { runPanel } from "./panel.js";
+import { runUpgrade } from "./upstream.js";
 import path from "node:path";
 
-export const commands = { create: createProject, model: runModel, resource: runResource, panel: runPanel };
-const help = `Usage: vibe <command>\n\nCommands:\n  create <dir> --profile <personal|organizations|hybrid> [--preview] [--json] [--noninteractive]\n    personal: registers panel app (/app); organizations: panel org (/org/<slug>); hybrid: both. Admin (/admin) always ships.\n  model <Name> --spec <JSON> [--preview] [--json] [--migration]\n  resource <Name> --model export --panel id --spec JSON-or-path [--with-model] [--migration] [--preview] [--json] [--noninteractive]\n  panel <id> --context global|personal|organization --prefix /path [--label text] [--identifier slug|uuid] [--preview] [--json] [--noninteractive]\n  doctor`;
+export const commands = { create: createProject, model: runModel, resource: runResource, panel: runPanel, upgrade: runUpgrade };
+const help = `Usage: vibe <command>\n\nCommands:\n  create <dir> --profile <personal|organizations|hybrid> [--preview] [--json] [--noninteractive]\n    personal: registers panel app (/app); organizations: panel org (/org/<slug>); hybrid: both. Admin (/admin) always ships.\n  model <Name> --spec <JSON> [--preview] [--json] [--migration]\n  resource <Name> --model export --panel id --spec JSON-or-path [--with-model] [--migration] [--preview] [--json] [--noninteractive]\n  panel <id> --context global|personal|organization --prefix /path [--label text] [--identifier slug|uuid] [--preview] [--json] [--noninteractive]\n  upgrade [--ref branch] [--preview] [--json]\n    merges kit updates recorded in .vibe-kit.json into branch chore/upgrade-kit-<sha>; never commits\n  doctor`;
 export async function main(argv = process.argv.slice(2)) {
   const [command, ...args] = argv;
   if (!command || command === "--help" || command === "-h") { console.log(help); return; }
@@ -36,6 +37,7 @@ export async function main(argv = process.argv.slice(2)) {
   if (command === "model") { await runModel(args); return; }
   if (command === "resource") { await runResource(args); return; }
   if (command === "panel") { await runPanel(args); return; }
+  if (command === "upgrade") { await runUpgrade(args); return; }
   throw new Error(`Unknown command: ${command}\n${help}`);
 }
 if (process.argv[1] && import.meta.url === new URL(`file://${process.argv[1]}`).href) {
