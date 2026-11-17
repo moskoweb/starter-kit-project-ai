@@ -19,14 +19,16 @@ O script cria o usuário já verificado com `role = "admin"` (ou promove um e-ma
 Resources em `apps/app/src/lib/resources/definitions/admin-users.ts` e `admin-organizations.ts`, registrados só no painel `admin`.
 
 - **Dashboard**: total de usuários e organizações, cadastros nos últimos 30 dias, usuários banidos.
-- **Usuários**: listar, buscar (nome/e-mail), filtrar por papel e banimento, ver perfil, segurança (2FA, e-mail verificado), status de banimento e número de organizações. Ações:
+- **Usuários**: listar, buscar (nome/e-mail), filtrar por papel e banimento, ver perfil, segurança (2FA, e-mail verificado), status de banimento e número de organizações; editar nome pela página `/admin/users/<id>/edit`. Ações:
   - `Tornar admin` / `Remover admin` (`setRole`);
   - `Encerrar sessões` (`revokeUserSessions`);
   - `Banir` / `Desbanir` (`banUser` / `unbanUser`; banir encerra as sessões);
   - `Atuar como` (`impersonateUser`), só para usuários não-admin e não banidos.
 - **Organizações**: listar, buscar (nome/slug), ver membros, excluir (remove membros, convites e dados da organização por cascata).
 
-Não há criação/edição genérica por formulário: mudanças de conta passam pelas ações acima.
+Formulário administrativo aceita somente `name` (1–255 caracteres); e-mail é somente leitura. Senha, papel, banimento e flags de verificação nunca são aceitos por essa operação. Mudanças de e-mail e senha pertencem aos fluxos verificados do titular. Cadastro e criação/edição de organização mantêm fluxos de identidade/tenancy, sem CRUD genérico que os contorne.
+
+Sessão de superadmin recebe atalho **Admin** na navegação da conta e dos painéis de trabalho. Usuário comum não recebe atalho e continua bloqueado por páginas, loaders e ações no servidor. CRUD de domínio completo é gerado por `pnpm vibe resource`, com componentes e organização em [UI.md](UI.md) e [CLI-RESOURCES.md](CLI-RESOURCES.md).
 
 ## Regras de segurança
 

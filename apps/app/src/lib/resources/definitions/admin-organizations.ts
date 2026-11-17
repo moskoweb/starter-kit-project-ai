@@ -70,12 +70,13 @@ export const adminOrganizationResource = defineResource({
   get: async (_scope, id) => {
     await requireAdmin();
     const db = getDb();
-    const [[row], list] = await Promise.all([
+    const [[row], list, [{ total }]] = await Promise.all([
       db.select().from(organization).where(eq(organization.id, id)).limit(1),
       db.select({ name: user.name, email: user.email, role: member.role }).from(member).innerJoin(user, eq(user.id, member.userId)).where(eq(member.organizationId, id)).orderBy(asc(user.name)).limit(200),
+      db.select({ total: count() }).from(member).where(eq(member.organizationId, id)),
     ]);
     // ponytail: members rendered as text lines (cap 200); upgrade to a relation table when resources support relation managers.
-    return row ? record({ ...row, members: list.length, memberList: list.map(m => `${m.name} · ${m.email} · ${m.role}`).join("\n") || "—" }) : null;
+    return row ? record({ ...row, members: total, memberList: list.map(m => `${m.name} · ${m.email} · ${m.role}`).join("\n") || "—" }) : null;
   },
   actions: [{
     name: "delete",

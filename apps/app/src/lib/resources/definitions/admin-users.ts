@@ -2,6 +2,7 @@ import "server-only";
 import { and, asc, count, desc, eq, ilike, ne, or, sql } from "drizzle-orm";
 import { headers } from "next/headers";
 import { APIError } from "better-auth/api";
+import { z } from "zod";
 import { getDb, member, session, user } from "@vibe/db";
 import { getAuth, requireSession } from "@vibe/auth";
 import type { ActionResult, ResourceRecord } from "@vibe/ui/lib/schema";
@@ -75,7 +76,25 @@ export const adminUserResource = defineResource({
   icon: "users",
   navigationGroup: { "pt-BR": "Sistema", en: "System" },
   titleKey: "name",
-  can: (_role, operation, scope) => scope.isAdmin && operation === "read",
+  can: (_role, operation, scope) => scope.isAdmin && (operation === "read" || operation === "update"),
+  form: async () => [{
+    title: { "pt-BR": "Perfil", en: "Profile" },
+    fields: [
+      { name: "name", label: { "pt-BR": "Nome", en: "Name" }, type: "text", required: true, maxLength: 255 },
+      { name: "email", label: { "pt-BR": "E-mail", en: "Email" }, type: "email", disabledOnEdit: true,
+        description: { "pt-BR": "O titular altera o e-mail com verificação na página da conta.", en: "The account owner changes email through the verified account flow." } },
+    ],
+  }],
+  update: async (scope, id, values) => {
+    try {
+      const { headers: currentHeaders } = await requireAdmin();
+      if (!scope.isAdmin) return { ok: false, error: "FORBIDDEN" };
+      const parsed = z.object({ name: z.string().trim().min(1).max(255) }).strict().safeParse(values);
+      if (!parsed.success) return { ok: false, error: "INVALID_INPUT", fieldErrors: { name: "Nome / Name: 1–255 caracteres / characters." } };
+      await getAuth().api.adminUpdateUser({ headers: currentHeaders, body: { userId: id, data: parsed.data } });
+      return { ok: true, id };
+    } catch (error) { return adminError(error); }
+  },
   table: {
     columns: [
       { key: "name", label: { "pt-BR": "Nome", en: "Name" }, primary: true, sortable: true },

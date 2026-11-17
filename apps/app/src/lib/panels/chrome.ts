@@ -11,7 +11,12 @@ import { resourceId, resourcesForPanel } from "./resources";
 import { buildPanelPath } from "./routing";
 
 type Copy = (typeof messages)[Locale];
-type User = { name: string; email?: string };
+type User = { name: string; email?: string; role?: string | null };
+
+function adminGroup(user: User, locale: Locale): NavGroup[] {
+  const admin = registry.find(panel => panel.context === "global");
+  return user.role === "admin" && admin ? [{ label: locale === "en" ? "System" : "Sistema", items: [{ title: admin.label, href: admin.prefix, icon: "security" }] }] : [];
+}
 
 export async function currentLocale(): Promise<Locale> { return (await cookies()).get("locale")?.value === "en" ? "en" : "pt-BR"; }
 
@@ -42,7 +47,7 @@ async function workspaceSwitcher(copy: Copy, loadOrganizations: boolean): Promis
 /** Build shell props (navigation groups, tenant switcher, user) for a panel page. */
 export async function panelChrome({ panel, basePath, tenant, user, locale }: { panel: PanelConfig; basePath: string; tenant?: { id: string; name: string; role: string }; user: User; locale: Locale }): Promise<Omit<PanelShellProps, "children">> {
   const copy = messages[locale];
-  const groups = new Map<string, NavGroup>([["", { label: copy.navigation, items: [{ title: copy.dashboard, href: basePath, icon: "dashboard", exact: true }] }]]);
+  const groups = new Map<string, NavGroup>([[copy.navigation, { label: copy.navigation, items: [{ title: copy.dashboard, href: basePath, icon: "dashboard", exact: true }] }]]);
   for (const item of resourcesForPanel(panel.id)) {
     const label = item.kind === "resource" && item.definition.navigationGroup ? t(item.definition.navigationGroup, locale) : copy.navigation;
     const group = groups.get(label) ?? { label, items: [] };
@@ -50,6 +55,7 @@ export async function panelChrome({ panel, basePath, tenant, user, locale }: { p
     groups.set(label, group);
   }
   if (panel.context !== "global") groups.set("\u0000settings", settingsGroup(copy));
+  if (panel.context !== "global") for (const group of adminGroup(user, locale)) groups.set("\u0000admin", group);
   return {
     title: tenant?.name ?? (panel.context === "personal" ? copy.personal : panel.label),
     subtitle: tenant ? tenant.role : panel.context === "global" ? panel.label : copy.workspace,
@@ -71,7 +77,7 @@ export async function accountChrome(user: User) {
   return {
     title: copy.account,
     subtitle: copy.settings,
-    groups: [settingsGroup(copy)],
+    groups: [settingsGroup(copy), ...adminGroup(user, locale)],
     currentWorkspaceId: null,
     ...await workspaceSwitcher(copy, false),
     user, locale,

@@ -20,6 +20,17 @@ Raiz `/` (`components/organization/landing.ts`): visitante vê página pública 
 
 ## Registro e rotas
 
+### Administração global pronta
+
+`/admin` usa o mesmo shell shadcn do restante do kit: sidebar, busca de navegação, menu da conta, temas e locale. O dashboard consulta contagens reais de usuários/organizações, novos usuários em 30 dias e contas banidas. Um link para o painel aparece nas páginas da conta e nos painéis de trabalho somente quando a sessão do servidor tem `user.role = "admin"`. Isso não substitui autorização: páginas, loaders e Server Actions conferem a sessão novamente.
+
+- `/admin/users`: listagem paginada, busca, filtros por papel/status, detalhes, edição de nome, promoção/rebaixamento de papel, banimento/desbanimento, revogação de sessões e personificação. Edição aceita apenas `name`; e-mail permanece somente leitura, usando o fluxo verificado do titular para alteração. Senhas e flags de segurança nunca são campos de formulário administrativo genérico.
+- `/admin/organizations`: listagem paginada, busca, detalhes e exclusão confirmada. A contagem de membros é completa; a prévia textual mostra no máximo 200 membros.
+- Cadastro de usuário continua no fluxo verificado de autenticação. Criação/edição de organização pertence ao fluxo de tenancy com membership. O admin não oferece operações genéricas que contornem esses contratos.
+- CRUD de domínio completo vem de `pnpm vibe resource`, não de tabelas demonstrativas embutidas. Resource declara `create/update/delete` e autorização explicitamente; omitir operação remove página e controles correspondentes.
+
+Não promova automaticamente o primeiro cadastro. Configure o primeiro superadmin por procedimento administrativo controlado do projeto, fora de endpoints públicos. Teste opt-in do painel em `e2e/admin.spec.ts` exige sessão descartável provisionada separadamente, nunca conta de produção.
+
 - `apps/app/src/lib/panels/registry.ts` declara painéis (`admin` inline; gerados via import de `<id>.config.ts`). IDs e prefixos são únicos, sem sobreposição nem conflito com `reservedPanelRoutes`. Painéis de organização definem `tenantIdentifier` (`slug` ou `uuid`).
 - `routing.ts`: `resolvePanelPath(pathname)` e `buildPanelPath(panelId, { tenant, segments })`. Elas rejeitam traversal e barras codificadas, e não autorizam nada. Prefixo de painel não registrado resolve para 404.
 - `apps/app/src/app/[...segments]/page.tsx` resolve o painel, exige sessão, exige `role = admin` no global, resolve tenant/membership no organizacional e despacha para dashboard ou resource.

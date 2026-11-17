@@ -116,7 +116,7 @@ export default async function PanelPage({ params, searchParams }: Props) {
     </>;
   }
 
-  const chrome = await panelChrome({ panel, basePath, tenant, user: { name: session.user.name, email: session.user.email }, locale });
+  const chrome = await panelChrome({ panel, basePath, tenant, user: { name: session.user.name, email: session.user.email, role: session.user.role }, locale });
 
   return <PanelShell {...chrome} tenantIdentifier={identifier} showNotifications={process.env.JOBS_ENABLED === "true"}>
     {content}
