@@ -81,6 +81,11 @@ try {
     await runResource(["Note", "--model", "note", "--panel", "app", "--with-model", "--spec", spec]);
     const generated = await readFile("apps/app/src/lib/resources/definitions/note.ts", "utf8");
     assert.match(generated, /export const noteResource = defineResource\(/);
+    assert.match(generated, /revalidatePath\("\/\(panels\)\/\[\.\.\.segments\]", "page"\)/, "generated mutations invalidate the shared resource route");
+    assert.match(generated, /table: \{/, "resource declares shared table schema");
+    assert.match(generated, /form: async/, "resource declares shared form schema");
+    assert.match(generated, /infolist: async/, "resource declares shared detail schema");
+    assert.doesNotMatch(generated, /ResourceTable|ResourceForm|<form|<table/, "CLI generates definitions, never duplicate CRUD UI");
     assert.match(generated, /if \(!can\(role, operation\)\) throw new Error\("FORBIDDEN"\)/, "generated resource enforces declared roles inside tenant transaction");
     assert.match(generated, /inputSchema\.safeParse\(values\)/, "generated mutations validate input on the server");
     assert.match(generated, /if \(process\.env\.JOBS_ENABLED === "true"\) await enqueueEvent\(tx, \{ userId: ownerUserId, organizationId: context\.organizationId \}, \{ type: "note\.created", entityId: row!\.id \}\)/, "generated create enqueues outbox event in the same transaction");

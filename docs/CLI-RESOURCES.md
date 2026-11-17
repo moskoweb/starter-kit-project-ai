@@ -1,5 +1,11 @@
 # CLI de recursos e painéis
 
+## Contrato da base CRUD
+
+Starter entrega componentes-base e engine de páginas, no estilo Filament. `vibe resource` cria diretórios necessários, definição declarativa e registro; não copia `ResourceTable`, `ResourceForm` ou páginas JSX para cada entidade. Schema/model são gerados quando `--with-model` é informado. Lista, criar, detalhe e editar usam renderer e componentes-base compartilhados de `@vibe/ui`, compostos com shadcn/Base UI.
+
+Resources internos do starter devem seguir o mesmo contrato. Integrações de identidade podem ter loaders/actions próprios via Better Auth, sem inventar outro formulário ou outra tabela CRUD. Reutilizar UI não significa reutilizar permissões: acesso global, associação a organização e operações de proprietário continuam verificados no servidor. Membros, convites e transferência são operações de identidade, não escrita genérica em tabelas auth.
+
 Execute CLI compilada a partir da raiz do projeto. Todos comandos são não interativos; `--noninteractive` torna essa intenção explícita. `--json` retorna caminhos/conteúdo sem segredos. `--preview` valida precondições e mostra plano sem escrever.
 
 ```sh
