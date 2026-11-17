@@ -1,18 +1,17 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { authClient } from "@vibe/auth/client";
 import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@vibe/ui/components/alert-dialog";
 import { Button } from "@vibe/ui/components/button";
-import { Field, FieldDescription, FieldGroup, FieldLabel, FieldSet } from "@vibe/ui/components/field";
+import { Field, FieldGroup, FieldLabel } from "@vibe/ui/components/field";
 import { Input } from "@vibe/ui/components/input";
 import { ConfirmAction } from "@vibe/ui/components/resource/confirm-action";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@vibe/ui/components/select";
 import { Spinner } from "@vibe/ui/components/spinner";
 import type { Locale } from "@/lib/i18n";
-import { slugPattern, validOrganizationSlug } from "./shared";
 
 const text = {
   "pt-BR": {
@@ -34,37 +33,6 @@ const text = {
 } satisfies Record<Locale, unknown>;
 
 function fail(message: string): never { toast.error(message); throw new Error("REQUEST_FAILED"); }
-
-/** Edit name and slug via `organization.update`; the auth hook re-validates the slug server-side. */
-export function OrganizationGeneralForm({ organizationId, name, slug, locale }: { organizationId: string; name: string; slug: string; locale: Locale }) {
-  const copy = text[locale];
-  const router = useRouter();
-  const [busy, setBusy] = useState(false);
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const data = new FormData(event.currentTarget);
-    const nextName = String(data.get("name") ?? "").trim();
-    const nextSlug = String(data.get("slug") ?? "");
-    if (!validOrganizationSlug(nextSlug)) { toast.error(copy.invalidSlug); return; }
-    setBusy(true);
-    try {
-      const result = await authClient.organization.update({ organizationId, data: { name: nextName, slug: nextSlug } });
-      if (result.error) { toast.error(result.error.message || copy.failed); return; }
-      toast.success(copy.saved);
-      if (nextSlug !== slug) router.replace(`/organizations/${encodeURIComponent(nextSlug)}`);
-      router.refresh();
-    } finally { setBusy(false); }
-  }
-  return <form onSubmit={submit} aria-busy={busy}>
-    <FieldSet disabled={busy}>
-      <FieldGroup>
-        <Field><FieldLabel htmlFor="organization-name">{copy.name}</FieldLabel><Input id="organization-name" name="name" defaultValue={name} minLength={1} maxLength={100} required /></Field>
-        <Field><FieldLabel htmlFor="organization-slug">{copy.slug}</FieldLabel><Input id="organization-slug" name="slug" defaultValue={slug} pattern={slugPattern} maxLength={80} required /><FieldDescription>{copy.slugHelp}</FieldDescription></Field>
-        <div><Button type="submit" disabled={busy}>{busy && <Spinner data-icon="inline-start" />}{copy.save}</Button></div>
-      </FieldGroup>
-    </FieldSet>
-  </form>;
-}
 
 /** Owner promotes a member to owner, then demotes self to admin (Better Auth requires an owner to remain). */
 export function TransferOwnership({ organizationId, selfMemberId, members, locale }: { organizationId: string; selfMemberId: string; members: Array<{ id: string; label: string }>; locale: Locale }) {

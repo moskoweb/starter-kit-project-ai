@@ -12,12 +12,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@vibe
 import { Empty, EmptyHeader, EmptyTitle } from "@vibe/ui/components/empty";
 import { Field, FieldLabel } from "@vibe/ui/components/field";
 import { Input } from "@vibe/ui/components/input";
-import { PageHeader } from "@vibe/ui/components/resource/page-header";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@vibe/ui/components/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@vibe/ui/components/tabs";
 import { OrganizationForm } from "@/components/identity/organization-form";
 import { FormSelect } from "@/components/organization/form-select";
-import { DeleteOrganization, LeaveOrganization, OrganizationGeneralForm, TransferOwnership } from "@/components/organization/settings";
+import { DeleteOrganization, LeaveOrganization, TransferOwnership } from "@/components/organization/settings";
+import { accountOrganizationResource } from "@/lib/resources/definitions/account-organizations";
+import { renderResource } from "@/lib/resources/render";
 import { hasRole, organizationRoles, roleLabels, roleText } from "@/components/organization/shared";
 import { pageSession } from "@/lib/identity-session";
 import { currentLocale } from "@/lib/panels/chrome";
@@ -73,8 +74,10 @@ export default async function OrganizationPage({ params }: { params: Promise<{ i
   const others = organization.members.filter(member => member.id !== self?.id && !hasRole(member.role, "owner"));
 
   return <>
-    <PageHeader title={tenant.name} description={`${copy.yourRole}: ${roleText(tenant.role, locale)}`} breadcrumbs={[{ label: copy.breadcrumb, href: "/organizations" }, { label: tenant.name }]}
-      actions={organizationPanelPath(tenant) && <Link href={organizationPanelPath(tenant)!} className={buttonVariants()}>{copy.openPanel}<ArrowRight data-icon="inline-end" /></Link>} />
+    <div className="flex flex-wrap items-center justify-between gap-2">
+      <p className="text-sm text-muted-foreground">{copy.yourRole}: {roleText(tenant.role, locale)}</p>
+      {organizationPanelPath(tenant) && <Link href={organizationPanelPath(tenant)!} className={buttonVariants()}>{copy.openPanel}<ArrowRight data-icon="inline-end" /></Link>}
+    </div>
     <Tabs defaultValue="general">
       <TabsList>
         <TabsTrigger value="general">{copy.tabs.general}</TabsTrigger>
@@ -84,11 +87,7 @@ export default async function OrganizationPage({ params }: { params: Promise<{ i
       </TabsList>
 
       <TabsContent value="general">
-        <Card>
-          <CardHeader><CardTitle>{copy.general}</CardTitle><CardDescription>{manager ? copy.generalDescription : copy.generalReadOnly}</CardDescription></CardHeader>
-          <CardContent>{manager ? <OrganizationGeneralForm key={tenant.slug} organizationId={tenant.id} name={tenant.name} slug={tenant.slug} locale={locale} />
-            : <p className="text-sm">{tenant.name} · <span className="font-mono text-muted-foreground">{tenant.slug}</span></p>}</CardContent>
-        </Card>
+        {await renderResource(accountOrganizationResource, { panelTitle: locale === "en" ? "Account" : "Conta", basePath: "", route: ["organizations", tenant.slug], query: {}, scope: { identifier: tenant.slug, role: tenant.role }, locale })}
       </TabsContent>
 
       <TabsContent value="members" className="flex flex-col gap-4">

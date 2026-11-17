@@ -6,6 +6,7 @@ import type { ActionResult } from "@vibe/ui/lib/schema";
 import { requireSession, resolveTenant } from "@vibe/auth";
 import { registry } from "../panels/registry";
 import { getPanelResource } from "../panels/resources";
+import { accountOrganizationResource, accountOrganizationScope, accountResourceId } from "./definitions/account-organizations";
 import type { Operation, ResourceDefinition, ResourceScope } from "./define";
 
 const ids = z.array(z.string().uuid()).min(1).max(100).transform(values => [...new Set(values)]);
@@ -16,6 +17,14 @@ async function authorize(panelId: string, slug: string, identifier: string | nul
   const currentHeaders = await headers();
   const session = await requireSession(currentHeaders).catch(() => null);
   if (!session) return { error: "UNAUTHORIZED" };
+  if (panelId === accountResourceId) {
+    if (slug !== accountOrganizationResource.slug) return { error: "FORBIDDEN" };
+    try {
+      const scope = await accountOrganizationScope(identifier);
+      if (!accountOrganizationResource.can(scope.role, operation, scope)) return { error: "FORBIDDEN" };
+      return { resource: accountOrganizationResource, scope };
+    } catch { return { error: "FORBIDDEN" }; }
+  }
   const panel = registry.find(({ id }) => id === panelId);
   const entry = panel ? getPanelResource(panel.id, slug) : undefined;
   if (!panel || !entry || entry.kind !== "resource") return { error: "FORBIDDEN" };
@@ -37,7 +46,7 @@ export async function createRecord(panelId: string, slug: string, identifier: st
 }
 
 export async function updateRecord(panelId: string, slug: string, identifier: string | null, id: string, values: unknown): Promise<ActionResult> {
-  if (!z.string().uuid().safeParse(id).success) return { ok: false, error: "INVALID_INPUT" };
+  if (panelId === accountResourceId ? slug !== accountOrganizationResource.slug || identifier !== id : !z.string().uuid().safeParse(id).success) return { ok: false, error: "INVALID_INPUT" };
   const access = await authorize(panelId, slug, identifier, "update");
   if ("error" in access) return { ok: false, error: access.error };
   return access.resource.update ? access.resource.update(access.scope, id, values) : { ok: false, error: "FORBIDDEN" };

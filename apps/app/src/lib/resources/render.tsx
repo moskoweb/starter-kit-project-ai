@@ -15,23 +15,30 @@ import { localize, t, type Operation, type ResourceDefinition, type ResourceScop
 import { resourceText } from "./labels";
 import { parseListState } from "./list-state";
 import { createRecord, deleteRecords, runRecordAction, updateRecord } from "./resource-actions";
+import { accountOrganizationResource, accountOrganizationScope, accountResourceId } from "./definitions/account-organizations";
 
 /** Route passes tenant data; user id and superadmin flag are re-read from the session here. */
-type Context = { panel: PanelConfig; panelTitle: string; basePath: string; route: string[]; query: Record<string, string | string[] | undefined>; scope: Pick<ResourceScope, "identifier" | "role">; locale: Locale };
+type Context = { panel?: PanelConfig; panelTitle: string; basePath: string; route: string[]; query: Record<string, string | string[] | undefined>; scope: Pick<ResourceScope, "identifier" | "role">; locale: Locale };
 
 /** Filament-style resource pages: index (table), create, view (infolist) and edit. */
 export async function renderResource(resource: ResourceDefinition, { panel, panelTitle, basePath, route, query, scope: tenant, locale }: Context) {
   const { session } = await pageSession();
   const isAdmin = session.user.role === "admin";
-  if (panel.context === "global" && !isAdmin) forbidden();
-  const scope: ResourceScope = { ...tenant, userId: session.user.id, isAdmin };
+  if (panel?.context === "global" && !isAdmin) forbidden();
+  if (!panel && resource !== accountOrganizationResource) forbidden();
+  const scope: ResourceScope = panel ? { ...tenant, userId: session.user.id, isAdmin } : await accountOrganizationScope(tenant.identifier).catch((error: unknown) => {
+    if (error instanceof Error && error.message === "NOT_FOUND") notFound();
+    if (error instanceof Error && error.message === "FORBIDDEN") forbidden();
+    throw error;
+  });
+  const contextId = panel?.id ?? accountResourceId;
   const base = `${basePath}/${resource.slug}`;
   const text = resourceText[locale];
   const can = (operation: Operation) => resource.can(scope.role, operation, scope) && (operation === "read" || resource[operation] !== undefined);
   if (!can("read")) forbidden();
-  const crumbs = [{ label: panelTitle, href: basePath }, { label: t(resource.pluralLabel, locale), href: base }];
-  const remove = deleteRecords.bind(null, panel.id, resource.slug, scope.identifier);
-  const act = runRecordAction.bind(null, panel.id, resource.slug, scope.identifier);
+  const crumbs = [{ label: panelTitle, href: basePath || "/account" }, { label: t(resource.pluralLabel, locale), href: base }];
+  const remove = deleteRecords.bind(null, contextId, resource.slug, scope.identifier);
+  const act = runRecordAction.bind(null, contextId, resource.slug, scope.identifier);
   const actions = resource.actions ?? [];
   const actionDefs: RecordActionDef[] = actions.map(({ visible: _visible, run: _run, ...def }) => localize(def, locale));
   const allowed = (record: ResourceRecord) => actions.filter(action => !action.visible || action.visible(record, scope)).map(action => action.name);
@@ -44,7 +51,7 @@ export async function renderResource(resource: ResourceDefinition, { panel, pane
     return <>
       <PageHeader title={t(resource.pluralLabel, locale)} description={resource.description && t(resource.description, locale)} breadcrumbs={[crumbs[0]!, { label: t(resource.pluralLabel, locale) }]}
         actions={can("create") && resource.form && <Link href={`${base}/new`} className={buttonVariants()}><Plus data-icon="inline-start" />{text.create} {t(resource.label, locale).toLowerCase()}</Link>} />
-      <ResourceTableView columns={localize(resource.table.columns, locale)} filters={filters} records={records} total={total} state={state} basePath={base} storageKey={`${panel.id}:${resource.slug}`} locale={locale} text={text}
+      <ResourceTableView columns={localize(resource.table.columns, locale)} filters={filters} records={records} total={total} state={state} basePath={base} storageKey={`${contextId}:${resource.slug}`} locale={locale} text={text}
         permissions={{ create: can("create"), view: true, update: can("update") && !!resource.form, delete: can("delete"), bulkDelete: can("delete") }} onDelete={can("delete") ? remove : undefined}
         recordActions={actionDefs} availableActions={Object.fromEntries(records.map(record => [record.id, allowed(record)]))} onRecordAction={actions.length ? act : undefined} />
     </>;
@@ -55,11 +62,11 @@ export async function renderResource(resource: ResourceDefinition, { panel, pane
     const title = `${text.create} ${t(resource.label, locale).toLowerCase()}`;
     return <>
       <PageHeader title={title} breadcrumbs={[...crumbs, { label: title }]} />
-      <ResourceFormView sections={localize(await resource.form(scope), locale)} basePath={base} cancelHref={base} text={text} locale={locale} onSubmit={createRecord.bind(null, panel.id, resource.slug, scope.identifier)} />
+      <ResourceFormView sections={localize(await resource.form(scope), locale)} basePath={base} cancelHref={base} text={text} locale={locale} onSubmit={createRecord.bind(null, contextId, resource.slug, scope.identifier)} />
     </>;
   }
 
-  if (!/^[0-9a-f-]{36}$/i.test(first) || (second !== undefined && second !== "edit") || third !== undefined) notFound();
+  if ((panel ? !/^[0-9a-f-]{36}$/i.test(first) : !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(first)) || (second !== undefined && second !== "edit") || third !== undefined) notFound();
   const record = await resource.get(scope, first);
   if (!record) notFound();
   const title = String(record[resource.titleKey] ?? t(resource.label, locale));
@@ -70,7 +77,7 @@ export async function renderResource(resource: ResourceDefinition, { panel, pane
     return <>
       <PageHeader title={`${text.edit} ${title}`} breadcrumbs={[...crumbs, { label: title, href: recordHref }, { label: text.edit }]}
         actions={can("delete") && <DeleteRecord id={record.id} text={text} redirectTo={base} onDelete={remove} />} />
-      <ResourceFormView sections={localize(await resource.form(scope), locale)} record={record} basePath={base} cancelHref={recordHref} text={text} locale={locale} onSubmit={updateRecord.bind(null, panel.id, resource.slug, scope.identifier, record.id)} />
+      <ResourceFormView sections={localize(await resource.form(scope), locale)} record={record} basePath={base} cancelHref={recordHref} text={text} locale={locale} onSubmit={updateRecord.bind(null, contextId, resource.slug, scope.identifier, record.id)} />
     </>;
   }
 

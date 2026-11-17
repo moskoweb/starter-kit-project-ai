@@ -9,10 +9,9 @@ import { FieldGroup, FieldSet } from "@vibe/ui/components/field";
 import { ConfirmAction } from "@vibe/ui/components/resource/confirm-action";
 import { Spinner } from "@vibe/ui/components/spinner";
 import type { Locale } from "@/lib/i18n";
-import { organizationPanelPath } from "@/lib/panels/routing";
-import { organizationRoles, validOrganizationSlug, type OrganizationRole } from "@/components/organization/shared";
+import { organizationRoles, type OrganizationRole } from "@/components/organization/shared";
 
-type Action = "create" | "invite" | "cancel" | "resend" | "role" | "remove" | "select" | "accept" | "reject";
+type Action = "invite" | "cancel" | "resend" | "role" | "remove" | "select" | "accept" | "reject";
 const variants: Partial<Record<Action, "destructive" | "outline">> = { remove: "destructive", cancel: "outline", reject: "outline", resend: "outline", select: "outline", role: "outline" };
 const text = {
   "pt-BR": {
@@ -35,7 +34,7 @@ const text = {
   },
 } satisfies Record<Locale, unknown>;
 
-/** Better Auth organization operations; the server enforces membership and role. `create` opens the new organization panel when registered, else its settings page. */
+/** Specialized Better Auth relationship operations; server enforces membership and role. */
 export function OrganizationForm({ action, organizationId, targetId, email, role, children, label, size, locale = "pt-BR" }: { action: Action; organizationId?: string; targetId?: string; email?: string; role?: string; children?: ReactNode; label: string; size?: "sm" | "default"; locale?: Locale }) {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
@@ -46,12 +45,9 @@ export function OrganizationForm({ action, organizationId, targetId, email, role
     const data = new FormData(form);
     const selectedRole = String(data.get("role") || role || "member");
     if (!organizationRoles.includes(selectedRole as OrganizationRole)) { toast.error(copy.invalidRole); throw new Error("INVALID_ROLE"); }
-    const slug = String(data.get("slug") ?? "");
-    if (action === "create" && !validOrganizationSlug(slug)) { toast.error(copy.invalidSlug); throw new Error("INVALID_SLUG"); }
     setBusy(true);
     try {
-      const result = action === "create" ? await authClient.organization.create({ name: String(data.get("name")).trim(), slug })
-        : action === "invite" || action === "resend" ? await authClient.organization.inviteMember({ organizationId, email: email ?? String(data.get("email")), role: selectedRole as OrganizationRole, resend: action === "resend" })
+      const result = action === "invite" || action === "resend" ? await authClient.organization.inviteMember({ organizationId, email: email ?? String(data.get("email")), role: selectedRole as OrganizationRole, resend: action === "resend" })
         : action === "cancel" ? await authClient.organization.cancelInvitation({ invitationId: targetId! })
         : action === "role" ? await authClient.organization.updateMemberRole({ organizationId, memberId: targetId!, role: selectedRole as OrganizationRole })
         : action === "remove" ? await authClient.organization.removeMember({ organizationId, memberIdOrEmail: targetId! })
@@ -61,9 +57,7 @@ export function OrganizationForm({ action, organizationId, targetId, email, role
       if (result.error) throw new Error("REQUEST_FAILED");
       form.reset();
       toast.success(copy.done);
-      const created = action === "create" && result.data && typeof result.data === "object" && "id" in result.data && typeof result.data.id === "string" ? result.data.id : null;
-      if (action === "create") router.push((created && organizationPanelPath({ id: created, slug })) ?? `/organizations/${encodeURIComponent(slug)}`);
-      else if (action === "accept" || action === "reject") router.push("/organizations");
+      if (action === "accept" || action === "reject") router.push("/organizations");
       router.refresh();
     } catch (error) {
       toast.error(copy.failed);
