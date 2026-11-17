@@ -71,8 +71,8 @@ export const accountOrganizationResource = defineResource({
       const parsed = input.safeParse(values);
       if (!parsed.success) return { ok: false, error: "INVALID_INPUT", fieldErrors: { name: "Nome / Name: 1–100", slug: "Identificador inválido / Invalid identifier" } };
       const tenant = await resolveTenant(slug, await headers(), "slug");
-      await getAuth().api.updateOrganization({ headers: await headers(), body: { organizationId: tenant.id, data: parsed.data } });
-      return { ok: true, id: parsed.data.slug };
+      const org = await getAuth().api.updateOrganization({ headers: await headers(), body: { organizationId: tenant.id, data: parsed.data } });
+      return org?.id === tenant.id && org.slug === parsed.data.slug ? { ok: true, id: org.slug } : { ok: false, error: "RESOURCE_ERROR" };
     } catch (error) { return failure(error); }
   },
 });

@@ -6,7 +6,7 @@ const require = createRequire(new URL("../../../../../../package.json", import.m
 const { transpileModule, ModuleKind } = require("typescript");
 const { z } = require("zod");
 const env = { IDENTITY_PROFILE: "hybrid", ORGANIZATION_MODE: "multi", SINGLE_ORGANIZATION_ID: "uuid-team" };
-let authenticated = true, role = "owner", membership = true, apiError = false;
+let authenticated = true, role = "owner", membership = true, apiError = false, missingUpdate = false;
 const writes = [];
 const dependencies = {
   "server-only": {}, "zod": { z }, "next/headers": { headers: async () => ({}) },
@@ -19,7 +19,7 @@ const dependencies = {
     getAuth: () => ({ api: {
       listOrganizations: async () => [{ id: "uuid-team", name: "Team", slug: "team" }, { id: "uuid-other", name: "Other", slug: "other" }],
       createOrganization: async args => { if (apiError) throw new Error("secret"); writes.push(args.body); return args.body; },
-      updateOrganization: async args => { if (apiError) throw new Error("secret"); writes.push(args.body); },
+      updateOrganization: async args => { if (apiError) throw new Error("secret"); writes.push(args.body); return missingUpdate ? null : { id: args.body.organizationId, ...args.body.data }; },
     } }),
   },
 };
@@ -62,6 +62,9 @@ assert.equal((await resource.create(forged, values)).id, "renamed");
 assert.equal((await resource.update(forged, "team", values)).id, "renamed");
 assert.equal(writes[1].organizationId, "uuid-team");
 assert.equal(writes[1].data.name, "Renamed");
+missingUpdate = true;
+assert.equal((await resource.update(forged, "team", values)).error, "RESOURCE_ERROR");
+missingUpdate = false;
 apiError = true;
 assert.equal((await resource.update(forged, "team", values)).error, "RESOURCE_ERROR");
 const fields = (await resource.form(forged))[0].fields;
