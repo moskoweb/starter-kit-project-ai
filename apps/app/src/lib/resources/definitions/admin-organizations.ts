@@ -1,6 +1,6 @@
 import "server-only";
-import { asc, count, desc, eq, ilike, inArray, or } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
+import { asc, count, desc, eq, ilike, or } from "drizzle-orm";
+import { z } from "zod";
 import { getDb, member, organization, user } from "@vibe/db";
 import type { ResourceRecord } from "@vibe/ui/lib/schema";
 import { defineResource } from "../define";
@@ -27,7 +27,28 @@ export const adminOrganizationResource = defineResource({
   icon: "organization",
   navigationGroup: { "pt-BR": "Sistema", en: "System" },
   titleKey: "name",
-  can: (_role, operation, scope) => scope.isAdmin && operation === "read",
+  can: (_role, operation, scope) => scope.isAdmin && scope.identifier === null && (operation === "read" || operation === "update"),
+  form: async () => [{
+    title: { "pt-BR": "Organização", en: "Organization" },
+    fields: [
+      { name: "name", label: { "pt-BR": "Nome", en: "Name" }, type: "text", required: true, maxLength: 100 },
+      { name: "slug", label: { "pt-BR": "Slug", en: "Slug" }, type: "text", disabledOnEdit: true,
+        description: { "pt-BR": "Identificador preservado para não invalidar URLs da organização.", en: "Identifier is preserved to keep organization URLs valid." } },
+    ],
+  }],
+  update: async (scope, id, values) => {
+    try {
+      await requireAdmin();
+      if (!scope.isAdmin || scope.identifier !== null) return { ok: false, error: "FORBIDDEN" };
+      const parsed = z.object({ name: z.string().trim().min(1).max(100) }).strict().safeParse(values);
+      if (!z.string().uuid().safeParse(id).success || !parsed.success) {
+        return { ok: false, error: "INVALID_INPUT", fieldErrors: { name: "Nome / Name: 1–100 caracteres / characters." } };
+      }
+      // Global identity metadata only. Never enter tenant data or bypass RLS for administration.
+      const [updated] = await getDb().update(organization).set(parsed.data).where(eq(organization.id, id)).returning({ id: organization.id });
+      return updated ? { ok: true, id: updated.id } : { ok: false, error: "NOT_FOUND" };
+    } catch (error) { return adminError(error); }
+  },
   table: {
     columns: [
       { key: "name", label: { "pt-BR": "Nome", en: "Name" }, primary: true, sortable: true },
@@ -78,26 +99,5 @@ export const adminOrganizationResource = defineResource({
     // ponytail: members rendered as text lines (cap 200); upgrade to a relation table when resources support relation managers.
     return row ? record({ ...row, members: total, memberList: list.map(m => `${m.name} · ${m.email} · ${m.role}`).join("\n") || "—" }) : null;
   },
-  actions: [{
-    name: "delete",
-    label: { "pt-BR": "Excluir", en: "Delete" },
-    destructive: true,
-    bulk: true,
-    confirm: { title: { "pt-BR": "Excluir organização?", en: "Delete organization?" }, description: { "pt-BR": "Membros, convites e dados da organização serão removidos. Esta ação não pode ser desfeita.", en: "Members, invitations and organization data are removed. This cannot be undone." } },
-    run: async (scope, ids) => {
-      try {
-        await requireAdmin();
-        if (!scope.isAdmin) return { ok: false, error: "FORBIDDEN" };
-        // Better Auth deleteOrganization requires owner membership; superadmin deletes directly, FKs cascade members/invitations/data.
-        const deleted = await getDb().transaction(async tx => {
-          const rows = await tx.delete(organization).where(inArray(organization.id, ids)).returning({ id: organization.id });
-          if (rows.length !== ids.length) throw new Error("NOT_FOUND");
-          return rows;
-        });
-        if (!deleted.length) return { ok: false, error: "NOT_FOUND" };
-        revalidatePath("/[...segments]", "page");
-        return { ok: true };
-      } catch (error) { return adminError(error); }
-    },
-  }],
+  // ponytail: creation stays in the identity flow; deletion needs an explicit tenant-data retention policy before enabling.
 });

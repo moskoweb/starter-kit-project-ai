@@ -25,9 +25,17 @@ Resources em `apps/app/src/lib/resources/definitions/admin-users.ts` e `admin-or
   - `Encerrar sessões` (`revokeUserSessions`);
   - `Banir` / `Desbanir` (`banUser` / `unbanUser`; banir encerra as sessões);
   - `Atuar como` (`impersonateUser`), só para usuários não-admin e não banidos.
-- **Organizações**: listar, buscar (nome/slug), ver membros, excluir (remove membros, convites e dados da organização por cascata).
+- **Organizações**: listar, buscar (nome/slug), ver detalhes e membros; editar nome pela página `/admin/organizations/<id>/edit`, usando formulário e operação `update` padrão de `defineResource`.
 
-Formulário administrativo aceita somente `name` (1–255 caracteres); e-mail é somente leitura. Senha, papel, banimento e flags de verificação nunca são aceitos por essa operação. Mudanças de e-mail e senha pertencem aos fluxos verificados do titular. Cadastro e criação/edição de organização mantêm fluxos de identidade/tenancy, sem CRUD genérico que os contorne.
+Formulário administrativo de usuário aceita somente `name` (1–255 caracteres); e-mail é somente leitura. Senha, papel, banimento e flags de verificação nunca são aceitos por essa operação. Mudanças de e-mail e senha pertencem aos fluxos verificados do titular.
+
+### Organizações
+
+Resource administrativo oferece leitura e edição de `name` (1–100 caracteres, espaços externos removidos). `slug` é somente leitura para preservar URLs. Campos extras, IDs inválidos e contexto de tenant são recusados no servidor. Alteração exige sessão atual de superadmin, não apenas permissão enviada no `scope`, e modifica somente metadados globais de identidade. Não concede membership nem acesso aos dados do tenant.
+
+Criação continua em `/organizations`, pelo Better Auth: respeita perfil, modo single/multi, verificação de e-mail e atribuição de proprietário. Não há criação administrativa direta nem exclusão individual/em lote no resource. A antiga ação de exclusão por cascata foi removida: não é seguro presumir organização vazia a partir de consultas limitadas por RLS. Reativar exclusão exige política explícita de retenção, autorização e proteção dos dados dependentes, inclusive tabelas adicionadas pelo projeto.
+
+Check sem banco: `node apps/app/src/lib/resources/definitions/admin-organizations.check.mjs`. Cobre contrato do resource e casos negativos com dependências simuladas, não substitui aceite com sessão/DB/UI reais.
 
 Sessão de superadmin recebe atalho **Admin** na navegação da conta e dos painéis de trabalho. Usuário comum não recebe atalho e continua bloqueado por páginas, loaders e ações no servidor. CRUD de domínio completo é gerado por `pnpm vibe resource`, com componentes e organização em [UI.md](UI.md) e [CLI-RESOURCES.md](CLI-RESOURCES.md).
 
@@ -37,7 +45,7 @@ Sessão de superadmin recebe atalho **Admin** na navegação da conta e dos pain
 - Ações de usuário usam a API server-side do Better Auth (`getAuth().api.*`) com os headers da requisição, então as permissões do plugin também são aplicadas.
 - Admin nunca age sobre si mesmo (banir, mudar papel, encerrar sessões, personificar): o servidor recusa com `CANNOT_ACT_ON_SELF`.
 - Admins não podem personificar outros admins (`allowImpersonatingAdmins: false`).
-- Exclusão de organização é feita direto no banco porque `organization.delete` do Better Auth exige ser owner; a checagem de superadmin acontece antes.
+- Edição de organização altera somente `organization.name` com predicado pelo ID validado; sem bypass de RLS, alteração de slug ou exclusão em cascata.
 
 ## Personificação (impersonation)
 
