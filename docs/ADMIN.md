@@ -7,12 +7,13 @@
 Senha só por stdin, nunca em argumentos ou histórico do shell:
 
 ```bash
-read -rs ADMIN_PASSWORD && printf '%s\n' "$ADMIN_PASSWORD" | \
-  ADMIN_EMAIL=admin@example.com ADMIN_NAME="Admin" pnpm --filter @vibe/auth seed:admin
+read -rs -p 'Senha do admin (12 a 128 caracteres): ' ADMIN_PASSWORD
+printf '\n'
+printf '%s\n' "$ADMIN_PASSWORD" | pnpm vibe make:admin --email admin@example.test --name 'Admin'
 unset ADMIN_PASSWORD
 ```
 
-O script cria o usuário já verificado com `role = "admin"` (ou promove um e-mail existente). Depois disso, outros admins são promovidos pelo próprio painel.
+Execute na raiz com ambiente runtime injetado e migrations/grants aplicados ([primeira execução](GETTING-STARTED.md)). Comando cria usuário novo já verificado com `role = "admin"` e credencial na mesma transação. Email existente é recusado sem alterar senha, papel, verificação ou sessões. Depois disso, outros admins podem ser promovidos por administrador autenticado no próprio painel. Não há conta padrão nem bypass dos dados dos tenants.
 
 ## O que o admin pode fazer
 

@@ -162,7 +162,7 @@ Use `pnpm --filter <nome> <script>` para processos isolados. Exemplos:
 pnpm --filter app dev
 pnpm --filter app build
 pnpm --filter app start
-pnpm --filter @vibe/auth seed:admin       # ADMIN_EMAIL/ADMIN_NAME; senha por stdin
+pnpm vibe make:admin --email admin@example.test --name 'Admin' # senha por stdin; email novo
 pnpm --filter @vibe/cli build
 node packages/cli/dist/index.js --help
 pnpm --filter @vibe/storage test
