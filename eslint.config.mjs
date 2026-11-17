@@ -1,6 +1,7 @@
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
+import oxlint from "eslint-plugin-oxlint";
 
 /** One flat config for the monorepo: Next + React Hooks + a11y + TypeScript rules. Astro files are checked by `astro check`. */
 export default defineConfig([
@@ -28,4 +29,6 @@ export default defineConfig([
     rules: { "@next/next/no-html-link-for-pages": "off" },
   },
   globalIgnores(["**/.next/**", "**/dist/**", "**/out/**", "**/build/**", "**/node_modules/**", "**/next-env.d.ts", "apps/web/.astro/**", "**/playwright-report/**", "**/test-results/**", ".agents/**", ".planning/**", "packages/db/migrations/**"]),
+  // Only disable rules explicitly enabled in Oxlint. Next/React/a11y remain authoritative here.
+  ...await oxlint.buildFromConfigFile("./.oxlintrc.json"),
 ]);
