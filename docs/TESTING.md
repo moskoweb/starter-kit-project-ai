@@ -1,5 +1,7 @@
 # Testes e qualidade
 
+Lint usa Oxlint para regras core/TypeScript explícitas e ESLint residual para React/Hooks/Next/a11y e regras não migradas. `pnpm test:lint` verifica negativos e configuração residual. `pnpm lint:oxlint` é gate rápido parcial, não substitui `pnpm lint`. Escopo e medições em `PERFORMANCE.md`.
+
 ## Organizações em resource: aceite de 2026-11-17
 
 Build standalone da demo independente passou após padronização. Playwright executou listagem, criação e edição pelo resource da conta, persistência após reload, abas membros/convites, busca e mobile sem overflow da página. Screenshots desktop/mobile inspecionadas. Segunda conta criada e verificada por Mailpit não viu organização na busca e recebeu página de não encontrado no detalhe e na edição. Após convite e aceite como viewer, leitura funcionou, edição ficou indisponível e update direto Better Auth foi negado sem alterar nome do proprietário. Sem `pageerror`. Login e resource Note gerado pela CLI também passaram após mudança da engine. Dados sintéticos foram mantidos. Origem HTTPS encaminhada ao gateway local, sem sessão externa autenticada Cloudflare Access.

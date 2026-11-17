@@ -4,6 +4,16 @@ Consulta e medições: 2026-11-17. Escopo: tooling local, sem troca de framework
 
 ## Decisão aplicada
 
+### Atualização: Oxlint adotado em 2026-11-17
+
+`pnpm lint` agora executa `lint:oxlint` e `lint:eslint`. Oxlint 1.94.0 assume 23 regras core/TypeScript explícitas em `.oxlintrc.json`, incluindo unused bindings e tipos inseguros. `eslint-plugin-oxlint` 1.94.0 desliga no ESLint somente regras habilitadas nessa configuração. React, React Hooks, Next, acessibilidade, imports e `prefer-const` continuam no residual ESLint. Não usamos preset que desliga todas as regras suportadas por nome. `prefer-const` ficou no residual porque Oxlint reportou binding declarado sem inicializador que ESLint aceita. Overrides de CommonJS, shadcn e escopo Next permanecem.
+
+`pnpm test:lint` exercita rejeição de `any`, parâmetro `_` permitido, acessibilidade e configuração residual/overrides. `pnpm test` inclui esse check. Ganho diz respeito à análise estática, não ao runtime da aplicação, build ou banco. Se a parte residual dominar custo, migração adicional exige fixtures de equivalência antes de desligar regras.
+
+Medição adicional no mesmo checkout, gates serializados, uma amostra por cenário: ESLint completo sem cache **15,19 s / 667360 KiB**, Oxlint + ESLint residual sem cache **15,09 s / 601680 KiB**, pipeline híbrido aquecido **3,68 s / 235692 KiB**. Oxlint isolado analisou 285 arquivos em 36–47 ms, sem incluir inicialização pnpm. O pipeline completo não demonstrou ganho considerável de tempo frio (menos de 1%, sujeito a ruído), embora RSS observado tenha caído cerca de 10%. Não comparar 36 ms de cobertura parcial com 15 s da cobertura completa. Lint aquecido inclui dois subprocessos pnpm adicionais. Nenhuma aceleração geral de testes ou runtime é atribuída a essa migração.
+
+### Histórico anterior à adoção
+
 `pnpm lint` mantém ESLint e configuração completa Next/Core Web Vitals, React Hooks, acessibilidade e TypeScript. Acrescenta `--cache --cache-strategy content --cache-location node_modules/.cache/eslint/`. Cache fica ignorado por `node_modules/`, não acompanha projeto criado nem exige mudança de lockfile. Conteúdo, não mtime, determina reaproveitamento. ESLint invalida entradas quando sua configuração muda. Após atualizar plugins/dependências, remova esse diretório de cache ou use `pnpm exec eslint . --max-warnings=0 --no-cache` para validação integral.
 
 Sem regra desligada, sem pacote novo, sem mudança em runtime ou tsconfig. CI continua chamando `pnpm lint`. Como CI não restaura esse cache, primeira execução continua integral. Não habilitado cache compartilhado entre branches nem reaproveitamento remoto.
@@ -92,7 +102,7 @@ Manter TS5.9.3 canônico. Reavaliar TS7 quando peers publicarem suporte e matriz
 
 Oxlint `latest` real: 1.94.0, Node `^20.19.0 || >=22.12.0`, compatível com Node local. `pnpm dlx oxlint@1.94.0 --rules` confirmou regras Next.js, JSX a11y e React, inclusive `rules-of-hooks`, `exhaustive-deps`, `purity`, `static-components` e `preserve-manual-memoization`. Não afirmar que Oxlint não tem essas regras. Presença pelo nome não prova semântica equivalente, opções, resoluções Next, suppressions ou presets idênticos.
 
-Não adotado nesta rodada. Rodar Oxlint seguido de ESLint completo duplica análise e adiciona dependência sem ganho demonstrado. Desligar duplicadas no ESLint exige inventário regra por regra e fixtures negativos para overrides shadcn, bindings `_`, CommonJS e scoping Next. Cache nativo do ESLint já resolve caso repetido com menor diff e preserva cobertura integral. Reavaliar híbrido apenas se lint frio virar gargalo medido, mantendo regras não equivalentes em ESLint. Nenhum benchmark de Oxlint com defaults é apresentado como comparação equivalente.
+Decisão inicial foi adiar. Revisão posterior, acima, adotou híbrido com regras core/TypeScript explícitas e integração oficial para desativar duplicadas. Regras React/Next/a11y não foram migradas apenas por coincidência de nome. Nenhum benchmark de Oxlint isolado é apresentado como comparação de cobertura integral.
 
 ## React/Next versus alternativas
 
