@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Fragment, type ReactNode } from "react";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@vibe/ui/components/breadcrumb";
+import { ResourceActionHeader } from "./resource-actions";
 
 /** Page heading with breadcrumbs, description and header actions (Filament page header). */
 export function PageHeader({ title, description, breadcrumbs = [], actions }: { title: string; description?: string; breadcrumbs?: { label: string; href?: string }[]; actions?: ReactNode }) {
@@ -18,7 +19,7 @@ export function PageHeader({ title, description, breadcrumbs = [], actions }: { 
         <h1 className="truncate text-2xl font-semibold tracking-tight">{title}</h1>
         {description && <p className="text-sm text-muted-foreground">{description}</p>}
       </div>
-      {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
+      {actions && <ResourceActionHeader>{actions}</ResourceActionHeader>}
     </div>
   </header>;
 }

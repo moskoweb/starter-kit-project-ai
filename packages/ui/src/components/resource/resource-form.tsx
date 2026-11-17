@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { cn } from "cn";
 import { Button, buttonVariants } from "@vibe/ui/components/button";
@@ -12,7 +12,7 @@ import { Input } from "@vibe/ui/components/input";
 import { Calendar } from "@vibe/ui/components/calendar";
 import { Combobox, ComboboxContent, ComboboxEmpty, ComboboxInput, ComboboxItem, ComboboxList } from "@vibe/ui/components/combobox";
 import { Popover, PopoverContent, PopoverTrigger } from "@vibe/ui/components/popover";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@vibe/ui/components/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@vibe/ui/components/select";
 import { Spinner } from "@vibe/ui/components/spinner";
 import { Switch } from "@vibe/ui/components/switch";
 import { Textarea } from "@vibe/ui/components/textarea";
@@ -20,6 +20,7 @@ import { CalendarIcon } from "lucide-react";
 import { format, isValid, parseISO } from "date-fns";
 import type { FormField, Option } from "../../lib/schema";
 import type { ResourceFormProps } from "./types";
+import { ResourceActionFooter } from "./resource-actions";
 
 type Values = Record<string, string | number | boolean | null>;
 
@@ -33,11 +34,22 @@ function initialValue(field: FormField, record: ResourceFormProps["record"]): st
 /** Schema-driven create/edit form. Server action re-validates; field errors map back by name. */
 export function ResourceForm({ sections, record, redirectTo, cancelHref, labels, locale, onSubmit }: ResourceFormProps) {
   const router = useRouter();
+  const formRef = useRef<HTMLFormElement>(null);
+  const submitting = useRef(false);
+  const focusError = useRef(false);
   const editing = !!record;
   const fields = sections.flatMap(section => section.fields);
   const [values, setValues] = useState(() => Object.fromEntries(fields.map(field => [field.name, initialValue(field, record)])));
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [pending, setPending] = useState(false);
+
+  useEffect(() => {
+    const name = Object.keys(errors)[0];
+    if (focusError.current && !pending) {
+      if (name) formRef.current?.querySelector<HTMLElement>(`[id=${CSS.escape(`field-${name}`)}]`)?.focus();
+      focusError.current = false;
+    }
+  }, [errors, pending]);
 
   function validate(): Record<string, string> {
     const found: Record<string, string> = {};
@@ -45,6 +57,8 @@ export function ResourceForm({ sections, record, redirectTo, cancelHref, labels,
       const value = values[field.name];
       if (editing && field.disabledOnEdit) continue;
       if (field.required && field.type !== "boolean" && String(value ?? "").trim() === "") found[field.name] = labels.required;
+      const control = formRef.current?.elements.namedItem(field.name);
+      if (!found[field.name] && (control instanceof HTMLInputElement || control instanceof HTMLTextAreaElement) && !control.validity.valid) found[field.name] = control.validationMessage;
     }
     return found;
   }
@@ -61,54 +75,60 @@ export function ResourceForm({ sections, record, redirectTo, cancelHref, labels,
   }
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submitting.current) return;
     const found = validate();
+    focusError.current = true;
     setErrors(found);
-    if (Object.keys(found).length) { document.getElementById(`field-${Object.keys(found)[0]}`)?.focus(); return; }
+    if (Object.keys(found).length) return;
+    submitting.current = true;
     setPending(true);
     try {
       const result = await onSubmit(serialize());
-      if (!result.ok) { setErrors(result.fieldErrors ?? {}); toast.error(labels.saveFailed); return; }
+      if (!result.ok) { focusError.current = true; setErrors(result.fieldErrors ?? {}); toast.error(labels.saveFailed); return; }
       toast.success(labels.saved);
       router.push(redirectTo(result.id ?? record?.id));
       router.refresh();
-    } catch { toast.error(labels.saveFailed); } finally { setPending(false); }
+    } catch { toast.error(labels.saveFailed); } finally { submitting.current = false; setPending(false); }
   }
   function set(name: string, value: string | boolean) { setValues(old => ({ ...old, [name]: value })); setErrors(old => { const { [name]: _, ...rest } = old; return rest; }); }
 
-  return <form onSubmit={submit} noValidate className="flex flex-col gap-6">
+  return <form ref={formRef} onSubmit={submit} noValidate aria-busy={pending} className="flex flex-col gap-6">
     {sections.map((section, index) => <Card key={index}>
       {(section.title || section.description) && <CardHeader>{section.title && <CardTitle>{section.title}</CardTitle>}{section.description && <CardDescription>{section.description}</CardDescription>}</CardHeader>}
       <CardContent>
         <FieldGroup className={cn(section.columns === 2 && "grid gap-6 md:grid-cols-2")}>
-          {section.fields.map(field => <FieldControl key={field.name} field={field} value={values[field.name]!} error={errors[field.name]} disabled={pending || (editing && !!field.disabledOnEdit)} labels={labels} locale={locale} onChange={value => set(field.name, value)} />)}
+          {section.fields.map(field => <FieldControl key={field.name} id={`field-${field.name}`} field={field} value={values[field.name]!} error={errors[field.name]} disabled={pending || (editing && !!field.disabledOnEdit)} labels={labels} locale={locale} onChange={value => set(field.name, value)} />)}
         </FieldGroup>
       </CardContent>
     </Card>)}
-    <div className="flex items-center gap-2">
+    <ResourceActionFooter>
       <Button type="submit" disabled={pending}>{pending && <Spinner data-icon="inline-start" />}{pending ? labels.saving : labels.save}</Button>
-      <Link href={cancelHref} className={buttonVariants({ variant: "outline" })}>{labels.cancel}</Link>
-    </div>
+      {pending ? <Button type="button" variant="outline" disabled>{labels.cancel}</Button> : <Link href={cancelHref} className={buttonVariants({ variant: "outline" })}>{labels.cancel}</Link>}
+    </ResourceActionFooter>
   </form>;
 }
 
 type ControlLabels = Pick<ResourceFormProps["labels"], "choose" | "searchOptions" | "noOptions" | "pickDate">;
-function FieldControl({ field, value, error, disabled, labels, locale, onChange }: { field: FormField; value: string | boolean; error?: string; disabled: boolean; labels: ControlLabels; locale?: string; onChange: (value: string | boolean) => void }) {
-  const id = `field-${field.name}`;
+function FieldControl({ id, field, value, error, disabled, labels, locale, onChange }: { id: string; field: FormField; value: string | boolean; error?: string; disabled: boolean; labels: ControlLabels; locale?: string; onChange: (value: string | boolean) => void }) {
   const described = [field.description && `${id}-description`, error && `${id}-error`].filter(Boolean).join(" ") || undefined;
   const common = { id, name: field.name, disabled, "aria-invalid": !!error || undefined, "aria-describedby": described, required: field.required };
-  if (field.type === "boolean") return <Field orientation="horizontal" data-invalid={!!error || undefined} className={cn(field.fullWidth && "md:col-span-2")}>
-    <Switch id={id} checked={value === true} disabled={disabled} onCheckedChange={checked => onChange(checked)} aria-describedby={described} />
-    <FieldLabel htmlFor={id}>{field.label}</FieldLabel>
+  if (field.type === "boolean") return <Field orientation="horizontal" data-invalid={!!error || undefined} data-disabled={disabled || undefined} className={cn(field.fullWidth && "md:col-span-2")}>
+    <Switch id={id} name={field.name} checked={value === true} disabled={disabled} onCheckedChange={checked => onChange(checked)} aria-invalid={!!error || undefined} aria-describedby={described} />
+    <div className="flex flex-col gap-1">
+      <FieldLabel htmlFor={id}>{field.label}</FieldLabel>
+      {field.description && <FieldDescription id={`${id}-description`}>{field.description}</FieldDescription>}
+      {error && <FieldError id={`${id}-error`}>{error}</FieldError>}
+    </div>
   </Field>;
   return <Field data-invalid={!!error || undefined} data-disabled={disabled || undefined} className={cn((field.fullWidth || field.type === "textarea") && "md:col-span-2")}>
     <FieldLabel htmlFor={id}>{field.label}{field.required && <span aria-hidden className="text-destructive">*</span>}</FieldLabel>
     {field.type === "textarea" ? <Textarea {...common} rows={4} maxLength={field.maxLength} placeholder={field.placeholder} value={String(value)} onChange={event => onChange(event.target.value)} />
       : field.type === "select" ? <Select items={[{ value: null, label: labels.choose }, ...(field.options ?? [])]} value={String(value) || null} disabled={disabled} onValueChange={next => onChange(next ?? "")}>
-        <SelectTrigger id={id} className="w-full" aria-invalid={common["aria-invalid"]} aria-describedby={described}><SelectValue /></SelectTrigger>
-        <SelectContent>
+        <SelectTrigger id={id} className="w-full" aria-required={field.required || undefined} aria-invalid={common["aria-invalid"]} aria-describedby={described}><SelectValue /></SelectTrigger>
+        <SelectContent><SelectGroup>
           <SelectItem value={null}>{labels.choose}</SelectItem>
           {field.options?.map(option => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}
-        </SelectContent>
+        </SelectGroup></SelectContent>
       </Select>
       : field.type === "combobox" ? <OptionCombobox id={id} options={field.options ?? []} value={String(value)} disabled={disabled} invalid={!!error} described={described} labels={labels} onChange={onChange} />
       : field.type === "date" ? <DatePicker id={id} value={String(value)} disabled={disabled} invalid={!!error} described={described} placeholder={field.placeholder ?? labels.pickDate} locale={locale} onChange={onChange} />

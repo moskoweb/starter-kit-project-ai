@@ -34,6 +34,8 @@ Cada resource gera um arquivo `apps/app/src/lib/resources/definitions/<kebab-nam
 
 O painel monta lista, criar, visualizar e editar a partir da definição; não há views geradas.
 
+As quatro páginas reutilizam `PageHeader` e seu `ResourceActionHeader`. Criar/editar reutilizam `ResourceForm` com `ResourceActionFooter` (salvar/cancelar responsivos). Cancelar volta à lista na criação e ao registro na edição, sem salvar; durante envio fica desabilitado. Erros por campo devem voltar em `ActionResult.fieldErrors` usando os nomes da definição, inclusive booleanos. Formulário preserva valores e foca primeiro campo inválido após resposta. `disabledOnEdit` omite campo no update, sem substituir autorização/validação no servidor. Componentes e origem da composição estão em [UI.md](UI.md).
+
 Registro canônico: `apps/app/src/lib/panels/resources.ts`. A CLI adiciona import explícito e a entrada `{ kind: "resource", definition, panelIds }`; não existe descoberta dinâmica. `kind: "custom"` continua disponível para páginas com `render(ResourceContext)` próprio. Ícone padrão gerado: `settings`; troque por uma chave de `components/panels/nav-icons.ts`.
 
 `panel` gera `<id>.config.ts`, importa no registry e registra config. `--label` define rótulo (padrão: id); contexto organização usa `--identifier slug|uuid` (padrão slug). `create --profile` reutiliza o mesmo gerador para `app`/`org`. Código da aplicação localiza painéis por contexto, não por id ([PANELS.md](PANELS.md)). Prefixos reservados, duplicados e sobrepostos são rejeitados; formato estrutural inesperado do registry falha fechado.

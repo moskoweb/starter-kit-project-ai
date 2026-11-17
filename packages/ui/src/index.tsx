@@ -44,6 +44,7 @@ export * from "./components/toggle-group";
 export * from "./components/tooltip";
 export * from "./components/resource/confirm-action";
 export * from "./components/resource/page-header";
+export * from "./components/resource/resource-actions";
 export * from "./components/resource/resource-form";
 export * from "./components/resource/resource-infolist";
 export * from "./components/resource/resource-table";
