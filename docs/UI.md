@@ -38,6 +38,12 @@ Se `Cannot find module '@tailwindcss/postcss'` persistir após instalar dependê
 
 ## API
 
+### Resources internos e gerados
+
+Organizações da conta e organizações administrativas usam `defineResource`, `renderResource`, `ResourceTable`, `ResourceForm`, `ResourceInfolist` e cabeçalhos/ações compartilhados. Não há tabela ou formulário CRUD paralelo para o mesmo fluxo. A definição da conta usa Better Auth para criação/atualização e membership para leitura; a definição admin tem política global própria. Relações de membros/convites e operações críticas de identidade permanecem composições específicas com primitivos shadcn, não CRUD genérico sobre tabelas auth. Onboarding reutiliza formulário/schema de criação da conta.
+
+CLI gera definição e registro, não cópias desses componentes. Alteração em componente-base atende recursos internos e novos recursos gerados. Nenhuma dependência visual nova é necessária para essa padronização.
+
 ### Mapa de montagem rápida
 
 | Necessidade | Reutilizar primeiro | Organização |

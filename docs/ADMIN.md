@@ -31,6 +31,8 @@ Formulário administrativo de usuário aceita somente `name` (1–255 caracteres
 
 ### Organizações
 
+Base CRUD é a mesma da conta e da CLI: `defineResource` com renderer e componentes compartilhados. `/organizations` não é outro sistema CRUD: sua definição atende apenas organizações das quais a sessão participa, com criação/edição via Better Auth. `/admin/organizations` usa definição global separada para autorizações e campos permitidos. Diferenças de escopo não exigem duplicar tabela, formulário ou detalhe. No app, criação fica em `/organizations/new` e edição em `/organizations/<slug>/edit`; onboarding usa o mesmo formulário de criação.
+
 Resource administrativo oferece leitura e edição de `name` (1–100 caracteres, espaços externos removidos). `slug` é somente leitura para preservar URLs. Campos extras, IDs inválidos e contexto de tenant são recusados no servidor. Alteração exige sessão atual de superadmin, não apenas permissão enviada no `scope`, e modifica somente metadados globais de identidade. Não concede membership nem acesso aos dados do tenant.
 
 Criação continua em `/organizations`, pelo Better Auth: respeita perfil, modo single/multi, verificação de e-mail e atribuição de proprietário. Não há criação administrativa direta nem exclusão individual/em lote no resource. A antiga ação de exclusão por cascata foi removida: não é seguro presumir organização vazia a partir de consultas limitadas por RLS. Reativar exclusão exige política explícita de retenção, autorização e proteção dos dados dependentes, inclusive tabelas adicionadas pelo projeto.

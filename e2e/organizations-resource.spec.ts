@@ -26,8 +26,9 @@ test("organizations use shared resource list, create, detail and edit", async ({
     await other.goto(`/organizations?search=${slug}`);
     await expect(other.locator("tbody")).not.toContainText("Resource organization updated");
     await other.goto(detail);
-    await expect(other.getByRole("heading", { level: 1 })).not.toHaveText("Resource organization updated");
+    await expect(other.getByText(/Página não encontrada|Page not found/, { exact: true })).toBeVisible();
     await other.goto(`${detail}/edit`);
+    await expect(other.getByText(/Página não encontrada|Page not found/, { exact: true })).toBeVisible();
     await expect(other.locator('button[type="submit"]')).toHaveCount(0);
   } finally { await isolated.close(); }
   await page.reload();

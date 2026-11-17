@@ -4,7 +4,9 @@ Autenticação usa somente `/login`, `/signup`, `/forgot-password`, `/reset-pass
 
 Removidas páginas duplicadas de `(auth)` e `/account/security`, junto de `components/identity/auth-form.tsx` e `components/identity/two-factor.tsx`, sem aliases nem redirecionamentos de compatibilidade. Links antigos para `/sign-in`, `/sign-up` e `/account/security` devem usar `/login`, `/signup` e `/security`.
 
-Preservados `/account`, `/organizations`, `/organizations/[identifier]` (configurações da organização em abas: geral, membros, convites, zona de perigo) e `/onboarding` (criação da primeira organização no perfil `organizations`). `components/identity/sign-out.tsx`, `organization-form.tsx` e `components/organization/*` atendem esses fluxos; `organization-form.tsx` também atende convites canônicos. Sessão ausente e logout levam a `/login`. [Detalhes](PANELS.md).
+Preservados `/account`, `/organizations`, `/organizations/[identifier]` e `/onboarding`. Organizações usam `defineResource` em `lib/resources/definitions/account-organizations.ts`: `/organizations` monta tabela com busca/ordenação/paginação, `/organizations/new` monta criação, `/organizations/<slug>` mostra detalhe e relações, `/organizations/<slug>/edit` monta edição. Renderer e componentes são os mesmos dos resources gerados pela CLI e do admin. O onboarding compõe o mesmo schema e formulário de criação, sem outra implementação de campos.
+
+Membros, convites, transferência, saída e exclusão pelo proprietário continuam fluxos específicos Better Auth no detalhe, com componentes shadcn existentes. Reutilização visual não concede permissões: organização resolve membership atual no servidor, sem bypass para superadmin. Perfil `personal` nega organizações; modo `single` filtra organização configurada e nega criação. Admin global mantém resource separado por política e escopo, não por engine visual. Sessão ausente e logout levam a `/login`. [Detalhes](PANELS.md).
 
 `account`, `organizations`, `onboarding`, `forgot-password` e `two-factor` são reservados no registry de painéis para impedir colisões de prefixo.
 

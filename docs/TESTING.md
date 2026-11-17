@@ -1,5 +1,9 @@
 # Testes e qualidade
 
+## Organizações em resource: aceite de 2026-11-17
+
+Build standalone da demo independente passou após padronização. Playwright executou listagem, criação e edição pelo resource da conta, persistência após reload, abas membros/convites, busca e mobile sem overflow da página. Screenshots desktop/mobile inspecionadas. Segunda conta criada e verificada por Mailpit não viu organização na busca e recebeu página de não encontrado no detalhe e na edição. Após convite e aceite como viewer, leitura funcionou, edição ficou indisponível e update direto Better Auth foi negado sem alterar nome do proprietário. Sem `pageerror`. Login e resource Note gerado pela CLI também passaram após mudança da engine. Dados sintéticos foram mantidos. Origem HTTPS encaminhada ao gateway local, sem sessão externa autenticada Cloudflare Access.
+
 ## Navegação e organizações: aceite de 2026-11-17
 
 Build standalone produção no exemplo independente passou. Browser Playwright com origem HTTPS e gateway local observou mesmo documento e mesmo DOM de `SidebarProvider` após navegar entre menus com 700 ms de atraso de rede, estado recolhido preservado, breadcrumb atualizado e histórico voltar/avançar. `MutationObserver` observou Skeleton real durante streaming. Menu mobile fechou após navegar, sem overflow da página em 390 px, sem `pageerror`; screenshots desktop e mobile escuro inspecionadas. Tabelas largas mantêm scroll interno. Não foi sessão externa autenticada do Cloudflare Access, cuja proteção permaneceu ativa.
@@ -29,6 +33,8 @@ No CI (`.github/workflows/ci.yml`), o job `e2e` roda depois de `checks`, com Pos
 
 Para repetir localmente, rode os mesmos comandos de geração numa cópia descartável (nunca no checkout que você vai commitar), aplique migrations e exporte `E2E_GENERATED_RESOURCE=1`.
 
+`E2E_ORGANIZATIONS=1` habilita `e2e/organizations-resource.spec.ts` em ambiente híbrido/multi descartável. Cobre tabela, criação, detalhe, edição persistente, busca, mobile e segunda conta sem membership, incluindo negação de detalhe e edição. O check `account-organizations.check.mjs` complementa com sessão, perfil personal, modo single, roles, scope forjado, validação estrita e fronteira slug/UUID. Ele usa stubs de autenticação, não substitui o fluxo real com Better Auth e banco.
+
 `EMAIL_ALLOW_INSECURE_LOOPBACK=true` permite links `http://` de loopback em e-mails de build de produção. Use só em E2E local ou CI. Nunca use em ambiente publicado.
 
 ## Convenções
@@ -43,6 +49,7 @@ Checks adicionais de UI e ferramentas:
 
 ```sh
 node packages/ui/src/components/resource/resource-form.check.mjs
+node apps/app/src/lib/resources/definitions/account-organizations.check.mjs
 node .agents/skills/shadcn/scripts/local-tooling.check.mjs
 ```
 
