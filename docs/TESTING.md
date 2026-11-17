@@ -27,6 +27,10 @@ Para repetir localmente, rode os mesmos comandos de geração numa cópia descar
 
 ## Convenções
 
+Revalidação final de 2026-11-17: novo projeto híbrido criado diretamente pelo checkout final, sem sincronização manual de fontes. Instalação offline `--frozen-lockfile`, lint, tipos dos workspaces, `pnpm test`, check público de formulário e check de hashes/MCP/política passaram no destino. Matriz standalone ampliada passou **7 testes comuns**, com admin opt-in skipped; rodada admin separada passou anteriormente. Novo caso cria registro com usuário A, cadastra/verifica/autentica B por HTTP/SMTP/browser, comprova 404 nas rotas de detalhe/edição de A, busca sem registro para B e registro intacto para A antes da exclusão autorizada. Não é prova de todas as mutações cross-tenant nem de todos os perfis.
+
+Repetições revelaram dois problemas nos testes, não vazamento de dados: 404 não possui `h1`, então assert passou a exigir mensagem explícita de página não encontrada; perfil com nome já salvo não disparava alteração, então teste passou a usar nome único. Matriz inteira foi repetida após correções, não apenas caso antes falho.
+
 Checks adicionais de UI e ferramentas:
 
 ```sh

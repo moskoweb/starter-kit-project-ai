@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { generatedResource } from "./helpers";
+import { generatedResource, signUpAndSignIn } from "./helpers";
 
 // Requires CI codegen first: `vibe panel app --context personal --prefix /app` + `vibe resource Note ...` (see docs/TESTING.md).
 // Generator slug = kebab-case of the name, not pluralized: `Note` → `/app/note`.
@@ -50,4 +50,32 @@ test("generated resource create form stays usable @mobile", async ({ page }) => 
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await page.getByRole("link", { name: /^(Cancelar|Cancel)$/ }).click();
   await expect(page).toHaveURL(/\/app\/note$/);
+});
+
+test("generated resource hides another user's record", async ({ page, browser }) => {
+  await page.goto("/app/note/new");
+  const title = `Private ${Date.now()}`;
+  await page.getByRole("textbox", { name: "Title", exact: true }).fill(title);
+  await page.locator("button[type=submit]").click();
+  await expect(page).toHaveURL(/\/app\/note\/[0-9a-f-]{36}$/);
+  const recordURL = page.url();
+  const other = await browser.newContext({ baseURL: new URL(recordURL).origin, storageState: { cookies: [], origins: [] } });
+  try {
+    const stranger = await other.newPage();
+    await signUpAndSignIn(stranger);
+    await stranger.goto(recordURL);
+    await expect(stranger.getByText("Página não encontrada", { exact: true })).toBeVisible();
+    await expect(stranger.getByText(title, { exact: true })).toHaveCount(0);
+    await expect(stranger.getByRole("link", { name: /^(Editar|Edit)$/ })).toHaveCount(0);
+    await stranger.goto(`${recordURL}/edit`);
+    await expect(stranger.getByText("Página não encontrada", { exact: true })).toBeVisible();
+    await expect(stranger.locator("button[type=submit]")).toHaveCount(0);
+    await stranger.goto(`/app/note?search=${encodeURIComponent(title)}`);
+    await expect(stranger.getByText(/Nenhum registro|No records/)).toBeVisible();
+    await page.goto(recordURL);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(title);
+    await page.getByRole("button", { name: /^(Excluir|Delete)$/ }).click();
+    await page.getByRole("alertdialog").getByRole("button", { name: /^(Excluir|Delete)$/ }).click();
+    await expect(page).toHaveURL(/\/app\/note$/);
+  } finally { await other.close(); }
 });

@@ -2,10 +2,11 @@ import { expect, test } from "@playwright/test";
 
 test("signed-in user updates profile", async ({ page }) => {
   await page.goto("/account");
-  await page.locator("#profile-name").fill("E2E Renamed");
+  const name = `E2E Renamed ${Date.now()}`;
+  await page.locator("#profile-name").fill(name);
   await page.locator("#profile-name").press("Enter");
   await expect(page.getByText(/Perfil atualizado\.|Profile updated\./)).toBeVisible();
-  await expect(page.locator("#profile-name")).toHaveValue("E2E Renamed");
+  await expect(page.locator("#profile-name")).toHaveValue(name);
 });
 
 test("non-admins cannot open admin", async ({ page }) => {
