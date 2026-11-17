@@ -21,11 +21,28 @@
       "skillPath": "skills/security-audit/SKILL.md",
       "computedHash": "8513eb3b2c39b8d05ef4f47b32ef4d18280b93a5efb91d8df6272f7435034af5"
     },
+    "reui": {
+      "source": "local",
+      "sourceType": "local",
+      "skillPath": ".agents/skills/reui/SKILL.md",
+      "installMode": "copy",
+      "license": "MIT (starter kit original guide, not official ReUI bundle)",
+      "reviewedAt": "2026-11-17",
+      "localSkillSha256": "bf79111cb0aab57c9f66af9e6ff599e21cd2d28fcce8d526ded3bd7eb808c345",
+      "officialSkillVersionObserved": "68f0e6fa91",
+      "officialSkillUrl": "https://mcp.reui.io/api/skills/download",
+      "officialBundleSha256Observed": "fb9324c5b132e58b91ad73c72d1aa02c072351565db225c44eaed177f14fa191",
+      "officialBundleVendored": false
+    },
     "shadcn": {
       "source": "shadcn-ui/ui",
       "sourceType": "github",
       "skillPath": "skills/shadcn/SKILL.md",
-      "computedHash": "388962d16c7a4f13aaeee0d8f128e50a87df8553d42ef7988c39c0e1c74a40e8"
+      "computedHash": "388962d16c7a4f13aaeee0d8f128e50a87df8553d42ef7988c39c0e1c74a40e8",
+      "sourceRevision": "dd41d19e2f80ff6891951f7ced74c2c9a650b065",
+      "reviewedAt": "2026-11-17",
+      "localModifications": "shadcn First, ReUI second, custom last; pnpm shadcn 4.23.0; Base UI and local tokens take precedence",
+      "localSkillSha256": "9ab746d1b7ace51458673f6d006584ce83244fb4db0b5f62782e604047099f7f"
     },
     "unslop": {
       "source": "heydamir/unslop",

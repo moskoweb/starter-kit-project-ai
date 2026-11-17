@@ -13,12 +13,18 @@
         "CODEGRAPH_TELEMETRY": "0"
       }
     },
+    "reui": {
+      "type": "http",
+      "url": "https://mcp.reui.io?style=base-nova"
+    },
     "shadcn": {
       "command": "pnpm",
       "args": [
         "dlx",
         "shadcn@4.23.0",
-        "mcp"
+        "mcp",
+        "--cwd",
+        "apps/app"
       ],
       "env": {
         "DO_NOT_TRACK": "1"
