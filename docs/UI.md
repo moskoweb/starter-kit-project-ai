@@ -1,5 +1,19 @@
 # UI compartilhada
 
+## Navegação e carregamento dos painéis
+
+Route group `(panels)` mantém `SidebarProvider` no layout compartilhado, fora do segmento catch-all. Documento e provider permanecem montados entre recursos, preservando estado recolhido. Shell visual é refeito com props autorizadas do painel atual, sem reter navegação ou dados de outro tenant. URLs públicas permanecem iguais. Resources gerados invalidam `/(panels)/[...segments]`, caminho interno do Next que inclui route group.
+
+App usa Next.js App Router, não uma SPA exclusivamente client-side. Links internos usam `next/link`: navegação e prefetch são do Next, com autorização e consultas no servidor. React sozinho não define estratégia de roteamento. Não adicionar `window.location` ou links HTML para menus internos.
+
+Shell adapta o bloco MIT shadcn/ui **sidebar-07**, Base UI `base-nova`: sidebar recolhível em ícones, workspace switcher, grupos de navegação, menu de usuário, rail e header com breadcrumb contextual. Mantém dados reais e busca global, sem menus fictícios do exemplo upstream.
+
+Na rota dinâmica de painéis, `PanelShell` envolve `Suspense` do conteúdo. Removido `loading.tsx` que substituía shell inteiro por “Carregando painel…”. Sessão, painel e tenant continuam validados antes de mostrar navegação. Enquanto essa validação acontece, navegação client mantém tela anterior. Depois, conteúdo lento recebe `PanelSkeleton`, sem trocar menu por tela vazia. Mudanças de recurso, query e tenant reiniciam boundary de conteúdo. Não compartilhar cache de dados autenticados para esconder latência.
+
+`PanelSkeleton` compõe primitivo `Skeleton` já instalado em `@vibe/ui`, com `role="status"`, texto localizado, formas ocultas de leitores de tela e respeito a reduced motion. Páginas de conta também usam fallback de conteúdo no layout compartilhado. Para seção lenta específica, colocar `Suspense` próximo do loader e compor `Skeleton` com forma correspondente. Skeleton indica espera, não acelera consulta nem substitui estados de erro/vazio.
+
+Regressão: `E2E_ADMIN=1 pnpm exec playwright test --config e2e/playwright.config.ts panel-navigation.spec.ts --project=desktop --no-deps`, com sessão admin descartável previamente provisionada. Confere identidade do documento e sidebar entre menus, estado recolhido, breadcrumb, histórico e overflow mobile. Não promover conta existente para executar teste.
+
 `@vibe/ui` contém apresentação, sem fetch, banco, autenticação, traduções ou engine de resources. Textos e dados chegam por props. App mantém autorização, loaders, locale e estado de navegação.
 
 ## CSS e temas

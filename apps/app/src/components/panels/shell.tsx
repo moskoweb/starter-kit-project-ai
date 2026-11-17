@@ -4,6 +4,7 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarInset, Si
 import { Notifications } from "../notifications";
 import { messages, type Locale } from "../../lib/i18n";
 import { GlobalSearch } from "./global-search";
+import { PanelBreadcrumbs } from "./breadcrumbs";
 import { ImpersonationBanner } from "./impersonation-banner";
 import { NavMain, type NavGroup } from "./nav-main";
 import { NavUser } from "./nav-user";
@@ -22,15 +23,16 @@ export type PanelShellProps = {
   children: ReactNode;
   locale: Locale;
   initialCollapsed?: boolean;
+  persistent?: boolean;
   showNotifications?: boolean;
   tenantIdentifier?: string | null;
 };
 
-/** Panel layout: collapsible sidebar with tenant switcher, grouped navigation and user menu; topbar with search and notifications. */
-export function PanelShell({ title, subtitle, groups, currentWorkspaceId, switchable, personal, organizations, user, children, locale, initialCollapsed = false, showNotifications = false, tenantIdentifier = null }: PanelShellProps) {
+/** shadcn/ui sidebar-07 (MIT), adapted to registered panels and real workspace/user data. */
+export function PanelShell({ title, subtitle, groups, currentWorkspaceId, switchable, personal, organizations, user, children, locale, initialCollapsed = false, persistent = false, showNotifications = false, tenantIdentifier = null }: PanelShellProps) {
   const copy = messages[locale];
-  return <SidebarProvider defaultOpen={!initialCollapsed}>
-    <Sidebar collapsible="icon" variant="inset">
+  const shell = <>
+    <Sidebar collapsible="icon">
       <SidebarHeader><TeamSwitcher title={title} subtitle={subtitle} currentId={currentWorkspaceId} switchable={switchable} personal={personal} organizations={organizations} labels={{ workspace: copy.workspace, organizations: copy.organizations, manage: copy.manageOrganizations }} /></SidebarHeader>
       <SidebarContent><NavMain groups={groups} /></SidebarContent>
       <SidebarFooter><NavUser user={user} locale={locale} copy={copy} /></SidebarFooter>
@@ -38,15 +40,17 @@ export function PanelShell({ title, subtitle, groups, currentWorkspaceId, switch
     </Sidebar>
     <SidebarInset>
       <ImpersonationBanner locale={locale} />
-      <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 rounded-t-xl border-b bg-background/95 px-4 backdrop-blur supports-backdrop-filter:bg-background/60">
+      <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background/95 px-4 backdrop-blur transition-[width,height] ease-linear supports-backdrop-filter:bg-background/60 group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
         <SidebarTrigger className="-ml-1" aria-label={copy.collapseSidebar} />
         <Separator orientation="vertical" className="mr-1 data-vertical:h-4" />
-        <GlobalSearch groups={groups} labels={{ search: copy.search, placeholder: copy.commandPlaceholder, empty: copy.noResults }} />
+        <PanelBreadcrumbs title={title} groups={groups} />
         <div className="ml-auto flex items-center gap-1">
+          <GlobalSearch groups={groups} labels={{ search: copy.search, placeholder: copy.commandPlaceholder, empty: copy.noResults }} />
           {showNotifications && <Notifications key={tenantIdentifier ?? "personal"} tenantIdentifier={tenantIdentifier} locale={locale} />}
         </div>
       </header>
       <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 p-4 md:p-8">{children}</main>
     </SidebarInset>
-  </SidebarProvider>;
+  </>;
+  return persistent ? shell : <SidebarProvider defaultOpen={!initialCollapsed}>{shell}</SidebarProvider>;
 }

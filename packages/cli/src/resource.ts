@@ -132,7 +132,7 @@ async function authorized<T>({ identifier }: ResourceScope, operation: Operation
 ${Object.keys(spec.relations).length ? `const parentResources = { ${[...new Set(Object.values(spec.relations).map(relation => relation.model))].map(value => `${value}: ${value}Resource`).join(", ")} };
 const canReadParent = (model: keyof typeof parentResources, role: string | null, scope: ResourceScope) => parentResources[model].can(role, "read", scope);` : ""}
 async function mutate(scope: ResourceScope, operation: Operation, run: (tx: TenantTransaction, userId: string, role: string | null) => Promise<string | undefined>) {
-  try { const id = await authorized(scope, operation, run); revalidatePath("/[...segments]", "page"); return { ok: true as const, id }; }
+  try { const id = await authorized(scope, operation, run); revalidatePath("/(panels)/[...segments]", "page"); return { ok: true as const, id }; }
   catch (error) { const message = error instanceof Error ? error.message : ""; return { ok: false as const, error: ["UNAUTHORIZED", "FORBIDDEN", "NOT_FOUND", "ORGANIZATION_REQUIRED"].includes(message) ? message : "RESOURCE_ERROR" }; }
 }
 const record = (row: Record<string, unknown> & { id: string }) => Object.fromEntries(Object.entries(row).map(([key, value]) => [key, value instanceof Date ? value.toISOString() : value as string | number | boolean | null])) as { id: string } & Record<string, string | number | boolean | null>;

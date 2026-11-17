@@ -33,7 +33,7 @@ Não promova automaticamente o primeiro cadastro. Configure o primeiro superadmi
 
 - `apps/app/src/lib/panels/registry.ts` declara painéis (`admin` inline; gerados via import de `<id>.config.ts`). IDs e prefixos são únicos, sem sobreposição nem conflito com `reservedPanelRoutes`. Painéis de organização definem `tenantIdentifier` (`slug` ou `uuid`).
 - `routing.ts`: `resolvePanelPath(pathname)` e `buildPanelPath(panelId, { tenant, segments })`. Elas rejeitam traversal e barras codificadas, e não autorizam nada. Prefixo de painel não registrado resolve para 404.
-- `apps/app/src/app/[...segments]/page.tsx` resolve o painel, exige sessão, exige `role = admin` no global, resolve tenant/membership no organizacional e despacha para dashboard ou resource.
+- `apps/app/src/app/(panels)/layout.tsx` preserva `SidebarProvider` entre navegações, sem guardar dados de identidade. `apps/app/src/app/(panels)/[...segments]/page.tsx` resolve o painel, exige sessão, exige `role = admin` no global, resolve tenant/membership no organizacional e despacha para dashboard ou resource. URLs públicas não mudam. Conteúdo assíncrono usa `Suspense` dentro do shell, com `PanelSkeleton`; menus não são substituídos por loading de página inteira.
 - `chrome.ts` monta props do shell: grupos de navegação, seletor de workspace (oculto sem painéis de trabalho) e usuário.
 
 ## Resources

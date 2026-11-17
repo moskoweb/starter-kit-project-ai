@@ -1,5 +1,11 @@
 # Testes e qualidade
 
+## Navegação e organizações: aceite de 2026-11-17
+
+Build standalone produção no exemplo independente passou. Browser Playwright com origem HTTPS e gateway local observou mesmo documento e mesmo DOM de `SidebarProvider` após navegar entre menus com 700 ms de atraso de rede, estado recolhido preservado, breadcrumb atualizado e histórico voltar/avançar. `MutationObserver` observou Skeleton real durante streaming. Menu mobile fechou após navegar, sem overflow da página em 390 px, sem `pageerror`; screenshots desktop e mobile escuro inspecionadas. Tabelas largas mantêm scroll interno. Não foi sessão externa autenticada do Cloudflare Access, cuja proteção permaneceu ativa.
+
+Fluxo real criou organização pelo Better Auth, abriu painel do proprietário, buscou no admin e editou nome por formulário padrão do resource. Nome persistiu após reload, slug permaneceu desabilitado. Organizações sintéticas do teste foram mantidas, sem apagar dados do usuário. Check de negativos sem banco: `node apps/app/src/lib/resources/definitions/admin-organizations.check.mjs`. Regressão permanente de navegação: `e2e/panel-navigation.spec.ts`, opt-in `E2E_ADMIN=1` com sessão admin isolada.
+
 | Comando | O que roda | Requisitos |
 | --- | --- | --- |
 | `pnpm lint` | ESLint (`eslint-config-next` core-web-vitals + TypeScript no app; TypeScript + React Hooks nos pacotes), cache por conteúdo | nenhum |

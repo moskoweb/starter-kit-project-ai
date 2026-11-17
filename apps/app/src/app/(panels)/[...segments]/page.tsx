@@ -1,29 +1,30 @@
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { headers } from "next/headers";
 import { notFound, redirect, forbidden } from "next/navigation";
 import { Ban, Building2, LayoutDashboard, UserPlus, Users } from "lucide-react";
 import { getIdentityEnv } from "@vibe/config/env";
 import { resolveTenant } from "@vibe/auth";
-import { loadAdminUserStats } from "../../lib/resources/definitions/admin-users";
+import { loadAdminUserStats } from "../../../lib/resources/definitions/admin-users";
 import { PageHeader } from "@vibe/ui/components/resource/page-header";
 import { Avatar, AvatarFallback } from "@vibe/ui/components/avatar";
 import { Card, CardContent } from "@vibe/ui/components/card";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@vibe/ui/components/empty";
 import { StatsOverview } from "@vibe/ui/components/widgets/stats-overview";
-import { SignOut } from "../../components/identity/sign-out";
-import { PanelShell } from "../../components/panels/shell";
-import { PushSettings } from "../../components/push-settings";
-import { WebhookDeliveries } from "../../components/webhook-deliveries";
-import { AiAssistant } from "../../components/ai-assistant";
-import { buildPanelPath, resolvePanelPath } from "../../lib/panels/routing";
-import { getPanelResource } from "../../lib/panels/resources";
-import { currentLocale, panelChrome } from "../../lib/panels/chrome";
-import { loadGlobalMetrics } from "../../lib/metrics/loaders";
-import { pageSession } from "../../lib/identity-session";
-import { messages } from "../../lib/i18n";
-import { t } from "../../lib/resources/define";
-import { renderResource } from "../../lib/resources/render";
+import { SignOut } from "../../../components/identity/sign-out";
+import { PanelShell } from "../../../components/panels/shell";
+import { PanelSkeleton } from "../../../components/panels/skeleton";
+import { PushSettings } from "../../../components/push-settings";
+import { WebhookDeliveries } from "../../../components/webhook-deliveries";
+import { AiAssistant } from "../../../components/ai-assistant";
+import { buildPanelPath, resolvePanelPath } from "../../../lib/panels/routing";
+import { getPanelResource } from "../../../lib/panels/resources";
+import { currentLocale, panelChrome } from "../../../lib/panels/chrome";
+import { loadGlobalMetrics } from "../../../lib/metrics/loaders";
+import { pageSession } from "../../../lib/identity-session";
+import { messages } from "../../../lib/i18n";
+import { t } from "../../../lib/resources/define";
+import { renderResource } from "../../../lib/resources/render";
 
 type Props = { params: Promise<{ segments: string[] }>; searchParams: Promise<Record<string, string | string[] | undefined>> };
 
@@ -63,6 +64,27 @@ export default async function PanelPage({ params, searchParams }: Props) {
   const query = await searchParams;
   const panelTitle = tenant?.name ?? (panel.context === "personal" ? copy.personal : panel.label);
 
+  const chrome = await panelChrome({ panel, basePath, tenant, user: { name: session.user.name, email: session.user.email, role: session.user.role }, locale });
+  return <PanelShell {...chrome} persistent tenantIdentifier={identifier} showNotifications={process.env.JOBS_ENABLED === "true"}>
+    <Suspense key={JSON.stringify([basePath, route, query])} fallback={<PanelSkeleton locale={locale} />}>
+      <PanelContent panel={panel} panelTitle={panelTitle} basePath={basePath} route={route} query={query} scope={scope} locale={locale} session={session} />
+    </Suspense>
+  </PanelShell>;
+}
+
+async function PanelContent({ panel, panelTitle, basePath, route, query, scope, locale, session }: {
+  panel: Parameters<typeof panelChrome>[0]["panel"];
+  panelTitle: string;
+  basePath: string;
+  route: string[];
+  query: Awaited<Props["searchParams"]>;
+  scope: Parameters<typeof renderResource>[1]["scope"];
+  locale: Awaited<ReturnType<typeof currentLocale>>;
+  session: Awaited<ReturnType<typeof pageSession>>["session"];
+}) {
+  const identifier = scope.identifier;
+  const copy = messages[locale];
+
   const entry = getPanelResource(panel.id, route[0]);
   if (route.length && !entry) notFound();
   type Loaded =
@@ -72,7 +94,7 @@ export default async function PanelPage({ params, searchParams }: Props) {
   let loaded: Loaded;
   try {
     if (entry?.kind === "resource") loaded = { kind: "node", node: await renderResource(entry.definition, { panel, panelTitle, basePath, route, query, scope, locale }) };
-    else if (entry?.kind === "custom") loaded = { kind: "node", node: await entry.render({ panel, identifier, basePath, route, query, role: tenant?.role ?? "owner", locale }) };
+    else if (entry?.kind === "custom") loaded = { kind: "node", node: await entry.render({ panel, identifier, basePath, route, query, role: scope.role ?? "owner", locale }) };
     else if (panel.context === "global") { const [metrics, admin] = await Promise.all([loadGlobalMetrics(), loadAdminUserStats()]); loaded = { kind: "global", metrics, admin }; }
     else loaded = { kind: "workspace" };
   } catch (error) { return authError(error); }
@@ -116,10 +138,8 @@ export default async function PanelPage({ params, searchParams }: Props) {
     </>;
   }
 
-  const chrome = await panelChrome({ panel, basePath, tenant, user: { name: session.user.name, email: session.user.email, role: session.user.role }, locale });
-
-  return <PanelShell {...chrome} tenantIdentifier={identifier} showNotifications={process.env.JOBS_ENABLED === "true"}>
+  return <>
     {content}
     {panel.context !== "global" && route.length === 0 && <AiAssistant key={identifier ?? "personal"} enabled={process.env.AI_ENABLED === "true"} tenantIdentifier={identifier} locale={locale} />}
-  </PanelShell>;
+  </>;
 }
