@@ -2,7 +2,7 @@
 
 | Comando | O que roda | Requisitos |
 | --- | --- | --- |
-| `pnpm lint` | ESLint (`eslint-config-next` core-web-vitals + TypeScript no app; TypeScript + React Hooks nos pacotes) | nenhum |
+| `pnpm lint` | ESLint (`eslint-config-next` core-web-vitals + TypeScript no app; TypeScript + React Hooks nos pacotes), cache por conteúdo | nenhum |
 | `pnpm check-types` | `tsc --noEmit` em todos os workspaces | nenhum |
 | `pnpm test` | Unitários e checks puros (identidade, rotas de painel, rate limit, estado de lista, e-mail, CLI, push) | nenhum |
 | `pnpm test:integration` | Auth, organizações, TOTP e RLS contra banco descartável | `IDENTITY_TEST_DATABASE=1`, PostgreSQL e Mailpit |
@@ -26,6 +26,21 @@ Para repetir localmente, rode os mesmos comandos de geração numa cópia descar
 `EMAIL_ALLOW_INSECURE_LOOPBACK=true` permite links `http://` de loopback em e-mails de build de produção. Use só em E2E local ou CI. Nunca use em ambiente publicado.
 
 ## Convenções
+
+Checks adicionais de UI e ferramentas:
+
+```sh
+node packages/ui/src/components/resource/resource-form.check.mjs
+node .agents/skills/shadcn/scripts/local-tooling.check.mjs
+```
+
+Primeiro usa Chromium e componente público real com adaptador de navegação Next, sem alegar banco ou integração completa. Cobre validação nativa, obrigatório, erro de servidor, foco após falha, bloqueio durante envio, ARIA do Switch, serialização e slots de ações. Segundo valida política e configuração local, não autentica MCP remoto.
+
+E2E de resource gerado cobre criar, visualizar, editar com persistência, cancelar exclusão, buscar e excluir em massa. Cenário mobile verifica formulário, erro obrigatório, cancelamento e ausência de overflow. Prefira nomes acessíveis dos campos, pois identificadores internos não são contrato público.
+
+`e2e/admin.spec.ts` é opt-in via `E2E_ADMIN=1`: exige sessão de superadmin sintético previamente provisionada no banco **descartável** e executa `--project=desktop --no-deps` para não substituir essa sessão pelo cadastro comum do setup. Cobre descoberta do admin na conta, dashboard, lista de usuários, edição de nome persistida e organizações. Nunca promova conta de produção para executar teste. Testes normais continuam exigindo negação do admin para usuário comum.
+
+Validação integrada em 2026-11-17: projeto híbrido criado pela CLI fora do checkout, instalação offline frozen-lockfile, resource Note com migration e banco exclusivo com roles owner/runtime separadas. Preview Next em loopback, SMTP Mailpit local. Browser passou CRUD, perfil, negação de admin/anônimo e mobile, seguido de rodada admin separada. Build Next de produção passou (compilação 14,6 s, TypeScript 17,3 s nessa rodada). A matriz normal foi repetida no artefato standalone: 6 testes passaram e teste admin opt-in ficou skipped, como esperado. Rodada separada de admin no mesmo standalone também passou (1 teste). Nenhum provedor externo pago foi chamado. Isso não substitui deploy real, CI remoto nem smoke dos provedores externos.
 
 - Teste permanente só para comportamento observável pelo usuário ou invariante de segurança. Detalhes de implementação ficam em scripts descartáveis.
 - Seletores E2E: ids de campo (`#auth-*`, `#field-*`), `role` e `data-slot` dos primitivos shadcn. Evite classes CSS.

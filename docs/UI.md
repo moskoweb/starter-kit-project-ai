@@ -24,6 +24,24 @@ Se `Cannot find module '@tailwindcss/postcss'` persistir após instalar dependê
 
 ## API
 
+### Mapa de montagem rápida
+
+| Necessidade | Reutilizar primeiro | Organização |
+| --- | --- | --- |
+| Painel autenticado | `PanelShell` + navegação/workspace/menu existentes | `apps/app/src/components/panels/` |
+| Lista CRUD | `ResourceTable` e `defineResource.table` | UI em `packages/ui`, consulta/permissão na definição server-side |
+| Criar/editar | `ResourceForm`, `Field`, `FieldGroup`, `Card` | `defineResource.form`; servidor valida novamente |
+| Cabeçalho e ações | `PageHeader`, `ResourceActionHeader` | Título, breadcrumbs e ações de contexto |
+| Rodapé de formulário | `ResourceActionFooter`, `Button`, `Spinner` | Integrado no `ResourceForm`; salvar/cancelar respeitam pending |
+| Detalhe | `ResourceInfolist` e ações de registro | `defineResource.infolist/actions` |
+| Exclusão/ação crítica | `ConfirmAction` e `AlertDialog` | Confirmação explícita, erro mantém controle disponível |
+| Filtros/seleção | `Select`, `Combobox`, `Popover`, `Checkbox` | Estado de lista na URL, opções autorizadas no servidor |
+| Feedback/estados | `Empty`, `Skeleton`, `Spinner`, `Alert`, Sonner | Sem dados de demonstração fingindo integração |
+| Métricas/gráfico | `StatsOverview`, `ChartWidget`, shadcn Chart | Dados reais por props, sem fetch no pacote UI |
+| Modal/painel lateral | `Dialog`, `Sheet`, `AlertDialog` | Usar foco e teclado dos primitivos Base UI |
+
+Não instalar catálogo inteiro para antecipar recursos hipotéticos. Se item acima não atender, pesquisar componentes/blocos shadcn, depois ReUI. Instalar apenas dependências da necessidade real, preservando licença e tokens. Uma composição local pequena não deve substituir primitivo já disponível.
+
 Primitivos são componentes oficiais shadcn/ui, estilo `base-nova` sobre [Base UI](https://base-ui.com) (`@base-ui/react`), ícones `lucide-react`, tokens `neutral`. A CLI instala tudo em `packages/ui/src/components/`. Importe por arquivo (`@vibe/ui/components/<nome>`) ou pelo entrypoint `@vibe/ui`. Docs: [ui.shadcn.com/docs/components](https://ui.shadcn.com/docs/components) (aba Base UI).
 
 Ícones: somente [`lucide-react`](https://lucide.dev/icons) (`iconLibrary: lucide` nos `components.json`). Em botões use `data-icon="inline-start|inline-end"`. Ícones de navegação vêm por chave de `apps/app/src/components/panels/nav-icons.ts`. SVG inline só para logos de marca ausentes no Lucide (ex.: Google).

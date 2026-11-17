@@ -9,10 +9,15 @@ test("signed-in user updates profile", async ({ page }) => {
 });
 
 test("non-admins cannot open admin", async ({ page }) => {
+  await page.goto("/account");
+  await expect(page.getByRole("link", { name: "Admin", exact: true })).toHaveCount(0);
   // Streaming may commit 200 before forbidden() renders; assert the denial page and absent admin data.
   await page.goto("/admin");
   await expect(page.getByText(/Acesso não permitido|Access denied/)).toBeVisible();
   await expect(page.getByText(/Métricas globais|Global metrics/)).toHaveCount(0);
+  await page.goto("/admin/users/00000000-0000-4000-8000-000000000001/edit");
+  await expect(page.getByText(/Acesso não permitido|Access denied/)).toBeVisible();
+  await expect(page.locator("button[type=submit]")).toHaveCount(0);
 });
 
 test.describe("anonymous", () => {

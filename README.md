@@ -9,7 +9,7 @@ Um monorepo TypeScript com aplicação autenticada, PostgreSQL, painéis e ferra
 
 O projeto criado recebe seu próprio código. Não depende de um serviço central do kit e não recebe atualizações automáticas; quando quiser, `vibe upgrade` traz melhorias do kit por merge revisável. Não é um CMS, ORM próprio nem garantia universal de produção.
 
-[Começar](docs/GETTING-STARTED.md) · [CLI](docs/CLI.md) · [Resources](docs/CLI-RESOURCES.md) · [Deploy](docs/DEPLOYMENT.md) · [Aceite](docs/ACCEPTANCE.md)
+[Começar](docs/GETTING-STARTED.md) · [CLI](docs/CLI.md) · [Resources](docs/CLI-RESOURCES.md) · [UI](docs/UI.md) · [Performance e stack](docs/PERFORMANCE.md) · [Deploy](docs/DEPLOYMENT.md) · [Aceite](docs/ACCEPTANCE.md)
 
 ## O que está no código
 
@@ -19,6 +19,7 @@ O projeto criado recebe seu próprio código. Não depende de um serviço centra
 - **Painéis configuráveis:** template registra só `admin` (`/admin`: usuários, organizações, métricas globais). `vibe create --profile` gera painel pessoal (`/app`), de organização (`/org/<slug>`) ou ambos, sem transformar contexto pessoal em organização fictícia. Admin global não tem acesso irrestrito aos dados dos tenants.
 - **UI e painel:** shadcn/ui (`base-nova` sobre Base UI), Tailwind v4, Lucide, Sonner, Recharts. Painel inspirado no Filament: resources declarativos (tabela com busca, filtros, colunas, ação em massa; formulário; visualização), dashboard com widgets, busca global `⌘K`, seletor de workspace, notificações. Temas claro/escuro/sistema e locale `pt-BR`/`en`.
 - **Geração revisável:** CLI cria cópia independente, models Drizzle com RLS, recursos CRUD e registro de painéis; preview e recusa de sobrescrita.
+- **Shadcn First:** reutilizar componentes locais, buscar shadcn oficial, depois ReUI, somente então compor UI própria para lacunas comprovadas. Skills locais e MCP portáteis acompanham `vibe create`; ReUI MCP requer autenticação própria, não credenciais do kit.
 - **Integrações opt-in:** SMTP/Resend, armazenamento S3-compatible privado, IA, jobs pg-boss, notificações internas, webhooks, analytics com consentimento e exportação sanitizada de logs.
 
 **Implementação não é aceite.** Instalação, migrations, grants, build, execução de containers, isolamento entre usuários/organizações e serviços externos precisam ser verificados no ambiente do projeto. Os comandos abaixo são instruções, não afirmação de execução nesta revisão documental. Consulte [limites e gates](#limites-e-verificação).
