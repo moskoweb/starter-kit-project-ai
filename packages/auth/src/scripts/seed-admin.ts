@@ -1,10 +1,20 @@
 import { createInterface } from "node:readline/promises";
 import { stdin, stdout } from "node:process";
-import { and, eq } from "drizzle-orm";
-import { getDb, closeDb } from "@vibe/db/client";
-import { account, session, user } from "@vibe/db/schema";
+import { pathToFileURL } from "node:url";
+import { sql } from "drizzle-orm";
+import { getDb, closeDb, type Database } from "@vibe/db/client";
+import { account, user } from "@vibe/db/schema";
 import { hashPassword } from "better-auth/crypto";
 import { randomUUID } from "node:crypto";
+
+export function validateAdminInput(emailInput: string | undefined, nameInput: string | undefined, password: string) {
+  const email = emailInput?.trim().toLowerCase();
+  const name = nameInput?.trim();
+  if (!email || email.length > 254 || /\p{Cc}/u.test(email) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("Email inválido.");
+  if (!name || name.length > 200 || /\p{Cc}/u.test(name)) throw new Error("Nome inválido (1 a 200 caracteres, sem controles).");
+  if (password.length < 12 || password.length > 128 || /\p{Cc}/u.test(password) || !password.trim()) throw new Error("Senha inválida (12 a 128 caracteres, sem controles).");
+  return { email, name, password };
+}
 
 async function readPassword() {
   if (stdin.isTTY) throw new Error("Envie senha por stdin usando read -rs; não use senha em argv ou histórico shell.");
@@ -12,31 +22,34 @@ async function readPassword() {
   let password = "";
   for await (const line of lines) { password = line; break; }
   lines.close();
-  if (password.length < 12) throw new Error("Senha deve ter pelo menos 12 caracteres.");
   return password;
+}
+
+export async function provisionAdmin(input: ReturnType<typeof validateAdminInput>, db: Database) {
+  const { email, name, password } = validateAdminInput(input.email, input.name, input.password);
+  await db.transaction(async (tx) => {
+    // Case-insensitive refusal also covers pre-existing mixed-case identities.
+    const [existing] = await tx.select({ id: user.id }).from(user).where(sql`lower(${user.email}) = ${email}`);
+    if (existing) throw new Error("Email já existe. Nenhuma conta foi alterada ou promovida.");
+    const userId = randomUUID();
+    const passwordHash = await hashPassword(password);
+    await tx.insert(user).values({ id: userId, email, name, emailVerified: true, role: "admin" });
+    await tx.insert(account).values({ id: randomUUID(), userId, accountId: userId, providerId: "credential", password: passwordHash, updatedAt: new Date() });
+  });
 }
 
 async function main() {
   if (process.argv.length > 2) throw new Error("Use ADMIN_EMAIL e ADMIN_NAME; senha somente por stdin, nunca por argumentos.");
-  const email = process.env.ADMIN_EMAIL?.trim().toLowerCase();
-  const name = process.env.ADMIN_NAME?.trim();
-  if (!email || !name) throw new Error("ADMIN_EMAIL e ADMIN_NAME obrigatórios.");
-  // Always take the operator's password: an existing row may be an unverified signup by someone else.
-  const passwordHash = await hashPassword(await readPassword());
-  await getDb().transaction(async (tx) => {
-    const [existing] = await tx.select({ id: user.id }).from(user).where(eq(user.email, email));
-    const userId = existing?.id ?? randomUUID();
-    if (!existing) await tx.insert(user).values({ id: userId, email, name, emailVerified: true, role: "admin" });
-    else {
-      await tx.update(user).set({ role: "admin", emailVerified: true, banned: false }).where(eq(user.id, userId));
-      // Drop every prior credential and session so only the operator can sign in.
-      await tx.delete(session).where(eq(session.userId, userId));
-      await tx.delete(account).where(and(eq(account.userId, userId), eq(account.providerId, "credential")));
-    }
-    await tx.insert(account).values({ id: randomUUID(), userId, accountId: userId, providerId: "credential", password: passwordHash, updatedAt: new Date() });
-  });
+  const input = validateAdminInput(process.env.ADMIN_EMAIL, process.env.ADMIN_NAME, await readPassword());
+  await provisionAdmin(input, getDb());
   stdout.write("Superadmin provisionado explicitamente.\n");
 }
-try { await main(); }
-catch { process.stderr.write("Provisionamento falhou. Confira configuração, email/nome e senha stdin (mínimo 12 caracteres).\n"); process.exitCode = 1; }
-finally { await closeDb(); }
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  try { await main(); }
+  catch (error) {
+    const message = error instanceof Error && /^(Email |Nome |Senha |Use ADMIN_|Envie senha )/.test(error.message) ? error.message : "Confira configuração e permissões do banco.";
+    process.stderr.write(`Provisionamento falhou. ${message}\n`);
+    process.exitCode = 1;
+  }
+  finally { await closeDb(); }
+}

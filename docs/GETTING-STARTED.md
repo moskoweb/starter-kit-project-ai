@@ -183,15 +183,17 @@ Não há seed: o kit não cria dados de demonstração. `doctor` verifica presen
 Opcional para usuário comum; necessário para `/admin`. Use email próprio de desenvolvimento e senha nova de pelo menos 12 caracteres, nunca senha em argumento:
 
 ```bash
-export ADMIN_EMAIL=admin@example.test
-export ADMIN_NAME='Admin'
-read -rs -p 'Senha do admin (mínimo 12 caracteres): ' ADMIN_INPUT
+read -rs -p 'Senha do admin (12 a 128 caracteres): ' ADMIN_INPUT
 printf '\n'
-printf '%s\n' "$ADMIN_INPUT" | pnpm --filter @vibe/auth seed:admin
-unset ADMIN_INPUT ADMIN_EMAIL ADMIN_NAME
+printf '%s\n' "$ADMIN_INPUT" | pnpm vibe make:admin --email admin@example.test --name 'Admin'
+status=$?
+unset ADMIN_INPUT
+# status contém resultado do provisionamento (0 = sucesso).
 ```
 
-Com email novo, script cria usuário verificado e conta com senha. Com email existente, promove e verifica conta, mas **não redefine senha existente**. Admin global é privilégio administrativo, não bypass dos dados de domínio nem membership automático de organização.
+Com email novo, comando cria usuário verificado e conta com senha na mesma transação. Email existente é **recusado sem mutação**: não promove, não verifica, não redefine senha nem revoga sessões. Email é normalizado para minúsculas; nome exige 1 a 200 caracteres e senha 12 a 128, sem caracteres de controle. Senha somente pela primeira linha de stdin, nunca por argumentos ou variável exportada.
+
+Legado `pnpm --filter @vibe/auth seed:admin` continua disponível com `ADMIN_EMAIL` e `ADMIN_NAME` no ambiente e senha por stdin, usando a mesma lógica segura. `make:admin` chama esse script via `pnpm` sem shell e preserva status de falha. Ambiente deve estar injetado como na seção 3. Admin global não concede bypass tenant, acesso aos dados de domínio nem membership automático de organização.
 
 ## 7. Iniciar app e entrar
 
