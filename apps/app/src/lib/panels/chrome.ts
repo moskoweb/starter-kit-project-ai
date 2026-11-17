@@ -32,13 +32,13 @@ function settingsGroup(copy: Copy): NavGroup {
   ] };
 }
 
-/** Workspace switcher entries; `switchable` is false when no personal/organization panel is registered. */
+/** Single topology shows a fixed workspace header, never a tenant dropdown. */
 async function workspaceSwitcher(copy: Copy, loadOrganizations: boolean): Promise<Pick<PanelShellProps, "personal" | "organizations" | "switchable">> {
-  const profile = getIdentityEnv().IDENTITY_PROFILE;
+  const { IDENTITY_PROFILE: profile, ORGANIZATION_MODE: mode } = getIdentityEnv();
   const personal = personalPanel(), organization = organizationPanel();
   const orgs = organization && loadOrganizations ? await loadOrganizationOptions(organization.tenantIdentifier ?? "slug") : [];
   return {
-    switchable: !!(personal || organization),
+    switchable: mode !== "single" && !!(personal || organization),
     personal: personal && profile !== "organizations" ? { id: "personal", name: copy.personal, href: buildPanelPath(personal.id) } : undefined,
     organizations: organization ? orgs.map(org => ({ id: org.id, name: org.name, href: buildPanelPath(organization.id, { tenant: org.identifier }) })) : [],
   };

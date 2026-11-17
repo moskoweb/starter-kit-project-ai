@@ -23,6 +23,8 @@ Em `single`, Better Auth desabilita a criação de organizações para todos os 
 
 ## Fronteira da API de autenticação
 
+Sidebar em `single` mostra organização autorizada como identidade fixa, sem dropdown de troca. Nas páginas da conta e do tenant, o cabeçalho leva ao painel da organização. `multi` mantém seletor de organizações. Isso é apresentação, não substitui membership e isolamento do servidor. Check de política: `node apps/app/src/lib/panels/chrome.check.mjs`.
+
 O plugin `singleTenantBoundary` usa middleware nativo do Better Auth instalado (1.7.20), não apenas o filtro de `resolveTenant`. Mesmo quem ainda possui memberships em outras organizações não pode acessá-las pelos endpoints diretos `/organization/*`:
 
 - IDs explícitos e slugs em body/query precisam identificar `SINGLE_ORGANIZATION_ID`. Sem identificador, o contexto `activeOrganizationId` da sessão autoritativa precisa corresponder; uma sessão antiga com outra organização ativa não concede acesso. É possível selecionar a organização configurada explicitamente ou limpar o contexto com `set-active` e `organizationId: null`.

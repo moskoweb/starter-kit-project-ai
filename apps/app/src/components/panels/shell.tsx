@@ -15,7 +15,7 @@ export type PanelShellProps = {
   subtitle: string;
   groups: NavGroup[];
   currentWorkspaceId: string | null;
-  /** False when no personal/organization panel is registered: header shows title only, no workspace menu. */
+  /** False in single mode or without workspace panels: fixed header, no workspace menu. */
   switchable: boolean;
   personal?: Workspace;
   organizations: readonly Workspace[];

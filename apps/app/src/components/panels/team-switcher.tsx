@@ -10,11 +10,12 @@ export type Workspace = { id: string; name: string; href: string };
 /** Tenant switcher (Filament tenancy menu); plain header when no workspace panel is registered. Adapted from shadcn/ui sidebar-07 (MIT). */
 export function TeamSwitcher({ title, subtitle, currentId, switchable, personal, organizations, labels }: { title: string; subtitle: string; currentId: string | null; switchable: boolean; personal?: Workspace; organizations: readonly Workspace[]; labels: { workspace: string; organizations: string; manage: string } }) {
   const { isMobile } = useSidebar();
+  const fixed = !switchable ? organizations.find(org => org.id === currentId) ?? organizations[0] : undefined;
   const identity = <>
-    <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">{currentId ? <Building2 className="size-4" /> : <UserRound className="size-4" />}</div>
-    <div className="grid flex-1 text-left text-sm leading-tight"><span className="truncate font-medium">{title}</span><span className="truncate text-xs text-muted-foreground">{subtitle}</span></div>
+    <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">{currentId || fixed ? <Building2 className="size-4" /> : <UserRound className="size-4" />}</div>
+    <div className="grid flex-1 text-left text-sm leading-tight"><span className="truncate font-medium">{fixed?.name ?? title}</span><span className="truncate text-xs text-muted-foreground">{subtitle}</span></div>
   </>;
-  if (!switchable) return <SidebarMenu><SidebarMenuItem><SidebarMenuButton size="lg" render={<Link href="/account" />}>{identity}</SidebarMenuButton></SidebarMenuItem></SidebarMenu>;
+  if (!switchable) return <SidebarMenu><SidebarMenuItem><SidebarMenuButton size="lg" render={<Link href={fixed?.href ?? "/account"} />}>{identity}</SidebarMenuButton></SidebarMenuItem></SidebarMenu>;
   return <SidebarMenu><SidebarMenuItem><DropdownMenu>
     <DropdownMenuTrigger render={<SidebarMenuButton size="lg" className="data-popup-open:bg-sidebar-accent data-popup-open:text-sidebar-accent-foreground" />}>
       {identity}
